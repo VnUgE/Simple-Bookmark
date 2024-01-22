@@ -1,0 +1,10 @@
+{
+  "name": "Simple-Bookmark",
+  "version": "0.1.0",
+  "type": "module",
+  "copyright": "Copyright \u00A9 2024 Vaughn Nugent",
+  "author": "Vaughn Nugent",
+  "description": "The project contains a ready-to-run, SimpleBookmark web server installation for Windows, Linux, and MacOS for .NET/8.0 Runtime.",
+  "repository": "https://github.com/VnUgE/Simple-Bookmark/tree/master/ci",
+  "output_dir": "bin"
+}

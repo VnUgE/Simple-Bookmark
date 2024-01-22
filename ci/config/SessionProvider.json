@@ -1,0 +1,21 @@
+{
+
+  "debug": false,
+
+  //Provider assemblies to load
+  "provider_assemblies": [ "VNLib.Plugins.Sessions.VNCache.dll" ],
+
+  //Web session provider, valid format for VNCache and also memory sessions
+  "web": {
+    //Cache system key prefix
+    "cache_prefix": "websessions",
+    //The session cookie name
+    "cookie_name": "sb-session",
+    //Size in bytes for generated session ids
+    "cookie_size": 40,
+    //time (in seconds) a session is valid for
+    "valid_for_sec": 3600,
+    //The maxium number of connections waiting for the cache server responses
+    "max_waiting_connections": 100
+  } 
+}

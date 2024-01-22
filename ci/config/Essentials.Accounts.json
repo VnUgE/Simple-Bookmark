@@ -1,0 +1,76 @@
+{
+  "debug": false,
+
+  //endpoints
+
+  "login_endpoint": {
+    "path": "/api/account/login",
+    "max_login_attempts": 10, //10 failed attempts in 10 minutes
+    "failed_attempt_timeout_sec": 600 //10 minutes
+  },
+
+  "keepalive_endpoint": {
+    "path": "/api/account/keepalive",
+    //Regen token every 10 mins along with cookies
+    "token_refresh_sec": 600 //10 minutes
+  },
+
+  "profile_endpoint": {
+    "path": "/api/account/profile"
+  },
+
+  "password_endpoint": {
+    "path": "/api/account/reset"
+  },
+
+  "mfa_endpoint": {
+    "path": "/api/account/mfa"
+  },
+
+  "logout_endpoint": {
+    "path": "/api/account/logout"
+  },
+
+  "pki_auth_endpoint": {
+    "path": "/api/account/pki",
+    "jwt_time_dif_sec": 30,
+    "max_login_attempts": 10,
+    "failed_attempt_timeout_sec": 600,
+    //Configures the PATCH and DELETE methods to update the user's stored key when logged in
+    "enable_key_update": true
+  },
+
+  //If mfa is defined, configures mfa enpoints and enables mfa logins
+  "mfa": {
+    "upgrade_expires_secs": 180,
+    "nonce_size": 64,
+
+    //Defines totp specific arguments
+    "totp": {
+      "digits": 6,
+      "issuer": "Simple-Bookmark",
+      "period_secs": 30,
+      "algorithm": "sha1",
+      "secret_size": 32,
+      "window_size": 2
+    }
+  },
+
+  //Defines the included account provider
+  "account_security": {
+    //Time in seconds before a session is considered expired
+    "session_valid_for_sec": 3600,
+    //Path/domain for all security cookies
+    "cookie_domain": "",
+    "cookie_path": "/",
+    "status_cookie_name": "li", //front-end cookie name must match to detect login status
+    "otp_header_name": "X-Web-Token", //Front-end header name must match
+    "otp_time_diff_sec": 30,
+    "otp_key_size": 64,
+    "pubkey_cookie_name": "client-id",
+    "pubkey_signing_key_size": 32,
+    "strict_origin": false,
+    "strict_path": true,  //Can be enabled if front-end is running on the same server
+    //"allowed_origins": [""]
+  }
+}

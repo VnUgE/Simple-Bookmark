@@ -59,6 +59,11 @@ namespace SimpleBookmark.Model
                     .MaxLength(100)
                     .Next()
 
+                .WithColumn(p => p.Version)
+                    .TimeStamp()
+                    .AllowNull(true)
+                    .Next()
+
                 .WithColumn(p => p.Url)
                     .AllowNull(true)
                     .Next()

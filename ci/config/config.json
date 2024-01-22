@@ -1,0 +1,183 @@
+{
+
+  //Host application config, config is loaded as a read-only DOM that is available 
+  //to the host and loaded child plugins, all elements are available to plugins via the 'HostConfig' property
+
+  "http": {
+    //The defaut HTTP version to being requests with (does not support http/2 yet)
+    "default_version": "HTTP/1.1",
+    //The maxium size (in bytes) of response messges that will be compressed
+    "compression_limit": 2048000,
+    //Minium response size (in bytes) to compress
+    "compression_minimum": 2048,
+    //The size of the buffer to use when parsing multipart/form data uploads
+    "multipart_max_buf_size": 20480,
+    //The maxium ammount of data (in bytes) allows for mulitpart/form data file uploads
+    "multipart_max_size": 80240,
+    //Absolute maximum size (in bytes) of the request entity body (exludes headers)
+    "max_entity_size": 51200,
+    //Keepalive ms for HTTP1.1 keepalive connections
+    "keepalive_ms": 1000000,
+    //The buffer size to use when parsing headers (also the maxium request header size allowed) 
+    "header_buf_size": 8128,
+    //The maxium number of headers allowed in an HTTP request message
+    "max_request_header_count": 50,
+    //The maxium number of allowed network connections, before 503s will be issued automatically and connections closed
+    "max_connections": 5000,
+    //The size in bytes of the buffer to use when writing response messages
+    "response_buf_size": 65535,
+    //time (in ms) to wait for a response from an active connection in recv mode, before dropping it
+    "recv_timeout_ms": 5000,
+    //Time in ms to wait for the client to accept transport data before terminating the connection
+    "send_timeout_ms": 60000,
+    //The size (in bytes) of the buffer used to store all response header data
+    "response_header_buf_size": 16384,
+    //Max number of file uploads allowed per request
+    "max_uploads_per_request": 10
+  },
+
+  //Path to managed compressor library
+  "compression_lib": "lib/vnlib.net.compression/VNLib.Net.Compression.dll",
+
+  //Setup the native lib
+  "vnlib.net.compression": {
+    "lib_path": "lib/vnlib_compress/build/<os-dependent-lib-path>",
+    "level": 1
+  },
+
+  //Maximum ammount of time a request is allowed to be processed (includes loading or waiting for sessions) before operations will be cancelled and a 503 returned
+  "max_execution_time_ms": 20000,
+
+  //Collection of objects to define hosts+interfaces to build server listeners from
+  "virtual_hosts": [
+    {
+      //The interface to bind to, you may not mix TLS and non-TLS connections on the same interface
+      "interface": {
+        "address": "0.0.0.0",
+        "port": 8080
+      },
+
+      //The directory path for files served by this endpoint
+      "path": "dist",
+
+      //The hostname to listen for, "*" as wildcard, and "[system]" as the default hostname for the current machine
+      //"hostname": "*",
+
+      //Or specify an array of hostnames instead, the hostnames array property takes priority over the single hostname property, each must be unique
+      "hostnames": [ "*" ],
+
+      //Collection of "trusted" servers to allow proxy header support from
+      "downstream_servers": [],
+
+      //Specify a list of ip addresses that are allowed to connect to the server, 403 will be returned if connections are not on this list
+      //whitelist works behind a trusted downstream server that supports X-Forwared-For headers
+      //"whitelist": [ "127.0.0.1" ],
+
+      //A list of file extensions to deny access to, if a resource is requested and has one of the following extensions, a 404 is returned
+      "deny_extensions": [ ".env", ".yaml", ".cs" ],
+
+      //The default file extensions to append to a resource that does not have a file extension
+      "default_files": [ "index.html" ],
+
+      //Key-value headers object, some headers are special and are controlled by the vh processor
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Xss-Protection": "1; mode=block",
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; frame-src 'none'; object-src 'none'; referrer no-referrer-when-downgrade; upgrade-insecure-requests; block-all-mixed-content;"
+      },
+
+      //Enables cors support for all endpoints and header controls, if false, all endpoints that are send CORS request headers will be forbidden
+      //"enable_cors": true,
+
+      //Allowed cors authoriy domains
+      //"cors_allowed_authority": [ "localhost:8080" ],
+
+      //Define a TLS certificate (enables TLS on the interface)
+      "disabled ssl": {
+
+        //Cert may be pem or pfx (include private key in pfx, or include private key in a pem file)
+        "cert": "/path/to/cert.pfx|pem",
+
+        //A pem encoded private key, REQUIRED if using a PEM certificate, may be encrypted with a password
+        "privkey": "/path/to/private_key.pem",
+
+        //An optional password for the ssl private key
+        "password": "plain-text-password",
+
+        //requires that any client connecting to this host present a valid certificate
+        "client_cert_required": false
+      },
+
+      //A list of error file objects, files are loaded into memory (and watched for changes) and returned when the specified error code occurs
+      "error_files": [],
+
+      //The default 
+      "cache_default_sec": 864000
+    }
+  ],
+
+
+  //Defines the directory where plugin's are to be loaded from
+  "plugins": {
+    //Hot-reload creates collectable assemblies that allow full re-load support in the host application, should only be used for development purposes!
+    "hot_reload": false,
+    "reload_delay_sec": 2,
+    "path": "plugins",
+    "config_dir": "config"
+  },
+
+  "disabled sys_log": {
+    //"path": "path/to/syslog/file",
+    //"template": "serilog template for writing to file",
+    //"flush_sec": 5,
+    //"retained_files": 31,
+    //"file_size_limit": 10485760,
+    //"interval": "infinite"
+  },
+
+  "disabled app_log": {
+    //"path": "path/to/applog/file",
+    //"template": "serilog template for writing to file",
+    //"flush_sec": 5,
+    //"retained_files": 31,
+    //"file_size_limit": 10485760,
+    //"interval": "infinite"
+  },
+
+  //Sql for the users database
+  "sql": {
+    "db_type": "sqlite", //mysql, mssql(default), sqlite
+    "source": "simple-bookmark.db" //For sqlite only
+
+    //"hostname": "example.com",
+    //"username": "simple-bookmark",
+    //"catalog": "simple-bookmark",
+    //"min_pool_size": 5,
+    //"ms_security": false
+    //"trust_cert": false
+  },
+
+  //caching should be setup globally after VNCache #78a47dd
+  "cache": {
+    //Load the vncache dll
+    "assembly_name": "VNLib.Data.Caching.Providers.VNCache.dll",
+    //Defaulting to memory only for now
+    "memory_only": true,
+    //enable memory cache
+    "memory_cache": {
+      "buckets": 20,
+      "bucket_size": 5000,
+      "max_age_sec": 600,
+      "refresh_interval_sec": 60,
+      "zero_all": false,
+      "max_object_size": 8128
+    }
+  },
+
+  //Global secrets object, used by the host and pluings for a specialized secrets
+  "secrets": {
+    //"db_password": ""
+    "passwords": "yourbase64passwordsecret"
+  }
+}

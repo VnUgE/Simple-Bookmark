@@ -286,11 +286,11 @@ const upload = (() => {
 
                 //update the progress bar
                 progressPercent.value = Math.round((i+1) / chunks.length * 100);
-
-                //refresh the bookmarks
-                store.bookmarks.refresh();
             }
         })
+
+          //refresh the bookmarks
+        store.bookmarks.refresh();
 
         //Force set progress once complete regardless of errors
         progressPercent.value = 100;

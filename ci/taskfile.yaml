@@ -1,0 +1,131 @@
+# https://taskfile.dev
+
+#Called by the vnbuild system to produce builds for my website
+#https://www.vaughnnugent.com/resources/software
+
+version: "3"
+
+vars:
+  BUILDS_URL: https://www.vaughnnugent.com/public/resources/software/builds
+
+includes:
+  plugins:
+    taskfile: plugins.taskfile.yaml
+
+tasks:
+
+  build:
+    cmds:
+    #clean out dist dir before building
+    - cmd: powershell -Command "rm -Recurse -Force ./dist"
+      ignore_error: true
+    #copy setup script for linux
+    - cmd: powershell -Command "cp setup.sh lib/ -Force"
+  
+    - task: install-plugins
+    - task: install-webserver
+
+  install-webserver:
+    cmds:
+    #setup env
+    - task: create-env
+      vars:
+        TARGET_OS: win-x64
+
+    - task: create-env
+      vars:
+        TARGET_OS: linux-x64
+
+    - task: create-env
+      vars:
+        TARGET_OS: osx-x64
+
+
+  postbuild_success:
+    cmds:
+    #make bin dir
+    - cmd: powershell -Command "mkdir bin -Force"
+      ignore_error: true
+
+    - task: pack
+      vars:
+        TARGET_OS: win-x64
+    - task: pack
+      vars:
+        TARGET_OS: linux-x64
+    - task: pack
+      vars:
+        TARGET_OS: osx-x64
+
+
+  install-plugins:
+    cmds:
+    #add plugins
+    - task: plugins:all
+    
+  create-env:
+    vars:
+      BUILD_DIR: './build/{{.TARGET_OS}}'
+    cmds:
+    #create dir for env
+    - cmd: powershell -Command "mkdir {{.BUILD_DIR}} -Force"
+      ignore_error: true
+    
+    #copy plugins
+    - cmd: powershell -Command "cp -Recurse -Force plugins {{.BUILD_DIR}}"
+
+    #copy wwwroot
+    - cmd: powershell -Command "cp -Recurse -Force dist {{.BUILD_DIR}}"
+
+    #copy libraries
+    - cmd: powershell -Command "cp -Recurse -Force lib {{.BUILD_DIR}}"
+
+    #copy config
+    - cmd: powershell -Command "cp -Recurse -Force config {{.BUILD_DIR}}"
+
+    - task: get-webserver
+      vars:
+        TARGET_OS: '{{.TARGET_OS}}'
+        BUILD_DIR: '{{.BUILD_DIR}}'
+
+  get-webserver:
+    internal: true
+    cmds:
+    - task: install
+      vars:
+        PROJECT_NAME: 'VNLib.Webserver'
+        MODULE_NAME: "VNLib.Webserver"
+        FILE_NAME: "{{.TARGET_OS}}-release.tgz"
+        BUILD_DIR: '{{.BUILD_DIR}}/webserver'
+
+    - cmd: powershell -Command "cp -Force ./config/config.json {{.BUILD_DIR}}/config.json"
+
+  install:
+    internal: true
+    vars:
+      DIR: '"{{.BUILD_DIR}}"'
+    cmds:
+    #make the plugin directory
+    - cmd: powershell -Command "mkdir {{.DIR}} -Force"
+      ignore_error: true
+    - cd {{.DIR}} && powershell "{{.USER_WORKING_DIR}}/install.ps1" -BaseUrl {{.BUILDS_URL}} -ModuleName {{.MODULE_NAME}} -ProjectName {{.PROJECT_NAME}} -FileName {{.FILE_NAME}}
+    - cd {{.DIR}} && tar -xzf {{.FILE_NAME}}
+    #remove the tar file
+    - cd {{.DIR}} && powershell -Command "rm {{.FILE_NAME}}"
+ 
+  pack:
+    internal: true
+    cmds:
+    - cmd: powershell -Command "mkdir build/{{.TARGET_OS}}/ -Force"
+      ignore_error: true
+    - cd build/{{.TARGET_OS}} && tar -czf ../../bin/{{.TARGET_OS}}-release.tgz .
+ 
+
+  clean:
+    ignore_error: true
+    cmds:
+    - cmd: powershell -Command "rm -Recurse -Force ./build"
+    - cmd: powershell -Command "rm -Recurse -Force ./bin"
+    - cmd: powershell -Command "rm -Recurse -Force ./dist"
+    - cmd: powershell -Command "rm -Recurse -Force ./plugins"
+    - cmd: powershell -Command "rm -Recurse -Force ./lib"

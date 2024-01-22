@@ -1,0 +1,157 @@
+# https://taskfile.dev
+
+#Called by the vnbuild system to produce builds for my website
+#https://www.vaughnnugent.com/resources/software
+
+version: "3"
+
+vars:
+
+tasks:
+
+  all:
+    cmds:
+    - echo "Installing and configuring plugins and UI"
+    - task: install-accounts
+    - task: install-router
+    - task: install-sessions
+    - task: install-vncache
+    - task: install-vncache-sessions
+    - task: install-users
+    - task: install-argon2-lib
+    - task: install-compression
+    - task: install-compressor-lib
+    - task: build-bookmarks
+
+  build-bookmarks:
+    cmds:
+    #build front-end
+    - cd ../front-end && npm install && npm run build
+    #move dist files to web root
+    - cmd: powershell -Command "cp -Recurse -Force ../front-end/dist {{.USER_WORKING_DIR}}"
+
+    #build the plugin 
+    - cmd: cd ../back-end/src && task build
+    - powershell -Command "mkdir plugins/SimpleBookmark -Force"
+    #copy the plugin output
+    - powershell -Command "cp -Recurse -Force ../back-end/src/bin/release/net8.0/publish/* plugins/SimpleBookmark/"
+
+  install-accounts:
+    cmds:
+    #install accounts plugin
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'VNLib.Plugins.Essentials.Accounts'
+        MODULE_NAME: "Plugins.Essentials"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/Essentials.Accounts'
+
+  install-router:
+    cmds:
+    #install router plugin
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'VNLib.Plugins.Essentials.Content.Routing'
+        MODULE_NAME: "Plugins.Essentials"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/PageRouter'
+
+  install-sessions:
+    cmds:
+    #install sessions plugin
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'SessionProvider'
+        MODULE_NAME: "VNLib.Plugins.Sessions"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/SessionProvider'
+
+  install-users:
+    cmds:
+    #install users plugin
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'VNLib.Plugins.Essentials.Users'
+        MODULE_NAME: "VNLib.Plugins.Essentials.Users"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/assets/VNLib.Plugins.Essentials.Users'
+
+  install-vncache:
+    cmds:
+    #install vncache global cache provider plugin
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'VNLib.Data.Caching.Providers.VNCache'
+        MODULE_NAME: "VNLib.Data.Caching"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/assets/VNLib.Data.Caching.Providers.VNCache'
+
+  install-vncache-sessions:
+    cmds:
+    #install vncache-web-sessions plugin
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'VNLib.Plugins.Sessions.VNCache'
+        MODULE_NAME: "VNLib.Plugins.Sessions"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/assets/VNLib.Plugins.Sessions.VNCache'
+
+  install-compression:
+    cmds:
+    #install compression plugin
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'VNLib.Net.Compression'
+        MODULE_NAME: "VNLib.Core"
+        FILE_NAME: "release.tgz"
+        DIR: './lib/vnlib.net.compression'
+
+  install-compressor-lib:
+    cmds:
+    #install compressor plugin
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'vnlib_compress'
+        MODULE_NAME: "VNLib.Core"
+        FILE_NAME: "src.tgz"
+        DIR: './lib/vnlib_compress'
+
+  install-argon2-lib:
+    cmds:
+    #install the argon2 binary for Windows
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'phc-winner-argon2'
+        MODULE_NAME: "VNLib.Core"
+        FILE_NAME: "win-x64-release-Argon2.tgz"
+        DIR: './lib/argon2'
+
+    #install the argon2 source code package for Linux and Mac
+    - task: install-plugin
+      vars:
+        PROJECT_NAME: 'phc-winner-argon2'
+        MODULE_NAME: "VNLib.Core"
+        FILE_NAME: "src.tgz"
+        DIR: './lib/argon2'
+
+    #remove unneeded files
+    - cmd: powershell -Command "rm ./lib/argon2/man -Recurse"
+      ignore_error: true
+    - cmd: powershell -Command "rm ./lib/argon2/latex -Recurse"
+      ignore_error: true
+    - cmd: powershell -Command "rm ./lib/argon2/kats -Recurse"
+      ignore_error: true
+    - cmd: powershell -Command "rm ./lib/argon2/argon2-specs.pdf"
+      ignore_error: true
+    - cmd: powershell -Command "rm ./lib/argon2/package.json"
+      ignore_error: true
+
+  install-plugin:
+    cmds:
+    #make the plugin directory
+    - cmd: powershell -Command "mkdir {{.DIR}} -Force"
+      ignore_error: true
+    - cd {{.DIR}} && powershell "{{.USER_WORKING_DIR}}/install.ps1" -BaseUrl {{.BUILDS_URL}} -ModuleName {{.MODULE_NAME}} -ProjectName {{.PROJECT_NAME}} -FileName {{.FILE_NAME}}
+    - cd {{.DIR}} && tar -xzf {{.FILE_NAME}} 
+    #remove the archive file 
+    - cd {{.DIR}} && powershell -Command "rm {{.FILE_NAME}}"

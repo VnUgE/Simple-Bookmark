@@ -71,6 +71,9 @@ const addOrUpdate = async () => {
         newConfig.secret = base32Encode(decSecret, 'RFC3548', { padding: false })
 
         set(newTotpConfig, newConfig);
+
+        //refresh config
+        store.mfaRefreshMethods();
     })
 }
 
@@ -110,7 +113,7 @@ const onVerifyOtp = async (code: string) => {
             >
             </span>
         </div>
-        <div v-if="totpEnabled" class="flex" @click="addOrUpdate()">
+        <div v-if="totpEnabled" class="flex">
             <button class="btn light">
                 Regenerate
             </button>
