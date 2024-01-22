@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, shallowRef, reactive, defineAsyncComponent } from 'vue'
+import { ref, shallowRef, reactive } from 'vue'
 import { useTimeoutFn, set } from '@vueuse/core'
 import { useVuelidate } from '@vuelidate/core'
 import { isEqual } from 'lodash-es'
@@ -8,7 +8,8 @@ import {
     useVuelidateWrapper, useMfaLogin, totpMfaProcessor, IMfaFlowContinuiation, MfaMethod,
     apiCall, useMessage, useWait, debugLog, WebMessage
 } from '@vnuge/vnlib.browser'
-const OptInput = defineAsyncComponent(() => import('../global/OtpInput.vue'))
+
+import OptInput from '../global/OtpInput.vue'//So small it does not need to be async
 
 const { setMessage } = useMessage();
 const { waiting } = useWait();

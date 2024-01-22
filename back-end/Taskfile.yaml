@@ -26,7 +26,7 @@ tasks:
     - task: packsource
 
     #copy license to output dir
-    - powershell -Command "cp '{{.MODULE_DIR}}/LICENSE.txt' -Destination '{{.OUT_DIR}}/LICENSE.txt'"
+    - powershell -Command "cp '{{.MODULE_DIR}}/LICENSE' -Destination '{{.OUT_DIR}}/LICENSE'"
 
     #tar the plugin output and put it in the bin dir
     - cd {{.OUT_DIR}} && tar -czvf '{{.USER_WORKING_DIR}}/bin/release.tgz' .

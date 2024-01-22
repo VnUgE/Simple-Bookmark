@@ -218,15 +218,17 @@ export const bookmarkPlugin = (bookmarkEndpoint: MaybeRef<string>): PiniaPlugin 
             }
 
             //Update the total bookmarks
-            apiCall(async () => totalBookmarks.value = await bookmarkApi.count())
-            apiCall(async () => allTags.value = await bookmarkApi.getTags())
+            apiCall(async () => {
+                allTags.value = await bookmarkApi.getTags()
+                totalBookmarks.value = await bookmarkApi.count()
+            })
         })
 
         //Watch for serach query changes
-        watchDebounced([currentPage, currentPageSize, totalBookmarks, tags, query, allTags], 
-            ([ page, pageSize, _, tags, query ]) => {
+        watchDebounced([currentPage, currentPageSize, tags, query, allTags], 
+            ([ page, pageSize, tags, query ]) => {
                 apiCall(async () => bookmarks.value = await bookmarkApi.list(page, pageSize, { tags, query }))
-        }, { debounce: 10 })
+        }, { debounce: 50 })
 
         //Watch for page changes and scroll to top
         watch([currentPage], () => window.scrollTo({ top: 0, behavior: 'smooth' }))
