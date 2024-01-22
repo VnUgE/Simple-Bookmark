@@ -317,7 +317,7 @@ namespace SimpleBookmark.Endpoints
             }
 
             //Try to update the records
-            ERRNO result = await Bookmarks.AddBulkAsync(sanitized, entity.Session.UserID, false, entity.EventCancellation);
+            ERRNO result = await Bookmarks.AddBulkAsync(sanitized, entity.Session.UserID, entity.RequestedTimeUtc, entity.EventCancellation);
 
             webm.Result = $"Successfully added {result} of {batch.Length} bookmarks";
             webm.Success = true;

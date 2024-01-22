@@ -19,7 +19,10 @@ tasks:
     #clean out dist dir before building
     - cmd: powershell -Command "rm -Recurse -Force ./dist"
       ignore_error: true
+
     #copy setup script for linux
+    - cmd: powershell -Command "mkdir lib -Force"
+      ignore_error: true
     - cmd: powershell -Command "cp setup.sh lib/ -Force"
   
     - task: install-plugins

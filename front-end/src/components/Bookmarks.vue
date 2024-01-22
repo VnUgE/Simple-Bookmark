@@ -5,7 +5,7 @@ import { get, set, formatTimeAgo, useToggle, useTimestamp, useFileDialog, asyncC
 import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, minLength, helpers } from '@vuelidate/validators';
 import { apiCall, useConfirm, useGeneralToaster, useVuelidateWrapper, useWait } from '@vnuge/vnlib.browser';
-import { clone, cloneDeep, join, defaultTo, every, filter, includes, isEmpty, isEqual, first, isString, chunk, map } from 'lodash-es';
+import { clone, cloneDeep, join, defaultTo, every, filter, includes, isEmpty, isEqual, first, isString, chunk, map, forEach } from 'lodash-es';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { parseNetscapeBookmarkString } from './Boomarks/util.ts';
 import type { Bookmark, BookmarkError } from '../store/bookmarks';
@@ -37,13 +37,13 @@ const addOrEditValidator = (buffer: Ref<Partial<Bookmark>>) => {
             required: helpers.withMessage('Name cannot be empty', required),
             safeName: helpers.withMessage('Bookmark name contains illegal characters', (value: string) => safeNameRegex.test(value)),
             minLength: helpers.withMessage('Name must be at least 1 characters', minLength(1)),
-            maxLength: helpers.withMessage('Name must have less than 128 characters', maxLength(128))
+            maxLength: helpers.withMessage('Name must have less than 100 characters', maxLength(100))
         },
         Url: {
             required: helpers.withMessage('Url cannot be empty', required),
             safeUrl: helpers.withMessage('Url contains illegal characters or is not a valid URL', (value: string) => safeUrlRegex.test(value)),
             minLength: helpers.withMessage('Url must be at least 1 characters', minLength(1)),
-            maxLength: helpers.withMessage('Url must have less than 128 characters', maxLength(128))
+            maxLength: helpers.withMessage('Url must have less than 200 characters', maxLength(200))
         },
         Description: {
             maxLength: helpers.withMessage('Description must have less than 512 characters', maxLength(512))
@@ -222,6 +222,7 @@ const upload = (() => {
 
     const file = computed(() => first(files.value));
     const ignoreErrors = ref(false);
+    const fixErrors = ref(false);
     const errors = ref<BookmarkError[]>([]);
     const progress = ref<string[]>([]);
     const progressPercent = ref(0);
@@ -258,6 +259,23 @@ const upload = (() => {
 
             //parse the text into bookmarks
             const bms = get(foundBookmarks);
+
+            if(get(fixErrors)){
+                //try to fix names
+                forEach(bms, bm => {
+                    //If the name is not safe, replace all illegal characters
+                    if(!safeNameRegex.test(bm.Name)){
+                        bm.Name = bm.Name.replace(/[^a-zA-Z0-9_\-\|\. ]/g, ' ');
+                    }
+                })
+
+                //truncate name length
+                forEach(bms, bm => {
+                    if(bm.Name.length > 100){
+                        bm.Name = bm.Name.substring(0, 100);
+                    }
+                })
+            }
 
             const chunks = chunk(bms, 20);
 
@@ -303,6 +321,7 @@ const upload = (() => {
         open,
         cancel,
         submit,
+        fixErrors,
         foundBookmarks,
         progressPercent,
         errors,
@@ -545,11 +564,18 @@ const upload = (() => {
                             </div>
                         </div>
                         <div class="flex flex-row items-center justify-between my-3 ">
-                            <div>
+                            <div class="flex flex-row gap-4">
                                 <div class="flex items-center">
                                     <input id="ignore-errors" type="checkbox" v-model="upload.ignoreErrors" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded cursor-pointer focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                                     <label for="ignore-errors" class="text-sm font-medium ms-2">Ignore Errors</label>
                                 </div>
+                                <div class="flex items-center">
+                                    <input id="fix-errors" type="checkbox" v-model="upload.fixErrors" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded cursor-pointer focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                    <label for="fix-errors" class="text-sm font-medium ms-2">Fix Errors</label>
+                                </div>
+                            </div>
+                            <div>
+                              
                             </div>
                              <button type="submit" class="btn blue">
                                 Upload

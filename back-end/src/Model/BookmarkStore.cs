@@ -19,10 +19,13 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
+using VNLib.Utils;
 using VNLib.Plugins.Extensions.Data;
-using VNLib.Plugins.Extensions.Data.Abstractions;
 using VNLib.Plugins.Extensions.Loading;
+using VNLib.Plugins.Extensions.Data.Abstractions;
+
 
 namespace SimpleBookmark.Model
 {
@@ -111,6 +114,37 @@ namespace SimpleBookmark.Model
                 .SelectMany(static t => t!.Split(','))
                 .Distinct()
                 .ToArray();
+        }
+
+        public async Task<ERRNO> AddBulkAsync(IEnumerable<BookmarkEntry> bookmarks, string userId, DateTimeOffset now, CancellationToken cancellation)
+        {
+            //Init new db connection
+            await using SimpleBookmarkContext context = new(dbOptions.Value);
+            await context.OpenTransactionAsync(cancellation);
+
+            //Setup clean bookmark instances
+            bookmarks = bookmarks.Select(b => new BookmarkEntry
+            {
+                Id = GetNewRecordId(),  //new uuid
+                UserId = userId,        //Set userid
+                LastModified = now.DateTime,
+
+                //Allow reuse of created time
+                Created = b.Created,
+                Description = b.Description,
+                Name = b.Name,
+                Tags = b.Tags,
+                Url = b.Url,
+            });
+
+            //Filter out bookmarks that already exist
+            bookmarks = bookmarks.Where(b => !context.Bookmarks.Any(b2 => b2.UserId == userId && b2.Url == b.Url));
+
+            //Add bookmarks to db
+            context.AddRange(bookmarks);
+
+            //Commit transaction
+            return await context.SaveAndCloseAsync(true, cancellation);
         }
 
         private sealed class BookmarkQueryLookup : IDbQueryLookup<BookmarkEntry>

@@ -124,7 +124,8 @@
     "hot_reload": false,
     "reload_delay_sec": 2,
     "path": "plugins",
-    "config_dir": "config"
+    "config_dir": "config",
+    "assets": "plugins/assets"
   },
 
   "disabled sys_log": {
