@@ -29,7 +29,7 @@ using VNLib.Plugins.Extensions.Data.Abstractions;
 namespace SimpleBookmark.Model
 {
     [Index(nameof(Url))]
-    internal sealed partial class BookmarkEntry : DbModelBase, IUserEntity
+    internal sealed partial class BookmarkEntry : DbModelBase, IUserEntity, IJsonOnDeserialized
     {
         [Key]
         public override string Id { get; set; }
@@ -70,7 +70,7 @@ namespace SimpleBookmark.Model
 
             validator.RuleFor(p => p.Name)
                 .NotEmpty()
-                .Matches(@"^[a-zA-Z0-9_\-\|\. ]+$", RegexOptions.Compiled)
+                .Matches(@"^[a-zA-Z0-9_\-\|\., ]+$", RegexOptions.Compiled)
                 .MaximumLength(100);
 
             validator.RuleFor(p => p.Url)
@@ -88,6 +88,14 @@ namespace SimpleBookmark.Model
                 .Matches(@"^[a-zA-Z0-9]+$", RegexOptions.Compiled);
 
             return validator;
+        }
+
+        public void OnDeserialized()
+        {
+            //Trim whitespace from all string properties
+            Name = Name?.Trim();
+            Url = Url?.Trim();
+            Description = Description?.Trim();
         }
     }
 }
