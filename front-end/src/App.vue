@@ -36,7 +36,7 @@ const showIf = (tabId: TabId, active: TabId) => isEqual(tabId, active)
     <title>{{ siteTitle }}</title>
   </head>
   <body>
-    <div id="app" class="min-h-screen pb-16 text-gray-700 bg-gray-100 dark:bg-gray-900 dark:text-white sm:pb-0">
+    <div id="app" class="min-h-screen pb-16 text-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white sm:pb-0">
       
       <div class="relative">
           <div class="absolute z-50 right-10 top-10">

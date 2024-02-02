@@ -5,6 +5,7 @@ import Oauth2Apps from './Settings/Oauth2Apps.vue';
 import PasswordReset from './Settings/PasswordReset.vue';
 import PkiSettings from './Settings/PkiSettings.vue';
 import TotpSettings from './Settings/TotpSettings.vue';
+import Bookmarks from './Settings/Bookmarks.vue';
 
 const store = useStore();
 const darkMode = useDark();
@@ -35,6 +36,14 @@ const darkMode = useDark();
                             <span class="text-sm font-medium text-gray-900 ms-3 dark:text-gray-300">Stay signed in</span>
                         </label>
                     </div>
+                </div>
+            </div>
+
+             <div class="">
+                <h3 class="text-xl font-bold">Boomarks</h3>
+
+                <div class="relative mt-4">
+                    <Bookmarks />
                 </div>
             </div>
 

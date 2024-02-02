@@ -30,7 +30,9 @@ using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 
 using VNLib.Utils;
-using VNLib.Utils.Logging;
+using VNLib.Utils.IO;
+using VNLib.Utils.Memory;
+using VNLib.Net.Http;
 using VNLib.Plugins;
 using VNLib.Plugins.Essentials;
 using VNLib.Plugins.Essentials.Accounts;
@@ -111,6 +113,41 @@ namespace SimpleBookmark.Endpoints
 
                 //Return result
                 return VirtualOk(entity, webm);
+            }
+
+            /*
+             * Allow exporting the current user's bookmark collection as a 
+             * netscape file for compatability.
+             * 
+             * Future support for CSV file via an accept content type header
+             */
+            if(entity.QueryArgs.ContainsKey("export"))
+            {
+                if (entity.Server.Accepts(ContentType.Html))
+                {
+                    //Get the collection of bookmarks
+                    List<BookmarkEntry> list = Bookmarks.ListRental.Rent();
+                    await Bookmarks.GetUserPageAsync(list, entity.Session.UserID, 0, (int)BmConfig.PerPersonQuota);
+
+                    //Alloc memory stream for output
+                    VnMemoryStream output = new(MemoryUtil.Shared, 16 * 1024, false);
+                    try
+                    {
+                        //Write the bookmarks as a netscape file and return the file
+                        ImportExportUtil.ExportToNetscapeFile(list, output);
+                        output.Seek(0, System.IO.SeekOrigin.Begin);
+                        return VirtualClose(entity, HttpStatusCode.OK, ContentType.Html, output);
+                    }
+                    catch
+                    {
+                        output.Dispose();
+                        throw;
+                    }
+                }
+                else
+                {
+                    return VirtualClose(entity, HttpStatusCode.NotAcceptable);
+                }
             }
 
             //Get query parameters

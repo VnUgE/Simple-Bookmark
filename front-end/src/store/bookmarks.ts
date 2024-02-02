@@ -51,6 +51,7 @@ export interface BookmarkApi{
     getTags: () => Promise<string[]>
     delete: (bookmark: Bookmark | Bookmark[]) => Promise<void>
     count: () => Promise<number>
+    downloadAll: () => Promise<string>
 }
 
 export interface BookmarkSearch{
@@ -140,6 +141,14 @@ const useBookmarkApi = (endpoint: MaybeRef<string>): BookmarkApi => {
         return data.result;
     }
 
+    const downloadAll = async () => {
+        //download the bookmarks as a html file
+        const { data } = await axios.get<string>(`${get(endpoint)}?export=true`, { 
+            headers: { 'Content-Type': 'application/htlm' }
+        })
+        return data;
+    }
+
     return {
         list: listBookmarks,
         add: addBookmark,
@@ -147,7 +156,8 @@ const useBookmarkApi = (endpoint: MaybeRef<string>): BookmarkApi => {
         delete: deleteBookmark,
         count: getItemsCount,
         addMany,
-        getTags
+        getTags,
+        downloadAll
     }
 }
 

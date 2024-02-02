@@ -114,7 +114,7 @@ const onVerifyOtp = async (code: string) => {
             </span>
         </div>
         <div v-if="totpEnabled" class="flex">
-            <button class="btn light">
+            <button class="btn light" @click="addOrUpdate()">
                 Regenerate
             </button>
             <button class="btn red" @click="disableTotp()">

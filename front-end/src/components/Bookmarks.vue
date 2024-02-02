@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { MaybeRef, Ref, computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue';
 import { useQuery, useStore } from '../store';
-import { get, set, formatTimeAgo, useToggle, useTimestamp, useFileDialog, asyncComputed, toReactive } from '@vueuse/core';
+import { get, set, formatTimeAgo, useToggle, useTimestamp, useFileDialog, asyncComputed, toReactive, useClipboard } from '@vueuse/core';
 import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, minLength, helpers } from '@vuelidate/validators';
 import { apiCall, useConfirm, useGeneralToaster, useVuelidateWrapper, useWait } from '@vnuge/vnlib.browser';
@@ -22,6 +22,7 @@ const now = useTimestamp({interval: 1000});
 const selectedTags = computed(() => store.bookmarks.tags);
 const localSearch = shallowRef<string>(store.bookmarks.query);
 const nextPageAvailable = computed(() => isEqual(bookmarks.value?.length, get(store.bookmarks.pages.currentPageSize)));
+const { copy } = useClipboard()
 
 //Refresh on page load
 store.bookmarks.refresh();
@@ -399,25 +400,6 @@ const upload = (() => {
                         </MenuItems>
                     </transition>
                 </Menu>
-
-                <!-- Dropdown menu -->
-                <div id="dropdown" class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700">
-                    <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
-                    <li>
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Dashboard</a>
-                    </li>
-                    <li>
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</a>
-                    </li>
-                    <li>
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Earnings</a>
-                    </li>
-                    <li>
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Sign out</a>
-                    </li>
-                    </ul>
-                </div>
-
             </div>
         </div>
         <div class="grid flex-auto grid-cols-4 gap-8 mt-4 max-w-[60rem] mx-auto w-full">
@@ -457,6 +439,9 @@ const upload = (() => {
                                 </span>
                                 | 
                                 <span class="inline-flex gap-1.5">
+                                    <button class="text-xs text-gray-700 dark:text-gray-400" @click="copy(bm.Url)">
+                                        Copy
+                                    </button>
                                     <button class="text-xs text-gray-700 dark:text-gray-400" @click="edit.editBookmark(bm)">
                                         Edit
                                     </button>  
@@ -595,7 +580,7 @@ const upload = (() => {
 <style scoped lang="scss">
     input.search{
         @apply ps-10 p-2.5 border block w-full text-sm rounded pe-10;
-        @apply bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 ;
+        @apply bg-white dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 ;
     }
 
     button.search{
