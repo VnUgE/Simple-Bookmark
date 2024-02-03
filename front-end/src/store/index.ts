@@ -19,6 +19,8 @@ import { noop, toSafeInteger, toString, defaults } from "lodash-es";
 import { defineStore } from "pinia";
 import { computed, shallowRef, watch } from "vue";
 
+export type { DownloadContentType } from './bookmarks'
+
 export const useQuery = (name: string) => {
 
     const getQuery = () => {

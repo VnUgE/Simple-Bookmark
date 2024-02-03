@@ -14,11 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-using System;
-using System.Buffers;
-
-using MemoryPack;
-
 using VNLib.Plugins;
 using VNLib.Plugins.Extensions.Loading;
 using VNLib.Data.Caching;
@@ -27,6 +22,7 @@ using VNLib.Plugins.Extensions.VNCache.DataModel;
 
 namespace SimpleBookmark.Cache
 {
+
     [ConfigurationName("settings")]
     internal sealed class UserSettingsStore
     {
@@ -47,16 +43,6 @@ namespace SimpleBookmark.Cache
                 Cache = cache.GetPrefixedCache(prefix)
                     .CreateEntityCache<UserSettings>(serializer, serializer);
             }
-
-        }
-
-        private sealed class MemPackCacheSerializer(MemoryPackSerializerOptions? options) : ICacheObjectSerializer, ICacheObjectDeserializer
-        {
-            ///<inheritdoc/>
-            public T? Deserialize<T>(ReadOnlySpan<byte> objectData) => MemoryPackSerializer.Deserialize<T>(objectData, options);
-
-            ///<inheritdoc/>
-            public void Serialize<T>(T obj, IBufferWriter<byte> finiteWriter) => MemoryPackSerializer.Serialize(finiteWriter, obj, options);
         }
     }
 }

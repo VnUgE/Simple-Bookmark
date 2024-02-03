@@ -129,7 +129,7 @@ const onAddKey = async () => {
             <h3 class="text-xl font-bold">Authentication Keys</h3>
             <div class="">
                 
-                <button type="button" class="btn blue" @click.prevent="showAddKeyDialog">
+                <button type="button" class="btn blue me-2" @click.prevent="showAddKeyDialog">
                     <div class="flex flex-row items-center gap-1.5">
                         Add
                     </div>

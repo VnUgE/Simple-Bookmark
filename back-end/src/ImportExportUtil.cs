@@ -15,8 +15,11 @@
 
 using System;
 using System.IO;
+using System.Text.Json;
 using SimpleBookmark.Model;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+
 using VNLib.Utils.IO;
 
 
@@ -72,6 +75,70 @@ namespace SimpleBookmark
             //Close document
             writer.WriteLine("</DL></p>");
             writer.Flush();
+        }
+
+        //Remove illegal characters from a string, ", \, and control characters
+        private static readonly Regex _illegalChars = new("[\"\\p{Cc}]", RegexOptions.Compiled);
+
+        private static string? Escape(string? input)
+        {
+            return input is null ? null : _illegalChars.Replace(input, "");
+        }
+
+        public static void ExportAsCsv(IEnumerable<BookmarkEntry> bookmarks, Stream outputStream)
+        {
+            using VnStreamWriter writer = new(outputStream, System.Text.Encoding.UTF8, 1024)
+            {
+                NewLine = "\r\n"
+            };
+
+            //Write header
+            writer.WriteLine("Name,Url,Description,Tags,Created,LastModified");
+
+            //Write each bookmark
+            foreach (BookmarkEntry entry in bookmarks)
+            {
+                //User params must be escaped with double quotes
+
+                writer.Write("\"");
+                writer.Write(Escape(entry.Name));
+                writer.Write("\",\"");
+                writer.Write(Escape(entry.Url));
+                writer.Write("\",\"");
+                writer.Write(Escape(entry.Description));
+                writer.Write("\",\"");
+                writer.Write(Escape(entry.Tags));
+                writer.Write("\",");
+                writer.Write(new DateTimeOffset(entry.Created).ToUnixTimeSeconds());
+                writer.Write(",");
+                writer.Write(new DateTimeOffset(entry.LastModified).ToUnixTimeSeconds());
+                writer.WriteLine();
+            }
+
+            writer.Flush();
+        }
+
+        public static void ExportAsJson(IEnumerable<BookmarkEntry> bookmarks, Stream outputStream)
+        {
+            using Utf8JsonWriter writer = new(outputStream, default);
+
+            writer.WriteStartArray();
+
+            foreach (BookmarkEntry entry in bookmarks)
+            {
+                writer.WriteStartObject();
+
+                writer.WriteString("Name", entry.Name);
+                writer.WriteString("Url", entry.Url);
+                writer.WriteString("Description", entry.Description);
+                writer.WriteString("Tags", entry.Tags);
+                writer.WriteNumber("Created", new DateTimeOffset(entry.Created).ToUnixTimeSeconds());
+                writer.WriteNumber("LastModified", new DateTimeOffset(entry.LastModified).ToUnixTimeSeconds());
+
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
         }
     }
 }

@@ -43,6 +43,8 @@ export interface BookmarkError{
     }>
 }
 
+export type DownloadContentType = 'application/json' | 'text/html' | 'text/csv' | 'text/plain'
+
 export interface BookmarkApi{
     list: (page: number, limit: number, search: BookmarkSearch) => Promise<Bookmark[]>
     add: (bookmark: Bookmark) => Promise<void>
@@ -51,7 +53,7 @@ export interface BookmarkApi{
     getTags: () => Promise<string[]>
     delete: (bookmark: Bookmark | Bookmark[]) => Promise<void>
     count: () => Promise<number>
-    downloadAll: () => Promise<string>
+    downloadAll: (contentType: DownloadContentType) => Promise<string>
 }
 
 export interface BookmarkSearch{
@@ -141,10 +143,10 @@ const useBookmarkApi = (endpoint: MaybeRef<string>): BookmarkApi => {
         return data.result;
     }
 
-    const downloadAll = async () => {
+    const downloadAll = async (contentType: DownloadContentType) => {
         //download the bookmarks as a html file
         const { data } = await axios.get<string>(`${get(endpoint)}?export=true`, { 
-            headers: { 'Content-Type': 'application/htlm' }
+            headers: { 'Accept': contentType }
         })
         return data;
     }

@@ -19,7 +19,6 @@ using System.Linq;
 using System.Buffers;
 using System.Text.Json;
 using System.Collections;
-using SimpleBookmark.Model;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -42,6 +41,8 @@ using VNLib.Plugins.Extensions.Loading;
 using VNLib.Plugins.Extensions.Loading.Sql;
 using VNLib.Plugins.Extensions.Data.Extensions;
 using VNLib.Plugins.Extensions.Validation;
+
+using SimpleBookmark.Model;
 
 namespace SimpleBookmark.Endpoints
 {
@@ -123,7 +124,11 @@ namespace SimpleBookmark.Endpoints
              */
             if(entity.QueryArgs.ContainsKey("export"))
             {
-                if (entity.Server.Accepts(ContentType.Html))
+                bool html = entity.Server.Accept.Contains("text/html");
+                bool csv = entity.Server.Accept.Contains("text/csv");
+                bool json = entity.Server.Accept.Contains("application/json");
+
+                if (html | csv | json)
                 {
                     //Get the collection of bookmarks
                     List<BookmarkEntry> list = Bookmarks.ListRental.Rent();
@@ -134,20 +139,41 @@ namespace SimpleBookmark.Endpoints
                     try
                     {
                         //Write the bookmarks as a netscape file and return the file
-                        ImportExportUtil.ExportToNetscapeFile(list, output);
-                        output.Seek(0, System.IO.SeekOrigin.Begin);
-                        return VirtualClose(entity, HttpStatusCode.OK, ContentType.Html, output);
+                        if (html)
+                        {
+                            ImportExportUtil.ExportToNetscapeFile(list, output);
+
+                            output.Seek(0, System.IO.SeekOrigin.Begin);
+                            return VirtualClose(entity, HttpStatusCode.OK, ContentType.Html, output);
+                        }
+                        else if(csv)
+                        {
+                            ImportExportUtil.ExportAsCsv(list, output);
+
+                            output.Seek(0, System.IO.SeekOrigin.Begin);
+                            return VirtualClose(entity, HttpStatusCode.OK, ContentType.Csv, output);
+                        }
+                        else if(json)
+                        {
+                            ImportExportUtil.ExportAsJson(list, output);
+
+                            output.Seek(0, System.IO.SeekOrigin.Begin);
+                            return VirtualClose(entity, HttpStatusCode.OK, ContentType.Json, output);
+                        }
                     }
                     catch
                     {
                         output.Dispose();
                         throw;
                     }
+                    finally
+                    {
+                        list.TrimExcess();
+                        Bookmarks.ListRental.Return(list);
+                    }
                 }
-                else
-                {
-                    return VirtualClose(entity, HttpStatusCode.NotAcceptable);
-                }
+
+                return VirtualClose(entity, HttpStatusCode.NotAcceptable);
             }
 
             //Get query parameters

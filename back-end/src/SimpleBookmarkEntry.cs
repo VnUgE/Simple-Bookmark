@@ -22,6 +22,9 @@
    */
 
 using System;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
 
 using VNLib.Plugins;
 using VNLib.Utils.Logging;
@@ -37,6 +40,7 @@ namespace SimpleBookmark
   
     public sealed class SimpleBookmarkEntry : PluginBase
     {
+
         ///<inheritdoc/>
         public override string PluginName { get; } = "SimpleBookmark";
 
@@ -49,7 +53,8 @@ namespace SimpleBookmark
             //Ensure database is created after a delay
             this.ObserveWork(() => this.EnsureDbCreatedAsync<SimpleBookmarkContext>(this), 1000);
 
-            Log.Information("Plugin loaded");
+            Log.Information("Plugin Loaded");
+            PrintHelloMessage();
         }
 
         ///<inheritdoc/>
@@ -61,6 +66,44 @@ namespace SimpleBookmark
         protected override void ProcessHostCommand(string cmd)
         {
             throw new NotImplementedException();
+        }
+
+        private void PrintHelloMessage()
+        {
+            const string template =
+@"
+******************************************************************************
+    Simple-Bookmark - A linkding inspired, self hosted, bookmark manager 
+    By Vaughn Nugent - vnpublic @proton.me
+    https://www.vaughnnugent.com/resources/software
+    License: GNU Affero General Public License v3.0
+    This application comes with ABSOLUTELY NO WARRANTY.
+
+    Documentation: https://www.vaughnnugent.com/resources/software/articles?tags=docs,_simple-bookmark
+    GitHub: https://github.com/VnUgE/simple-bookmark
+
+    Your server is now running at the following locations:{0}
+******************************************************************************";
+
+            string[] interfaces = HostConfig.GetProperty("virtual_hosts")
+                .EnumerateArray()
+                .Select(e =>
+                {
+                    JsonElement el = e.GetProperty("interface");
+                    string ipAddress = el.GetProperty("address").GetString()!;
+                    int port = el.GetProperty("port").GetInt32();
+                    return $"{ipAddress}:{port}";
+                })
+                .ToArray();
+
+            StringBuilder sb = new();
+            foreach (string intf in interfaces)
+            {
+                sb.Append("\n\t");
+                sb.AppendLine(intf);
+            }
+
+            Log.Information(template, sb);
         }
     }
 }
