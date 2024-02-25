@@ -1,0 +1,19 @@
+# https://taskfile.dev
+
+#Called by the vnbuild system to produce builds for my website
+#https://www.vaughnnugent.com/resources/software
+
+version: "3"
+
+tasks:
+
+  install:
+    internal: true
+    cmds:
+    #make the plugin directory
+    - cmd: powershell -Command "mkdir {{.DIR}} -Force"
+      ignore_error: true
+    - cd {{.DIR}} && powershell "{{ .PROJECT_DIR }}/install.ps1" -BaseUrl {{.BUILDS_URL}} -ModuleName {{.MODULE_NAME}} -ProjectName {{.PROJECT_NAME}} -FileName {{.FILE_NAME}}
+    - cd {{.DIR}} && tar -xzf {{.FILE_NAME}}
+    #remove the archive file
+    - cd {{.DIR}} && powershell -Command "rm {{.FILE_NAME}}"

@@ -9,8 +9,15 @@ vars:
   BUILDS_URL: https://www.vaughnnugent.com/public/resources/software/builds
 
 includes:
+  install:
+    taskfile: install.taskfile.yaml
+
   plugins:
     taskfile: plugins.taskfile.yaml
+
+  container:
+    dir: container  #always run from the container directory
+    taskfile: container/Taskfile.yaml
 
 tasks:
 
@@ -27,44 +34,37 @@ tasks:
   
     - task: install-plugins
     - task: install-webserver
+    
+    #run container build last
+    - task: container:build
 
   install-webserver:
     cmds:
-    #setup env
-    - task: create-env
-      vars:
-        TARGET_OS: win-x64
-
-    - task: create-env
-      vars:
-        TARGET_OS: linux-x64
-
-    - task: create-env
-      vars:
-        TARGET_OS: osx-x64
-
+    - for: [ win-x64, linux-x64, osx-x64 ]
+      task: create-env
+      vars: 
+        TARGET_OS: '{{.ITEM}}'
 
   postbuild_success:
     cmds:
     #make bin dir
     - cmd: powershell -Command "mkdir bin -Force"
       ignore_error: true
+    - for: [ win-x64, linux-x64, osx-x64 ]
+      task: pack
+      vars: 
+        TARGET_OS: '{{.ITEM}}'
 
-    - task: pack
-      vars:
-        TARGET_OS: win-x64
-    - task: pack
-      vars:
-        TARGET_OS: linux-x64
-    - task: pack
-      vars:
-        TARGET_OS: osx-x64
-
+    - task: container:postbuild_success
 
   install-plugins:
     cmds:
     #add plugins
     - task: plugins:all
+  
+  build-container:
+    cmds:
+     - task: container:build
     
   create-env:
     vars:
@@ -74,17 +74,9 @@ tasks:
     - cmd: powershell -Command "mkdir {{.BUILD_DIR}} -Force"
       ignore_error: true
     
-    #copy plugins
-    - cmd: powershell -Command "cp -Recurse -Force plugins {{.BUILD_DIR}}"
-
-    #copy wwwroot
-    - cmd: powershell -Command "cp -Recurse -Force dist {{.BUILD_DIR}}"
-
-    #copy libraries
-    - cmd: powershell -Command "cp -Recurse -Force lib {{.BUILD_DIR}}"
-
-    #copy config
-    - cmd: powershell -Command "cp -Recurse -Force config {{.BUILD_DIR}}"
+    #copy build files
+    - for: [ plugins, dist, lib, config ]
+      cmd: powershell -Command "cp -Recurse -Force {{.ITEM}} {{.BUILD_DIR}}"
 
     - task: get-webserver
       vars:
@@ -94,27 +86,14 @@ tasks:
   get-webserver:
     internal: true
     cmds:
-    - task: install
+    - task: install:install
       vars:
         PROJECT_NAME: 'VNLib.Webserver'
         MODULE_NAME: "VNLib.Webserver"
         FILE_NAME: "{{.TARGET_OS}}-release.tgz"
-        BUILD_DIR: '{{.BUILD_DIR}}/webserver'
+        DIR: '{{.BUILD_DIR}}/webserver'
 
     - cmd: powershell -Command "cp -Force ./config/config.json {{.BUILD_DIR}}/config.json"
-
-  install:
-    internal: true
-    vars:
-      DIR: '"{{.BUILD_DIR}}"'
-    cmds:
-    #make the plugin directory
-    - cmd: powershell -Command "mkdir {{.DIR}} -Force"
-      ignore_error: true
-    - cd {{.DIR}} && powershell "{{.USER_WORKING_DIR}}/install.ps1" -BaseUrl {{.BUILDS_URL}} -ModuleName {{.MODULE_NAME}} -ProjectName {{.PROJECT_NAME}} -FileName {{.FILE_NAME}}
-    - cd {{.DIR}} && tar -xzf {{.FILE_NAME}}
-    #remove the tar file
-    - cd {{.DIR}} && powershell -Command "rm {{.FILE_NAME}}"
  
   pack:
     internal: true
@@ -127,8 +106,7 @@ tasks:
   clean:
     ignore_error: true
     cmds:
-    - cmd: powershell -Command "rm -Recurse -Force ./build"
-    - cmd: powershell -Command "rm -Recurse -Force ./bin"
-    - cmd: powershell -Command "rm -Recurse -Force ./dist"
-    - cmd: powershell -Command "rm -Recurse -Force ./plugins"
-    - cmd: powershell -Command "rm -Recurse -Force ./lib"
+    - for: [ ./build, ./bin, ./dist, ./plugins, ./lib ]
+      cmd: powershell -Command "rm -Recurse -Force '{{.ITEM}}'"
+    
+    - task: container:clean

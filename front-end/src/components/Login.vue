@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import { computed, defineAsyncComponent } from 'vue'
 import { apiCall, useWait } from '@vnuge/vnlib.browser'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue'
 import UserPass from './Login/UserPass.vue'
 import PkiLogin from './Login/PkiLogin.vue'
+const AdminReg = defineAsyncComponent(() => import('./Login/AdminReg.vue'))
 
 const { waiting } = useWait();
 const store = useStore();
 const { loggedIn, siteTitle } = storeToRefs(store);
+
+const adminRegEnabled = computed(() => store.registation.status?.enabled && store.registation.status?.setup_mode);
 
 const logout = () => {
     apiCall(async () => {
@@ -20,7 +24,7 @@ const logout = () => {
 </script>
 <template>
      <section id="login-page" class="flex-auto">
-        <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-24">
+        <div class="flex flex-col items-center justify-center px-2 py-8 mx-auto sm:px-6 lg:py-24">
             <div class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
                 <span class="p-2 mr-2 bg-blue-500 rounded-full">
                     <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 14 20">
@@ -35,11 +39,19 @@ const logout = () => {
                     <div v-if="!loggedIn">
                         <!-- password/username login -->
                         <h1 class="text-xl font-bold leading-tight tracking-tight text-center text-gray-900 md:text-2xl dark:text-white">
-                            Sign in to your account
+                            {{ adminRegEnabled ? "Create admin account" : "Sign in to your account" }}
                         </h1>
             
-                        <TabGroup class="w-full" as="div">
+                        <TabGroup class="w-full" as="div">                           
                             <TabList as="ul" class="flex flex-wrap justify-center -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                                 <Tab v-if="adminRegEnabled" as="template" v-slot="{ selected }" class="cursor-pointer me-2">
+                                    <div class="tab group" :class="{ selected }">
+                                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z"/>
+                                        </svg>
+                                        Create
+                                    </div>
+                                </Tab>
                                 <Tab as="template" v-slot="{ selected }" class="cursor-pointer me-2">
                                     <div class="tab group" :class="{ selected }">
                                         <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
@@ -58,6 +70,9 @@ const logout = () => {
                                 </Tab>
                             </TabList>
                             <TabPanels class="mt-4" as="div">
+                                <TabPanel v-if="adminRegEnabled" :unmount="false">
+                                    <AdminReg />
+                                </TabPanel>
                                 <TabPanel :unmount="false">
                                     <UserPass />
                                 </TabPanel>

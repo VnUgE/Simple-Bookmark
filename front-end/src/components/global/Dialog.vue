@@ -19,10 +19,10 @@ onClickOutside(dialog, () => get(open) ? cancel() : noop())
 <template>
     <!-- Main modal -->
     <Dialog :open="open" id="static-modal" data-modal-backdrop="static" tabindex="-1"
-        class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-10 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-20 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
 
-        <div class="relative w-full max-w-xl max-h-full p-4 mx-auto mt-2 md:mt-32">
+        <div class="relative w-full max-w-xl max-h-full p-4 mx-auto mt-[8rem] md:mt-32">
             <!-- Modal content -->
             <div class="relative bg-white rounded shadow dark:bg-gray-700" ref="dialog">
                 <!-- Modal header -->

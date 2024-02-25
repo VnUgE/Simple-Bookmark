@@ -49,6 +49,7 @@ namespace SimpleBookmark
         {
             //route the bm endpoint
             this.Route<BookmarkEndpoint>();
+            this.Route<BmAccountEndpoint>();
 
             //Ensure database is created after a delay
             this.ObserveWork(() => this.EnsureDbCreatedAsync<SimpleBookmarkContext>(this), 1000);
@@ -81,7 +82,7 @@ namespace SimpleBookmark
 
     Documentation: https://www.vaughnnugent.com/resources/software/articles?tags=docs,_simple-bookmark
     GitHub: https://github.com/VnUgE/simple-bookmark
-
+    {warning}
     Your server is now running at the following locations:{0}
 ******************************************************************************";
 
@@ -103,7 +104,14 @@ namespace SimpleBookmark
                 sb.AppendLine(intf);
             }
 
-            Log.Information(template, sb);
+            //See if setup mode is enabled
+            bool setupMode = HostArgs.HasArgument("--setup") && !HostArgs.HasArgument("--disable-registation");
+
+            string warnMessage = setupMode
+                ? "\nWARNING: This server is in setup mode. Account registation is open to all users.\n"
+                : string.Empty;
+
+            Log.Information(template, warnMessage, sb);
         }
     }
 }

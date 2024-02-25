@@ -32,6 +32,7 @@ namespace SimpleBookmark.Model
     internal sealed partial class BookmarkEntry : DbModelBase, IUserEntity, IJsonOnDeserialized
     {
         [Key]
+        [MaxLength(64)]
         public override string Id { get; set; }
 
         public override DateTime Created { get; set; }
@@ -39,12 +40,13 @@ namespace SimpleBookmark.Model
         public override DateTime LastModified { get; set; }
 
         [JsonIgnore]
+        [MaxLength(64)]
         public string? UserId { get; set; }
 
-        [MaxLength(100)]
+        [MaxLength(200)]
         public string? Name { get; set; }
 
-        [MaxLength(200)]
+        [MaxLength(300)]
         public string? Url { get; set; }
 
         [MaxLength(500)]
@@ -53,7 +55,7 @@ namespace SimpleBookmark.Model
         //Json flavor
         [NotMapped]
         [JsonPropertyName("Tags")]
-        public string[]? JsonTags
+        public string?[]? JsonTags
         {
             get => Tags?.Split(',');
             set => Tags = value is null ? null : string.Join(',', value);
@@ -61,7 +63,7 @@ namespace SimpleBookmark.Model
 
         //Database flavor as string
         [JsonIgnore]
-        [MaxLength(100)]
+        [MaxLength(100)]        
         public string? Tags { get; set; }
 
         public static IValidator<BookmarkEntry> GetValidator()
@@ -71,21 +73,29 @@ namespace SimpleBookmark.Model
             validator.RuleFor(p => p.Name)
                 .NotEmpty()
                 .Matches(@"^[a-zA-Z0-9_\-\|\., ]+$", RegexOptions.Compiled)
-                .MaximumLength(100);
+                .MaximumLength(200);
 
             validator.RuleFor(p => p.Url)
                 .NotEmpty()
                 .Matches(@"^https?://", RegexOptions.Compiled)
-                .MaximumLength(200);
+                .MaximumLength(300);
 
+            //Description should be valid utf-8 and not exceed 500 characters
             validator.RuleFor(p => p.Description)
+                .Matches(@"^[\u0000-\u007F]+$", RegexOptions.Compiled).When(p => !string.IsNullOrEmpty(p.Description))
+                .WithMessage("Description contains illegal unicode characters")
                 .MaximumLength(500);
 
-            //Tags must be non-empty and alphanumeric only, no spaces
+            //Tags must be non-empty and alphanumeric only, no spaces, only if tags are not null
             validator.RuleForEach(p => p.JsonTags)
-                .NotNull()
-                .NotEmpty()
-                .Matches(@"^[a-zA-Z0-9]+$", RegexOptions.Compiled);
+                 .Matches(@"^[a-zA-Z0-9\-]+$", RegexOptions.Compiled).When(v => v.JsonTags is not null && v.JsonTags.Length > 0, ApplyConditionTo.CurrentValidator)
+                 .WithMessage("Tags for this bookmark contain invalid characters -> {PropertyValue}")
+                 .Length(1, 64).When(v => v.JsonTags is not null && v.JsonTags.Length > 0, ApplyConditionTo.CurrentValidator)
+                 .WithMessage("One or more tags for this bookmark are too long");
+
+            validator.RuleFor(p => p.Tags)
+                .MaximumLength(100)
+                .WithMessage("You have too many tags or tag names are too long");
 
             return validator;
         }
@@ -96,6 +106,20 @@ namespace SimpleBookmark.Model
             Name = Name?.Trim();
             Url = Url?.Trim();
             Description = Description?.Trim();
+            
+            //Trim tags array
+            if(JsonTags != null)
+            {
+                for (int i = 0; i < JsonTags.Length; i++)
+                {
+                    JsonTags[i] = JsonTags[i].Trim();
+                }
+            }
+
+            if(string.IsNullOrWhiteSpace(Tags))
+            {
+                Tags = null;
+            }
         }
     }
 }

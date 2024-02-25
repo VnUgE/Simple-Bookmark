@@ -5,22 +5,29 @@
 
 version: "3"
 
+includes:
+  install:
+    taskfile: install.taskfile.yaml
+
 vars:
 
 tasks:
 
   all:
+    deps:
+     - install-accounts
+     - install-router
+     - install-sessions
+     - install-vncache
+     - install-vncache-sessions
+     - install-users
+     - install-sqlite
+     - install-argon2-lib
+     - install-compression
+     - install-compressor-lib 
+
     cmds:
     - echo "Installing and configuring plugins and UI"
-    - task: install-accounts
-    - task: install-router
-    - task: install-sessions
-    - task: install-vncache
-    - task: install-vncache-sessions
-    - task: install-users
-    - task: install-argon2-lib
-    - task: install-compression
-    - task: install-compressor-lib
     - task: build-bookmarks
 
   build-bookmarks:
@@ -39,7 +46,7 @@ tasks:
   install-accounts:
     cmds:
     #install accounts plugin
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'VNLib.Plugins.Essentials.Accounts'
         MODULE_NAME: "Plugins.Essentials"
@@ -49,7 +56,7 @@ tasks:
   install-router:
     cmds:
     #install router plugin
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'VNLib.Plugins.Essentials.Content.Routing'
         MODULE_NAME: "Plugins.Essentials"
@@ -59,7 +66,7 @@ tasks:
   install-sessions:
     cmds:
     #install sessions plugin
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'SessionProvider'
         MODULE_NAME: "VNLib.Plugins.Sessions"
@@ -69,7 +76,7 @@ tasks:
   install-users:
     cmds:
     #install users plugin
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'VNLib.Plugins.Essentials.Users'
         MODULE_NAME: "VNLib.Plugins.Essentials.Users"
@@ -79,7 +86,7 @@ tasks:
   install-vncache:
     cmds:
     #install vncache global cache provider plugin
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'VNLib.Data.Caching.Providers.VNCache'
         MODULE_NAME: "VNLib.Data.Caching"
@@ -89,17 +96,27 @@ tasks:
   install-vncache-sessions:
     cmds:
     #install vncache-web-sessions plugin
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'VNLib.Plugins.Sessions.VNCache'
         MODULE_NAME: "VNLib.Plugins.Sessions"
         FILE_NAME: "release.tgz"
         DIR: './plugins/assets/VNLib.Plugins.Sessions.VNCache'
 
+  install-sqlite:
+    cmds:
+    #install SQLite asset package
+    - task: install:install
+      vars:
+        PROJECT_NAME: 'VNLib.Plugins.Extensions.Loading.Sql.SQLite'
+        MODULE_NAME: "VNLib.Plugins.Extensions"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite'
+
   install-compression:
     cmds:
     #install compression plugin
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'VNLib.Net.Compression'
         MODULE_NAME: "VNLib.Core"
@@ -109,7 +126,7 @@ tasks:
   install-compressor-lib:
     cmds:
     #install compressor plugin
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'vnlib_compress'
         MODULE_NAME: "VNLib.Core"
@@ -119,7 +136,7 @@ tasks:
   install-argon2-lib:
     cmds:
     #install the argon2 binary for Windows
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'phc-winner-argon2'
         MODULE_NAME: "VNLib.Core"
@@ -127,7 +144,7 @@ tasks:
         DIR: './lib/argon2'
 
     #install the argon2 source code package for Linux and Mac
-    - task: install-plugin
+    - task: install:install
       vars:
         PROJECT_NAME: 'phc-winner-argon2'
         MODULE_NAME: "VNLib.Core"
@@ -135,23 +152,7 @@ tasks:
         DIR: './lib/argon2'
 
     #remove unneeded files
-    - cmd: powershell -Command "rm ./lib/argon2/man -Recurse"
-      ignore_error: true
-    - cmd: powershell -Command "rm ./lib/argon2/latex -Recurse"
-      ignore_error: true
-    - cmd: powershell -Command "rm ./lib/argon2/kats -Recurse"
-      ignore_error: true
-    - cmd: powershell -Command "rm ./lib/argon2/argon2-specs.pdf"
-      ignore_error: true
-    - cmd: powershell -Command "rm ./lib/argon2/package.json"
+    - for: [ man, latex, kats, argon2-specs.pdf, package.json ]
+      cmd: powershell -Command "rm ./lib/argon2/{{.ITEM}} -Recurse"
       ignore_error: true
 
-  install-plugin:
-    cmds:
-    #make the plugin directory
-    - cmd: powershell -Command "mkdir {{.DIR}} -Force"
-      ignore_error: true
-    - cd {{.DIR}} && powershell "{{.USER_WORKING_DIR}}/install.ps1" -BaseUrl {{.BUILDS_URL}} -ModuleName {{.MODULE_NAME}} -ProjectName {{.PROJECT_NAME}} -FileName {{.FILE_NAME}}
-    - cd {{.DIR}} && tar -xzf {{.FILE_NAME}} 
-    #remove the archive file 
-    - cd {{.DIR}} && powershell -Command "rm {{.FILE_NAME}}"

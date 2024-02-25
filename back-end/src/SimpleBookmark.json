@@ -1,16 +1,22 @@
 ﻿{
 
   //Comments are allowed
-  "debug": false,
+  "debug": false, //Enables obnoxious debug logging
 
   "bm_endpoint": {
 
-    "path": "/bookmarks",  //Path for the bookmarks endpoint
+    "path": "/bookmarks", //Path for the bookmarks endpoint
 
     "config": {
-      "max_limit": 100,     //Max results per page
-      "default_limit": 20,  //Default results per page
-      "user_quota": 5000    //Max bookmarks per user
+      "max_limit": 100, //Max results per page
+      "default_limit": 20, //Default results per page
+      "user_quota": 5000 //Max bookmarks per user
     }
+  },
+
+  "registration": {
+    "path": "/register", //Path for the registration endpoint
+    "token_lifetime_mins": 360, //Token lifetime in minutes
+    "key_regen_interval_mins": 3600 //Signing key regeneration interval in minutes
   }
 }

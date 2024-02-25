@@ -15,7 +15,7 @@
 
 import { useSession, useAutoHeartbeat } from "@vnuge/vnlib.browser";
 import { toRefs, set, watchDebounced, useLocalStorage } from "@vueuse/core";
-import { noop, toSafeInteger, toString, defaults } from "lodash-es";
+import { toSafeInteger, toString, defaults } from "lodash-es";
 import { defineStore } from "pinia";
 import { computed, shallowRef, watch } from "vue";
 
@@ -53,7 +53,8 @@ export enum TabId{
     Bookmarks,
     Profile,
     Settings,
-    Login
+    Login,
+    Register
 }
 
 /**
@@ -80,7 +81,13 @@ export const useStore = defineStore('main', () => {
     })
 
     //If not logged in, redirect to login tab
-    watch(loggedIn, (loggedIn) => loggedIn ? noop() : set(activeTab, TabId.Login), { immediate: true })
+    watch(loggedIn, (li) =>{
+        if (li || activeTab.value == TabId.Register){
+            return;
+        }
+
+        set(activeTab, TabId.Login);
+    }, { immediate: true })
 
     //Setup heartbeat for 5 minutes
     useAutoHeartbeat(shallowRef(5 * 60 * 1000), autoHeartbeat)

@@ -29,6 +29,7 @@ import { profilePlugin } from './store/userProfile'
 import { mfaSettingsPlugin } from './store/mfaSettingsPlugin'
 import { socialMfaPlugin } from './store/socialMfaPlugin'
 import { bookmarkPlugin } from './store/bookmarks'
+import { registationPlugin } from './store/registation';
 
 //Setup the vnlib api
 configureApi({
@@ -69,6 +70,7 @@ store.use(profilePlugin('/account/profile'))
     .use(socialMfaPlugin())
     //Add the oauth2 apps plugin
     .use(bookmarkPlugin('/bookmarks'))
+    .use(registationPlugin('/register'))
     //Setup oauth apps plugin (disabled for now)
     //.use(oauth2AppsPlugin('/oauth/apps', '/oauth/scopes'))
 

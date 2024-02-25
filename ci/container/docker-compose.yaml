@@ -1,0 +1,45 @@
+#Copyright (c) Vaughn Nugent
+#Licensed under the GNU AGPLv3
+
+version: '3.6'
+
+services:
+  simple-bookmark:
+    image: vnuge/simple-bookmark
+    container_name: simple-bookmark
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./assets:/app/usr/assets:ro
+      - ./ssl:/app/ssl:ro
+    ports:
+      - 8080:8080
+    environment:
+      MAX_BOOKMARKS: "5000"
+      #SQL Config
+      SQL_LIB_PATH: "VNLib.Plugins.Extensions.Sql.SQLite.dll"
+      SQL_CONNECTION_STRING: "Data Source=data/simple-bookmark.db;"
+      #HC Vault
+      HC_VAULT_ADDR: ""
+      HC_VAULT_TOKEN: ""
+      #VNCACHE (default to memory only)
+      CACHE_ASM_PATH: "VNLib.Data.Caching.Providers.VNCache.dll"
+      MEMCACHE_ONLY: "true"
+      REDIS_CONNECTION_STRING: ""
+      VNCACHE_INITIAL_NODES: "[]"
+      #ACCOUNTS
+      MAX_LOGIN_ATTEMPS: "10"
+
+      #SECRETS
+      PASSWORD_PEPPER: ""
+      DATABASE_PASSWORD: ""
+      REDIS_PASSWORD: ""
+      VNCACHE_CLIENT_PRIVATE_KEY: ""
+      VNCACHE_CACHE_PUBLIC_KEY: ""
+
+      #HTTP
+      HTTP_DOWNSTREAM_SERVERS: "[]"
+      #SSL_JSON: '{"cert": "ssl/cert.pem", "privkey":"ssl/priv.pem"}'
+
+      SERVER_ARGS: "--input-off"
+

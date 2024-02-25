@@ -16,17 +16,16 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using SimpleBookmark.Model;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using VNLib.Utils.IO;
 
-
+using SimpleBookmark.Model;
 
 namespace SimpleBookmark
 {
-    internal static class ImportExportUtil
+    internal static partial class ImportExportUtil
     {
         /// <summary>
         /// Exports a colletion of bookmarks to a netscape bookmark file
@@ -78,7 +77,7 @@ namespace SimpleBookmark
         }
 
         //Remove illegal characters from a string, ", \, and control characters
-        private static readonly Regex _illegalChars = new("[\"\\p{Cc}]", RegexOptions.Compiled);
+        private static readonly Regex _illegalChars = GetIllegalCharsReg();
 
         private static string? Escape(string? input)
         {
@@ -140,5 +139,8 @@ namespace SimpleBookmark
 
             writer.WriteEndArray();
         }
+
+        [GeneratedRegex("[\"\\p{Cc}]", RegexOptions.Compiled)]
+        private static partial Regex GetIllegalCharsReg();
     }
 }

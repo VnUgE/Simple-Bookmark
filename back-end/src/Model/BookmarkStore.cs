@@ -22,15 +22,18 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using VNLib.Utils;
+using VNLib.Plugins;
 using VNLib.Plugins.Extensions.Data;
 using VNLib.Plugins.Extensions.Loading;
 using VNLib.Plugins.Extensions.Data.Abstractions;
-
+using VNLib.Plugins.Extensions.Loading.Sql;
 
 namespace SimpleBookmark.Model
 {
-    internal sealed class BookmarkStore(IAsyncLazy<DbContextOptions> dbOptions) : DbStore<BookmarkEntry>
+    internal sealed class BookmarkStore(PluginBase plugin) : DbStore<BookmarkEntry>
     {
+        private readonly IAsyncLazy<DbContextOptions> dbOptions = plugin.GetContextOptionsAsync();
+
         ///<inheritdoc/>
         public override IDbQueryLookup<BookmarkEntry> QueryTable { get; } = new BookmarkQueryLookup();
 
@@ -52,6 +55,8 @@ namespace SimpleBookmark.Model
 
         public async Task<BookmarkEntry[]> SearchBookmarksAsync(string userId, string? query, string[] tags, int limit, int page, CancellationToken cancellation)
         {
+            BookmarkEntry[] results;
+
             ArgumentNullException.ThrowIfNull(userId);
             ArgumentNullException.ThrowIfNull(tags);
             ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, 0);
@@ -59,36 +64,67 @@ namespace SimpleBookmark.Model
 
             //Init new db connection
             await using SimpleBookmarkContext context = new(dbOptions.Value);
-            await context.OpenTransactionAsync(cancellation);
 
-            //Start with userid 
+            //Build the query starting with the user's bookmarks
             IQueryable<BookmarkEntry> q = context.Bookmarks.Where(b => b.UserId == userId);
+
+            //reduce result set by search query first
+            if (!string.IsNullOrWhiteSpace(query))
+            {               
+                q = WithSearch(q, query);
+            }
+            
+            q = q.OrderByDescending(static b => b.Created);
+
+            /*
+              *  For some databases server-side tag filtering is not supported.
+              *  Client side evaluation must be used to finally filter the results.
+              *  
+              *  I am attempting to reduce the result set as much as possible on server-side
+              *  evaluation before pulling the results into memory. So search, ordering and
+              *  first tag filtering is done on server-side. The final tag filtering is done
+              *  for multiple tags on client-side along with pagination. For bookmarks, I expect
+              *  the result set to at worst double digits for most users, so this should be fine.
+              *  
+              */
 
             if (tags.Length > 0)
             {
-                //if tags are set, only return bookmarks that match the tags
-                q = q.Where(b => b.Tags != null && tags.All(t => b.Tags!.Contains(t)));
+             
+                //filter out bookmarks that do not have any tags and reduce by the first tag
+                q = q.Where(static b => b.Tags != null && b.Tags.Length > 0)
+                    .Where(b => EF.Functions.Like(b.Tags, $"%{tags[0]}%"));
             }
 
-            if (!string.IsNullOrWhiteSpace(query))
+            if(tags.Length > 1)
             {
-                //if query is set, only return bookmarks that match the query
-                q = q.Where(b => EF.Functions.Like(b.Name, $"%{query}%") || EF.Functions.Like(b.Description, $"%{query}%"));
+                //Finally pull all results into memory
+                BookmarkEntry[] bookmarkEntries = await q.ToArrayAsync(cancellation);
+
+                //filter out bookmarks that do not have all requested tags, then skip and take the requested page
+                results = bookmarkEntries.Where(b => tags.All(p => b.JsonTags!.Contains(p)))
+                    .Skip(page * limit)
+                    .Take(limit)
+                    .ToArray();
             }
-
-            //return bookmarks in descending order of creation
-            q = q.OrderByDescending(static b => b.Created);
-
-            //return only the requested page
-            q = q.Skip(page * limit).Take(limit);
-
-            //execute query
-            BookmarkEntry[] results = await q.ToArrayAsync(cancellation);
+            else
+            {
+                //execute server-side query
+                results = await q.Skip(page * limit)
+                    .Take(limit)
+                    .ToArrayAsync(cancellation);               
+            }           
 
             //Close db and commit transaction
             await context.SaveAndCloseAsync(true, cancellation);
 
             return results;
+        }
+
+        private static IQueryable<BookmarkEntry> WithSearch(IQueryable<BookmarkEntry> q, string query)
+        {
+            //if query is set, only return bookmarks that match the query
+            return q.Where(b => EF.Functions.Like(b.Name, $"%{query}%") || EF.Functions.Like(b.Description, $"%{query}%"));
         }
 
         public async Task<string[]> GetAllTagsForUserAsync(string userId, CancellationToken cancellation)
@@ -97,8 +133,7 @@ namespace SimpleBookmark.Model
 
             //Init new db connection
             await using SimpleBookmarkContext context = new(dbOptions.Value);
-            await context.OpenTransactionAsync(cancellation);
-
+            
             //Get all tags for the user
             string[] tags = await context.Bookmarks
                 .Where(b => b.UserId == userId)
@@ -116,11 +151,19 @@ namespace SimpleBookmark.Model
                 .ToArray();
         }
 
+        public async Task<ERRNO> DeleteAllForUserAsync(string userId, CancellationToken cancellation)
+        {
+            await using SimpleBookmarkContext context = new(dbOptions.Value);
+
+            context.Bookmarks.RemoveRange(context.Bookmarks.Where(b => b.UserId == userId));
+
+            return await context.SaveAndCloseAsync(true, cancellation);
+        }
+
         public async Task<ERRNO> AddBulkAsync(IEnumerable<BookmarkEntry> bookmarks, string userId, DateTimeOffset now, CancellationToken cancellation)
         {
             //Init new db connection
             await using SimpleBookmarkContext context = new(dbOptions.Value);
-            await context.OpenTransactionAsync(cancellation);
 
             //Setup clean bookmark instances
             bookmarks = bookmarks.Select(b => new BookmarkEntry
@@ -162,8 +205,7 @@ namespace SimpleBookmark.Model
             public IQueryable<BookmarkEntry> GetSingleQueryBuilder(IDbContextHandle context, params string[] constraints)
             {
                 string bookmarkId = constraints[0];
-                string userId = constraints[1];
-               
+                string userId = constraints[1];               
 
                 return from b in context.Set<BookmarkEntry>()
                        where b.UserId == userId && b.Id == bookmarkId

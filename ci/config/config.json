@@ -84,6 +84,7 @@
         "X-Content-Type-Options": "nosniff",
         "X-Xss-Protection": "1; mode=block",
         "X-Frame-Options": "DENY",
+        "Server":"VNLib.Webserver",
         "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; frame-src 'none'; object-src 'none'; referrer no-referrer-when-downgrade; upgrade-insecure-requests; block-all-mixed-content;"
       },
 
@@ -125,7 +126,7 @@
     "reload_delay_sec": 2,
     "path": "plugins",
     "config_dir": "config",
-    "assets": "plugins/assets"
+    "assets": "plugins/assets/"
   },
 
   "disabled sys_log": {
@@ -148,15 +149,9 @@
 
   //Sql for the users database
   "sql": {
-    "db_type": "sqlite", //mysql, mssql(default), sqlite
-    "source": "simple-bookmark.db" //For sqlite only
-
-    //"hostname": "example.com",
-    //"username": "simple-bookmark",
-    //"catalog": "simple-bookmark",
-    //"min_pool_size": 5,
-    //"ms_security": false
-    //"trust_cert": false
+    "debug": false,
+    "provider": "VNLib.Plugins.Extensions.Sql.SQLite.dll",
+    "source": "simple-bookmark.db" //For sqlite only 
   },
 
   //caching should be setup globally after VNCache #78a47dd

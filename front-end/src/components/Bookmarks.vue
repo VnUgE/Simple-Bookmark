@@ -5,10 +5,10 @@ import { get, set, formatTimeAgo, useToggle, useTimestamp, useFileDialog, asyncC
 import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, minLength, helpers } from '@vuelidate/validators';
 import { apiCall, useConfirm, useGeneralToaster, useVuelidateWrapper, useWait } from '@vnuge/vnlib.browser';
-import { clone, cloneDeep, join, defaultTo, every, filter, includes, isEmpty, isEqual, first, isString, chunk, map, forEach } from 'lodash-es';
+import { clone, cloneDeep, join, defaultTo, every, filter, includes, isEmpty, isEqual, first, isString, chunk, map, forEach, isNil } from 'lodash-es';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { parseNetscapeBookmarkString } from './Boomarks/util.ts';
-import type { Bookmark, BookmarkError } from '../store/bookmarks';
+import type { BatchUploadResult, Bookmark, BookmarkError } from '../store/bookmarks';
 import AddOrUpdateForm from './Boomarks/AddOrUpdateForm.vue';
 const Dialog = defineAsyncComponent(() => import('./global/Dialog.vue'));
 
@@ -27,7 +27,7 @@ const { copy } = useClipboard()
 //Refresh on page load
 store.bookmarks.refresh();
 
-const safeNameRegex = /^[a-zA-Z0-9_\-\|\. ]*$/;
+const safeNameRegex = /^[a-zA-Z0-9_\-\|\., ]*$/;
 const safeUrlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
 const safeTagRegex = /^[a-zA-Z0-9-_]*$/;
 
@@ -38,19 +38,19 @@ const addOrEditValidator = (buffer: Ref<Partial<Bookmark>>) => {
             required: helpers.withMessage('Name cannot be empty', required),
             safeName: helpers.withMessage('Bookmark name contains illegal characters', (value: string) => safeNameRegex.test(value)),
             minLength: helpers.withMessage('Name must be at least 1 characters', minLength(1)),
-            maxLength: helpers.withMessage('Name must have less than 100 characters', maxLength(100))
+            maxLength: helpers.withMessage('Name must have less than 200 characters', maxLength(200))
         },
         Url: {
             required: helpers.withMessage('Url cannot be empty', required),
             safeUrl: helpers.withMessage('Url contains illegal characters or is not a valid URL', (value: string) => safeUrlRegex.test(value)),
             minLength: helpers.withMessage('Url must be at least 1 characters', minLength(1)),
-            maxLength: helpers.withMessage('Url must have less than 200 characters', maxLength(200))
+            maxLength: helpers.withMessage('Url must have less than 300 characters', maxLength(300))
         },
         Description: {
-            maxLength: helpers.withMessage('Description must have less than 512 characters', maxLength(512))
+            maxLength: helpers.withMessage('Description must have less than 500 characters', maxLength(500))
         },
         Tags: {
-            maxLength: helpers.withMessage('Tags must have less than 32 characters', (tags: string[]) => every(tags, tag => tag.length < 32)),
+            maxLength: helpers.withMessage('Tags must have less than 64 characters', (tags: string[]) => every(tags, tag => tag.length < 64)),
             safeTag: helpers.withMessage('Tags contains illegal characters', (tags: string[]) => every(tags, tag => safeTagRegex.test(tag)))
         }
     }));
@@ -99,6 +99,7 @@ const bmDelete = async (bookmark: Bookmark) => {
 
 const isTagSelected = (tag: string, currentTags: MaybeRef<string[]>) => includes(get(currentTags), tag);
 const execSearch = () => store.bookmarks.query = get(localSearch);
+const clearTags = () => store.bookmarks.tags = [];
 const percentToWith = (percent: number) => ({ width: `${percent}%` });
 const printErroMessage = (error: BookmarkError) => {
    const errorMessages = map(error.errors, e=> e.message);
@@ -262,21 +263,38 @@ const upload = (() => {
             const bms = get(foundBookmarks);
 
             if(get(fixErrors)){
-                //try to fix names
-                forEach(bms, bm => {
-                    //If the name is not safe, replace all illegal characters
-                    if(!safeNameRegex.test(bm.Name)){
-                        bm.Name = bm.Name.replace(/[^a-zA-Z0-9_\-\|\. ]/g, ' ');
-                    }
-                })
 
                 //truncate name length
                 forEach(bms, bm => {
                     if(bm.Name.length > 100){
-                        bm.Name = bm.Name.substring(0, 100);
+                        bm.Name = bm.Name.substring(0, 199);
                     }
+
+                    //Replace illegal characters from name strings
+                    bm.Name = bm.Name.replace(/[^a-zA-Z0-9_\-\|\., ]/g, ' ');
+
+                    if(!isNil(bm.Description)){
+                        //truncate description
+                        if (bm.Description.length > 500) {
+                            bm.Description = bm.Description.substring(0, 499);
+                        }
+
+                        bm.Description = bm.Description.replace(/[^\x00-\x7F]/g, '');   //only allow utf-8 characters
+                    }
+
+                    //Try to remove illegal chars from tags
+                    bm.Tags = map(bm.Tags, tag => tag.replace(/[^a-zA-Z0-9\-]/g, ''));
                 })
             }
+
+            forEach(bms, bm => {
+                //Remove any empty tags
+                bm.Tags = filter(bm.Tags, tag => tag?.length > 0);
+
+                if(isEmpty(bm.Tags)){
+                    (bm.Tags as any) = null;
+                }
+            })
 
             const chunks = chunk(bms, 20);
 
@@ -290,9 +308,18 @@ const upload = (() => {
 
                 //See if an error occured
                 if(!isString(result) && 'invalid' in result){
+                    const { message, invalid } = result as BatchUploadResult;
+
                     //add errors to the error list
-                    errors.value.push(...result.invalid);
+                    errors.value.push(...invalid);
                     isError = true;
+                    
+                   if(message){
+                        toaster.error({
+                            title: `Batch ${i} upload failed due to an error`,
+                            text: message
+                        })
+                   }
                 }
 
                 if(isError){
@@ -382,14 +409,14 @@ const upload = (() => {
                         <MenuItems class="absolute z-10 bg-white divide-y divide-gray-100 rounded-b shadow right-2 lg:left-0 min-w-32 lg:end-0 dark:bg-gray-700">
                             <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
                                 <!-- Use the `active` state to conditionally style the active item. -->
-                                <MenuItem as="template" v-slot="{ active }">
+                                <MenuItem as="template" v-slot="{  }">
                                     <li>
                                         <button @click="add.open()" class="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                             Manual
                                         </button>
                                     </li>
                                 </MenuItem>
-                                <MenuItem as="template" v-slot="{ active }">
+                                <MenuItem as="template" v-slot="{  }">
                                     <li>
                                         <button @click="upload.open()" class="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                             Upload html
@@ -402,7 +429,7 @@ const upload = (() => {
                 </Menu>
             </div>
         </div>
-        <div class="grid flex-auto grid-cols-4 gap-8 mt-4 max-w-[60rem] mx-auto w-full">
+        <div class="grid flex-auto grid-cols-4 gap-8 sm:mt-4 max-w-[60rem] mx-auto w-full">
                 
             <div class="col-span-4 lg:col-span-3">
 
@@ -414,7 +441,7 @@ const upload = (() => {
                     <span class="sr-only">Loading...</span>
                 </div>
 
-                <div class="mx-auto mt-2">
+                <div class="mx-auto sm:mt-2">
                     <div class="grid h-full grid-cols-1 gap-1 leading-tight md:leading-normal">
                         
                         <div v-for="bm in bookmarks" :key="bm.Id" :id="join(['bm', bm.Id], '-')" class="w-full p-1">
@@ -476,7 +503,15 @@ const upload = (() => {
                 </div>
             </div>
             <div class="hidden lg:block">
-                <div class="mt-10">
+                <div class="h-10">
+                    <div class="ml-12">
+                        <button :disabled="isEmpty(selectedTags)" @click="clearTags()" 
+                        class="text-sm font-bold text-gray-600 duration-75 ease-linear disabled:opacity-0 hover:underline">
+                            Clear Tags
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-1">
                     <ul class="grid grid-cols-2">
                         <li v-for="tag in tags" :key="tag" class="text-sm">
                             <span

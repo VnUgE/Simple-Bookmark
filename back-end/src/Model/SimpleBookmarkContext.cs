@@ -22,12 +22,12 @@ using VNLib.Plugins.Extensions.Loading.Sql;
 namespace SimpleBookmark.Model
 {
 
-    internal sealed class SimpleBookmarkContext : TransactionalDbContext, IDbTableDefinition
+    internal sealed class SimpleBookmarkContext : DBContextBase, IDbTableDefinition
     {
 
         public DbSet<BookmarkEntry> Bookmarks { get; set; }
 
-        public DbSet<UserSettingsEntry> BmSettings { get; set; }
+        public DbSet<UserSettingsEntry> SbSettings { get; set; }
 
         public SimpleBookmarkContext(DbContextOptions options) : base(options)
         { }
@@ -56,7 +56,6 @@ namespace SimpleBookmark.Model
 
                 .WithColumn(p => p.Name)
                     .AllowNull(true)
-                    .MaxLength(100)
                     .Next()
 
                 .WithColumn(p => p.Version)
@@ -70,12 +69,10 @@ namespace SimpleBookmark.Model
 
                 .WithColumn(p => p.Description)
                     .AllowNull(true)
-                    .MaxLength(500)
                     .Next()
 
                 .WithColumn(p => p.Tags)
                     .AllowNull(true)
-                    .MaxLength(100)
                     .Next();
         }
 

@@ -31,6 +31,7 @@ using Microsoft.EntityFrameworkCore;
 using VNLib.Utils;
 using VNLib.Utils.IO;
 using VNLib.Utils.Memory;
+using VNLib.Utils.Extensions;
 using VNLib.Net.Http;
 using VNLib.Plugins;
 using VNLib.Plugins.Essentials;
@@ -38,7 +39,6 @@ using VNLib.Plugins.Essentials.Accounts;
 using VNLib.Plugins.Essentials.Endpoints;
 using VNLib.Plugins.Essentials.Extensions;
 using VNLib.Plugins.Extensions.Loading;
-using VNLib.Plugins.Extensions.Loading.Sql;
 using VNLib.Plugins.Extensions.Data.Extensions;
 using VNLib.Plugins.Extensions.Validation;
 
@@ -60,9 +60,8 @@ namespace SimpleBookmark.Endpoints
             string? path = config.GetRequiredProperty("path", p => p.GetString()!);
             InitPathAndLog(path, plugin.Log);
 
-            //Init new bookmark store
-            IAsyncLazy<DbContextOptions> options = plugin.GetContextOptionsAsync();
-            Bookmarks = new BookmarkStore(options);
+            //Init bookmark store
+            Bookmarks = plugin.GetOrCreateSingleton<BookmarkStore>();
 
             //Load config
             BmConfig = config.GetRequiredProperty("config", p => p.Deserialize<BookmarkStoreConfig>()!);
@@ -342,7 +341,7 @@ namespace SimpleBookmark.Endpoints
             if (failOnInvalid)
             {
                 //Get any invalid entires and create a validation result
-                BookmarkError[] invalidEntires = sanitized.Select(b =>
+                BookmarkError[] invalidEntires = sanitized.Select(static b =>
                 {
                     ValidationResult result = BmValidator.Validate(b);
                     if(result.IsValid)
@@ -378,16 +377,24 @@ namespace SimpleBookmark.Endpoints
                 //Remove any invalid entires
                 sanitized = sanitized.Where(static b => BmValidator.Validate(b).IsValid);
             }
+            try
+            {
+                //Try to update the records
+                ERRNO result = await Bookmarks.AddBulkAsync(sanitized, entity.Session.UserID, entity.RequestedTimeUtc, entity.EventCancellation);
 
-            //Try to update the records
-            ERRNO result = await Bookmarks.AddBulkAsync(sanitized, entity.Session.UserID, entity.RequestedTimeUtc, entity.EventCancellation);
+                webm.Result = $"Successfully added {result} of {batch.Length} bookmarks";
+                webm.Success = true;
 
-            webm.Result = $"Successfully added {result} of {batch.Length} bookmarks";
-            webm.Success = true;
-
-            return VirtualClose(entity, webm, HttpStatusCode.OK);
+                return VirtualClose(entity, webm, HttpStatusCode.OK);
+            }
+            catch (DbUpdateException dbe) when(dbe.InnerException is not null)
+            {
+                //Set entire batch as an error
+                webm.Result = GetResultFromEntires(batch, dbe.InnerException.Message);
+                return VirtualOk(entity, webm);
+            }
         }
-
+       
         ///<inheritdoc/>
         protected override async ValueTask<VfReturnType> DeleteAsync(HttpEntity entity)
         {
@@ -418,10 +425,29 @@ namespace SimpleBookmark.Endpoints
             return VirtualClose(entity, webm, HttpStatusCode.OK);
         }
 
+        private static BatchUploadResult GetResultFromEntires(IEnumerable<BookmarkEntry> errors, string message)
+        {
+            BookmarkError[] invalidEntires = errors.Select(e => new BookmarkError
+            {
+                Errors = new object[] { new ValidationFailure(string.Empty, message) },
+                Subject = e
+            }).ToArray();
+
+            return new BatchUploadResult()
+            {
+                Errors = invalidEntires,
+                Message = message
+            };
+        }
+
+
         sealed class BatchUploadResult
         {
             [JsonPropertyName("invalid")]
             public BookmarkError[]? Errors { get; set; }
+
+            [JsonPropertyName("message")]
+            public string? Message { get; set; }
         }
 
         sealed class BookmarkError

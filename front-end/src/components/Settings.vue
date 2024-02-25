@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
 import { useStore } from '../store';
+import { defineAsyncComponent } from 'vue';
 import Oauth2Apps from './Settings/Oauth2Apps.vue';
 import PasswordReset from './Settings/PasswordReset.vue';
 import PkiSettings from './Settings/PkiSettings.vue';
 import TotpSettings from './Settings/TotpSettings.vue';
 import Bookmarks from './Settings/Bookmarks.vue';
+const Registation = defineAsyncComponent(() => import('./Settings/Registation.vue'));
 
 const store = useStore();
 const darkMode = useDark();
@@ -39,7 +41,7 @@ const darkMode = useDark();
                 </div>
             </div>
 
-             <div class="">
+            <div class="">
                 <h3 class="text-xl font-bold">Boomarks</h3>
 
                 <div class="relative mt-4">
@@ -61,7 +63,11 @@ const darkMode = useDark();
 
             <!-- Only load component if oauth2 plugin is enabled -->
             <div v-if="store.oauth2" class="">
-                  <Oauth2Apps />
+                <Oauth2Apps />
+            </div>
+
+            <div v-if="store.registation.status?.can_invite" class="mb-10">
+                <Registation />
             </div>
 
         </div>

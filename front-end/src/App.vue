@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { useStore, TabId } from './store';
-import { defineAsyncComponent } from 'vue';
-import { apiCall } from '@vnuge/vnlib.browser';
+import { computed, defineAsyncComponent } from 'vue';
 import { isEqual } from 'lodash-es';
 import { useDark } from '@vueuse/core';
 import SideMenuItem from './components/SideMenuItem.vue';
@@ -12,6 +11,7 @@ const Settings = defineAsyncComponent(() => import('./components/Settings.vue'))
 const Confirm = defineAsyncComponent(() => import('./components/global/ConfirmPrompt.vue'));
 const Alerts = defineAsyncComponent(() => import('./components/Alerts.vue'));
 const Login = defineAsyncComponent(() => import('./components/Login.vue'));
+const Registation = defineAsyncComponent(() => import('./components/Registation.vue'));
 const PasswordPrompt = defineAsyncComponent(() => import('./components/global/PasswordPrompt.vue'));
 
 const store = useStore();
@@ -20,12 +20,7 @@ const darkMode = useDark()
 
 store.setSiteTitle('Simple Bookmark')
 
-const logout = () => {
-  apiCall(async () => {
-    const { logout } = await store.socialOauth()
-    await logout()
-  })
-}
+const isSetupMode = computed(() => store.registation.status?.setup_mode === true)
 
 const showIf = (tabId: TabId, active: TabId) => isEqual(tabId, active)
 
@@ -39,7 +34,7 @@ const showIf = (tabId: TabId, active: TabId) => isEqual(tabId, active)
     <div id="app" class="min-h-screen pb-16 text-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white sm:pb-0">
       
       <div class="relative">
-          <div class="absolute z-50 right-10 top-10">
+          <div class="fixed z-50 right-10 top-10">
             <Alerts />
           </div>
       </div>
@@ -47,7 +42,7 @@ const showIf = (tabId: TabId, active: TabId) => isEqual(tabId, active)
       <Confirm />
       <PasswordPrompt />
 
-      <aside id="logo-sidebar" class="fixed top-0 left-0 z-10 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+      <aside id="logo-sidebar" class="fixed top-0 left-0 z-20 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
           <div class="flex flex-col h-full px-3 py-4 overflow-y-auto bg-white dark:bg-gray-800">
               <div class="flex-auto">
                   <a href="/" class="flex items-center ps-2.5 mb-5">
@@ -106,7 +101,14 @@ const showIf = (tabId: TabId, active: TabId) => isEqual(tabId, active)
         </div>
       </aside>
 
+      <div v-if="isSetupMode" class="relative mb-16 sm:mb-10">
+          <div class="fixed top-0 z-10 w-full p-2 text-center text-white bg-amber-600">
+              Setup mode is enabled. Restart the server without --setup flag to disable this warning
+          </div>
+      </div>
+
       <div class="h-full py-6 md:p-6 sm:ml-64">
+        
         <div v-if="showIf(TabId.Bookmarks, activeTab)" class="flex flex-col w-full h-full">
           <Bookmarks />
         </div>
@@ -117,6 +119,10 @@ const showIf = (tabId: TabId, active: TabId) => isEqual(tabId, active)
 
         <div v-if="showIf(TabId.Settings, activeTab)" class="flex w-full h-full">
           <Settings />
+        </div>
+
+        <div v-if="showIf(TabId.Register, activeTab)" class="flex w-full h-full">
+          <Registation/>
         </div>
       </div>
 

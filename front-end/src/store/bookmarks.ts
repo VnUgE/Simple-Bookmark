@@ -33,6 +33,7 @@ export interface Bookmark{
 
 export interface BatchUploadResult{
     readonly invalid: BookmarkError[]
+    readonly message?: string
 }
 
 export interface BookmarkError{

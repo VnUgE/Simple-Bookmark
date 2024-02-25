@@ -99,7 +99,7 @@ const onSubmit = async () => {
     </form>
     <form v-else class="space-y-4 md:space-y-6" action="#" @submit.prevent="onSubmit" :disabled="waiting">
         <fieldset>
-            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
+            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
             <input type="email" name="email" id="email" class="input" placeholder="name@company.com" required
                 v-model="v$.username.$model"
             >

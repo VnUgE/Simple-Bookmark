@@ -86,7 +86,7 @@ onReveal(m => message.value = defaultTo(m, {}));
             </form> 
         </div>
         <!-- Modal footer -->
-        <div class="flex items-center justify-end p-4 border-t border-gray-200 rounded-b md:p-5 dark:border-gray-600">
+        <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 rounded-b md:p-5 dark:border-gray-600">
             <button 
              @click="formSubmitted" 
              type="button"

@@ -33,9 +33,8 @@ namespace SimpleBookmark.Model
 
             //Init new db connection
             await using SimpleBookmarkContext context = new(dbOptions.Value);
-            await context.OpenTransactionAsync(cancellation);
 
-            UserSettingsEntry? settings = await context.BmSettings.FirstOrDefaultAsync(p => p.UserId == userId, cancellation);
+            UserSettingsEntry? settings = await context.SbSettings.FirstOrDefaultAsync(p => p.UserId == userId, cancellation);
 
             //Close db and commit transaction
             await context.SaveAndCloseAsync(true, cancellation);
@@ -50,10 +49,9 @@ namespace SimpleBookmark.Model
 
             //Init new db connection
             await using SimpleBookmarkContext context = new(dbOptions.Value);
-            await context.OpenTransactionAsync(cancellation);
 
             //Search for existing settings entry
-            UserSettingsEntry? existing = await context.BmSettings.FirstOrDefaultAsync(p => p.UserId == userId, cancellation);
+            UserSettingsEntry? existing = await context.SbSettings.FirstOrDefaultAsync(p => p.UserId == userId, cancellation);
 
             if (existing is null)
             {
