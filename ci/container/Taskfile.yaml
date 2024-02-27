@@ -1,13 +1,12 @@
 # https://taskfile.dev
 
-#Called by the vnbuild system to produce builds for my website
-#https://www.vaughnnugent.com/resources/software
+#This taskfile must be called from the CI taskfile, as it is part of the CI 
+#project and it's pipleine. This file will also be copied to the container image
+#and used to build the native libraries for the project.
 
 version: "3"
 
 vars:
-  BUILDS_URL: https://www.vaughnnugent.com/public/resources/software/builds
-  PACKAGE_FILE_NAME: "sb-alpine3.19-oci.tgz"
   INCLUDE_FILES: "Dockerfile, docker-compose.yaml"
 
 includes:
@@ -16,7 +15,6 @@ includes:
     optional: true #not needed for inside container build
 
 tasks:
-  
   #called from inside the container to build native libraries
   build-libs:
     vars:
@@ -29,8 +27,8 @@ tasks:
      - "{{.USER_WORKING_DIR}}/out/libvn_compress.so"
 
     cmds:
-      #build argon2 lib
-      - cd lib/argon2/ && task && cp build/libargon2.so {{.OUT_DIR}}/libargon2.so     
+      #build argon2 native library
+      - cd lib/argon2/ && task && cp build/libargon2.so {{.OUT_DIR}}/libargon2.so
       #build rpmalloc library
       - cd lib/vnlib_rpmalloc/ && task && cp build/libvn_rpmalloc.so {{.OUT_DIR}}/libvn_rpmalloc.so 
       #install zlib and brotli native libraries from the source repos (they dont have active releases anymore :()
@@ -38,32 +36,23 @@ tasks:
       - cd lib/third-party && git clone https://github.com/cloudflare/zlib.git
       - cd lib/third-party && git clone https://github.com/google/brotli.git  
       #build native compression lib and put in lib dir
-      - cd lib/vnlib_compress && cmake -B./build && cmake --build build/ --config Release && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so 
-
+      - cd lib/vnlib_compress && cmake -B./build && cmake --build build/ --config Release && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so
 
   #called from ci pipline to build the package
   build:
-    vars:
-      SQLITE_RUNTIMES: 'build/app/plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite/runtimes' 
     cmds:
+     # clean up the run.sh script to remove windows line endings in my wsl default instance
      - cmd: wsl dos2unix ./run.sh
-     #make build directory
-     - cmd: powershell -Command "mkdir build, build/app, build/app/config-templates/, build/app/static/ -Force"
-     #copy the existing linux-x64 build to the build folder
-     - cmd: powershell -Command "cp -Recurse -Force ../build/linux-x64/* build/app/"
-     #copy local scripts into the build folder
-     - cmd: powershell -Command "cp -Force run.sh, Taskfile.yaml build/app/"
-     - cmd: powershell -Command "cp -Force Dockerfile, docker-compose.yaml build/"    
-     - cmd: powershell -Command "cp -Force static/* build/app/static/"
-     - cmd: powershell -Command "cp -Force config-templates/* build/app/config-templates/"
+       platform: [ win-x64 ]
+
+     #init build image
+     - task: setup-container-image
+
      #remove the default config file as it's not needed in the container
-     - cmd: powershell -Command "rm -Force build/app/config.json"
-     - cmd: powershell -Command "rm -Force -Recurse build/app/config/"
+     - powershell -Command "rm -Force build/app/config.json"
+     - powershell -Command "rm -Force -Recurse build/app/config/"
   
-     #move the linux-musl-x64 directory out of assets before removing the rest of the runtimes and then move it back
-     - cmd: powershell -Command "mv {{.SQLITE_RUNTIMES}}/linux-musl-x64 build/linux-musl-x64"
-     - cmd: powershell -Command "rm -Recurse -Force {{.SQLITE_RUNTIMES}}" && powershell -Command "mkdir {{.SQLITE_RUNTIMES}}"
-     - cmd: powershell -Command "mv build/linux-musl-x64 {{.SQLITE_RUNTIMES}}/linux-musl-x64 "
+     - task: prune-sql-runtimes
 
      #install rpmalloc
      - task: install-rpmalloc-lib
@@ -72,12 +61,13 @@ tasks:
     cmds:
      #tar up the build directory and move it to the output bin directory
      - cmd: cd build/ && tar -czf ../../bin/{{.PACKAGE_FILE_NAME}} .
+     #clean up all the build files after build succeeds
+     - task: clean
 
   clean:
     ignore_error: true
     cmds:
     - cmd: powershell -Command "rm -Recurse -Force ./build"
-
 
   install-rpmalloc-lib:
     internal: true
@@ -89,3 +79,26 @@ tasks:
         MODULE_NAME: "VNLib.Core"
         FILE_NAME: "src.tgz"
         DIR: './build/app/lib/vnlib_rpmalloc'
+
+  setup-container-image:
+    internal: true
+    cmds:
+     #make build directory
+     - powershell -Command "mkdir build, build/app, build/app/config-templates/, build/app/static/ -Force"
+     #copy the existing linux-x64 build to the build folder, this will be the container base
+     - powershell -Command "cp -Recurse -Force ../build/linux-x64/* build/app/"
+     #copy local scripts and config data into the build folder
+     - powershell -Command "cp -Force run.sh, Taskfile.yaml build/app/"
+     - powershell -Command "cp -Force Dockerfile, docker-compose.yaml build/"
+     - powershell -Command "cp -Force static/* build/app/static/"
+     - powershell -Command "cp -Force config-templates/* build/app/config-templates/"
+
+  prune-sql-runtimes:
+    internal: true
+    vars:
+      SQLITE_RUNTIMES: 'build/app/plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite/runtimes' 
+    cmds:
+      #move the linux-musl-x64 directory out of assets before removing the rest of the runtimes and then move it back
+     - powershell -Command "mv {{.SQLITE_RUNTIMES}}/linux-musl-x64 build/linux-musl-x64"
+     - powershell -Command "rm -Recurse -Force {{.SQLITE_RUNTIMES}}" && powershell -Command "mkdir {{.SQLITE_RUNTIMES}}"
+     - powershell -Command "mv build/linux-musl-x64 {{.SQLITE_RUNTIMES}}/linux-musl-x64 "

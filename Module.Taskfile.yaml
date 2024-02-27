@@ -27,3 +27,7 @@ tasks:
   #clean hook
   clean:
     cmds:
+
+  dev-update:
+    cmds:
+     - cd front-end/ && npm update 

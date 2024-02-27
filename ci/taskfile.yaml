@@ -18,6 +18,9 @@ includes:
   container:
     dir: container  #always run from the container directory
     taskfile: container/Taskfile.yaml
+    vars:
+      BUILDS_URL: '{{.BUILDS_URL}}'
+      PACKAGE_FILE_NAME: "sb-alpine3.19-oci.tgz"  #the name of the output package file
 
 tasks:
 
@@ -30,7 +33,9 @@ tasks:
     #copy setup script for linux
     - cmd: powershell -Command "mkdir lib -Force"
       ignore_error: true
-    - cmd: powershell -Command "cp setup.sh lib/ -Force"
+    - cmd: wsl dos2unix ./setup.sh #convert the setup script to unix line endings for linux
+      platform: [ win-x64 ]
+    - powershell -Command "cp setup.sh lib/ -Force"
   
     - task: install-plugins
     - task: install-webserver
@@ -54,6 +59,11 @@ tasks:
       task: pack
       vars: 
         TARGET_OS: '{{.ITEM}}'
+
+    #cleanup unnecessary build files that clog up the pipeline
+    - for: [ build, plugins, dist, lib ]
+      cmd: powershell -Command "rm -Recurse '{{.ITEM}}'"
+      ignore_error: true
 
     - task: container:postbuild_success
 

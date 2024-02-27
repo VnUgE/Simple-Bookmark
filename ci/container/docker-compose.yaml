@@ -38,7 +38,7 @@ services:
       VNCACHE_CACHE_PUBLIC_KEY: ""
 
       #HTTP
-      HTTP_DOWNSTREAM_SERVERS: "[]"
+      HTTP_DOWNSTREAM_SERVERS: '[]'
       #SSL_JSON: '{"cert": "ssl/cert.pem", "privkey":"ssl/priv.pem"}'
 
       SERVER_ARGS: "--input-off"
