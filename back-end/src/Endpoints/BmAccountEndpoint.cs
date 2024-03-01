@@ -79,7 +79,7 @@ namespace SimpleBookmark.Endpoints
              * long term exposure of a signing key.
              * 
              */
-            AuthMan = new JwtAuthManager();
+            AuthMan = new JwtAuthManager(64);
 
             if(config.TryGetProperty("key_regen_interval_mins", p => p.GetTimeSpan(TimeParseType.Minutes), out TimeSpan regen))
             {
@@ -333,52 +333,39 @@ namespace SimpleBookmark.Endpoints
             return base.DeleteAsync(entity);
         }
 
-        private sealed class JwtAuthManager() : IIntervalScheduleable
+        private sealed class JwtAuthManager(int keySize) : IIntervalScheduleable
         {
             /*
              * Random signing keys are rotated on the configured expiration 
              * interval.
              */
 
-            private byte[] secretKey = RandomHash.GetRandomBytes(64);
+            private byte[] secretKey = RandomHash.GetRandomBytes(keySize);
 
             Task IIntervalScheduleable.OnIntervalAsync(ILogProvider log, CancellationToken cancellationToken)
             {
-                secretKey = RandomHash.GetRandomBytes(64);
+                secretKey = RandomHash.GetRandomBytes(keySize);
                 return Task.CompletedTask;
             }
 
-            public void SignJwt(JsonWebToken jwt)
-            {
-                if (ManagedHash.IsAlgSupported(HashAlg.BlAKE2B))
-                {
-                    jwt.Sign(secretKey, HashAlg.BlAKE2B);
-                }
-                else if (ManagedHash.IsAlgSupported(HashAlg.SHA3_256))
-                {
-                    jwt.Sign(secretKey, HashAlg.SHA3_256);
-                }
-                else
-                {
-                    //fallback to sha256
-                    jwt.Sign(secretKey, HashAlg.SHA256);
-                }
-            }
+            public void SignJwt(JsonWebToken jwt) => jwt.Sign(secretKey, GetHashAlg());
 
-            public bool VerifyJwt(JsonWebToken jwt)
+            public bool VerifyJwt(JsonWebToken jwt) => jwt.Verify(secretKey, GetHashAlg());
+
+            private static HashAlg GetHashAlg()
             {
                 if (ManagedHash.IsAlgSupported(HashAlg.BlAKE2B))
                 {
-                    return jwt.Verify(secretKey, HashAlg.BlAKE2B);
+                    return HashAlg.BlAKE2B;
                 }
                 else if (ManagedHash.IsAlgSupported(HashAlg.SHA3_256))
                 {
-                    return jwt.Verify(secretKey, HashAlg.SHA3_256);
+                    return HashAlg.SHA3_256;
                 }
                 else
                 {
                     //fallback to sha256
-                    return jwt.Verify(secretKey, HashAlg.SHA256);
+                    return HashAlg.SHA256;
                 }
             }
         }

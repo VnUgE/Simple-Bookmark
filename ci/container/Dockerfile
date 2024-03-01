@@ -54,6 +54,7 @@ ENV VNLIB_ARGON2_DLL_PATH=/app/lib/libargon2.so
 
 #set default env variables
 ENV MAX_BOOKMARKS=5000
+ENV REG_TOKEN_DURATION_MIN=360
 
 #SQL Config
 ENV SQL_LIB_PATH=VNLib.Plugins.Extensions.Sql.SQLite.dll

@@ -16,6 +16,7 @@ services:
       - 8080:8080
     environment:
       MAX_BOOKMARKS: "5000"
+      REG_TOKEN_DURATION_MIN: "360"  #6 hours
       #SQL Config
       SQL_LIB_PATH: "VNLib.Plugins.Extensions.Sql.SQLite.dll"
       SQL_CONNECTION_STRING: "Data Source=data/simple-bookmark.db;"

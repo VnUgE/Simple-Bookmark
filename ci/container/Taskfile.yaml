@@ -32,9 +32,7 @@ tasks:
       #build rpmalloc library
       - cd lib/vnlib_rpmalloc/ && task && cp build/libvn_rpmalloc.so {{.OUT_DIR}}/libvn_rpmalloc.so 
       #install zlib and brotli native libraries from the source repos (they dont have active releases anymore :()
-      - mkdir -p lib/third-party
-      - cd lib/third-party && git clone https://github.com/cloudflare/zlib.git
-      - cd lib/third-party && git clone https://github.com/google/brotli.git  
+      - cd lib/vnlib_compress/ && task && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so
       #build native compression lib and put in lib dir
       - cd lib/vnlib_compress && cmake -B./build && cmake --build build/ --config Release && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so
 
