@@ -1,5 +1,13 @@
 .btn{
-    @apply focus:ring-2 focus:outline-none font-medium rounded text-sm px-4 py-2 text-center text-white;
+    @apply focus:ring-2 focus:outline-none font-medium rounded text-sm px-2.5 py-2 text-center text-white;
+
+    &.sm{
+        @apply text-xs px-2 py-1;
+    }
+
+    &.lg{
+        @apply text-lg px-4 py-3;
+    }
 
     &.round{
         @apply rounded-full;

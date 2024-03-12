@@ -19,7 +19,7 @@ const darkMode = useDark();
         <h2 class="text-2xl font-bold">Settings</h2>
         <div class="flex flex-col w-full max-w-3xl gap-10 mt-3">
 
-            <div class="">
+            <div class="mb-6">
                 <h3 class="text-xl font-bold">
                     General
                 </h3>
@@ -41,7 +41,7 @@ const darkMode = useDark();
                 </div>
             </div>
 
-            <div class="">
+            <div class="mb-6">
                 <h3 class="text-xl font-bold">Boomarks</h3>
 
                 <div class="relative mt-4">
@@ -51,7 +51,7 @@ const darkMode = useDark();
 
             <PasswordReset />
 
-            <div class="">
+            <div class="mb-8">
                 <h3 class="text-xl font-bold">Multi Factor Auth</h3>
 
                 <div class="relative mt-4 py-2.5">
@@ -66,7 +66,7 @@ const darkMode = useDark();
                 <Oauth2Apps />
             </div>
 
-            <div v-if="store.registation.status?.can_invite" class="mb-10">
+            <div v-if="store.registation.status?.can_invite" class="mt-6 mb-10">
                 <Registation />
             </div>
 

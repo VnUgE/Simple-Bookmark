@@ -58,7 +58,7 @@ const onCancel = () => {
     <div class="">
 
         <div class="flex flex-row justify-between w-full">
-            <h3 class="text-xl font-bold">Registation</h3>
+            <h3 class="text-xl font-bold">Invite Links</h3>
 
             <div class="flex flex-row justify-end">
                 <button class="btn blue" @click="toggleOpen(true)">Invite User</button>

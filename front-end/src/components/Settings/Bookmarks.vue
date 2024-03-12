@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { apiCall, useWait } from '@vnuge/vnlib.browser';
 import { useStore, type DownloadContentType, TabId } from '../../store';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
-const { bookmarks } = useStore();
+const { bookmarks, websiteLookup } = useStore();
 
 const downloadAnchor = ref();
 const { waiting } = useWait()
+const curlSupported = computed(() => websiteLookup.isSupported);
 
 const downloadBookmarks = (contentType: DownloadContentType) => {
     apiCall(async () => {
@@ -58,8 +59,10 @@ javascript: (function() {
             </div>
             <p class="p-0.5 my-auto text-sm flex flex-row">
                 <span class="">
-                    <svg class="w-6 h-5 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4 4 4"/>
+                    <svg class="w-6 h-5 text-gray-800 dark:text-white" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5 12h14M5 12l4-4m-4 4 4 4" />
                     </svg>
                 </span>
                 <span>
@@ -72,47 +75,66 @@ javascript: (function() {
                 <MenuButton :disabled="waiting" class="flex items-center gap-3 btn light">
                     <div class="hidden lg:inline">Download</div>
                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V4M7 14H5a1 1 0 0 0-1 1v4c0 .6.4 1 1 1h14c.6 0 1-.4 1-1v-4c0-.6-.4-1-1-1h-2m-1-5-4 5-4-5m9 8h0"/>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 13V4M7 14H5a1 1 0 0 0-1 1v4c0 .6.4 1 1 1h14c.6 0 1-.4 1-1v-4c0-.6-.4-1-1-1h-2m-1-5-4 5-4-5m9 8h0" />
                     </svg>
                 </MenuButton>
-                    <transition
-                    enter-active-class="transition duration-100 ease-out"
-                    enter-from-class="transform scale-95 opacity-0"
-                    enter-to-class="transform scale-100 opacity-100"
+                <transition enter-active-class="transition duration-100 ease-out"
+                    enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100"
                     leave-active-class="transition duration-75 ease-out"
-                    leave-from-class="transform scale-100 opacity-100"
-                    leave-to-class="transform scale-95 opacity-0"
-                >
-                    <MenuItems class="absolute z-10 bg-white divide-y divide-gray-100 rounded-b shadow right-2 lg:left-0 min-w-32 lg:end-0 dark:bg-gray-700">
-                        <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
+                    leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+                    <MenuItems
+                        class="absolute z-10 bg-white divide-y divide-gray-100 rounded-b shadow right-2 lg:left-0 min-w-32 lg:end-0 dark:bg-gray-700">
+                        <ul class="py-2 text-sm text-gray-700 dark:text-gray-200"
+                            aria-labelledby="dropdownDefaultButton">
                             <!-- Use the `active` state to conditionally style the active item. -->
                             <MenuItem as="template" v-slot="{ }">
-                                <li>
-                                    <button @click="downloadBookmarks('text/html')" class="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                        HTML
-                                    </button>
-                                </li>
+                            <li>
+                                <button @click="downloadBookmarks('text/html')"
+                                    class="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    HTML
+                                </button>
+                            </li>
                             </MenuItem>
                             <MenuItem as="template" v-slot="{ }">
-                                <li>
-                                    <button @click="downloadBookmarks('text/csv')" class="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                        CSV
-                                    </button>
-                                </li>
+                            <li>
+                                <button @click="downloadBookmarks('text/csv')"
+                                    class="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    CSV
+                                </button>
+                            </li>
                             </MenuItem>
-                              <MenuItem as="template" v-slot="{ }">
-                                <li>
-                                    <button @click="downloadBookmarks('application/json')" class="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                        JSON
-                                    </button>
-                                </li>
+                            <MenuItem as="template" v-slot="{ }">
+                            <li>
+                                <button @click="downloadBookmarks('application/json')"
+                                    class="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    JSON
+                                </button>
+                            </li>
                             </MenuItem>
                         </ul>
                     </MenuItems>
                 </transition>
             </Menu>
         </div>
+        <div class="mt-3">
+            <h4 class="mb-2 font-bold">Features</h4>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Some features for Simple-Bookmark use tools and applications that are already installed on 
+                your server such as curl.
+            </p>
+            <div class="flex flex-row gap-2 mt-4">
+                <span class="w-3 h-3 my-auto rounded-full" :class="[curlSupported ? 'bg-green-500' : 'bg-amber-500']"></span>
+                <span class="my-auto font-bold">
+                    curl
+                </span>
+                <span class="my-auto text-sm text-gray-500 ms-4 dark:text-gray-400">
+                    Curl is used to fetch website details like title, description and tags.
+                    {{ curlSupported ? '(supported)' : '(not supported)' }}
+                </span>
+            </div>
+        </div>
     </div>
-    
+
     <a ref="downloadAnchor" class="hidden"></a>
 </template>

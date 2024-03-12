@@ -387,7 +387,6 @@ const upload = (() => {
                         <span class="sr-only">Search</span>
                     </button>
                 </form>
-
             </div>
 
             <div class="relative ml-3 md:ml-10">

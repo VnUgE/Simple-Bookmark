@@ -14,6 +14,19 @@
     }
   },
 
+  //System website lookup endpoint (aka curl)
+  "curl": {
+    "path": "/lookup",
+    "exe_path": "curl", //Path to the curl executable
+    "extra_args": [
+      "--globoff",                //Disables unsafe url globbing
+      "--no-keepalive",           //Disables keepalive, uneeded for a single lookup request
+      "--max-filesize", "100K",   //Max file size 100K
+      "--max-redirs", "5",        //Max redirects 5
+      "--location",               //Follow redirects
+    ]
+  },
+
   "registration": {
     "path": "/register", //Path for the registration endpoint
     "token_lifetime_mins": 360, //Token lifetime in minutes
