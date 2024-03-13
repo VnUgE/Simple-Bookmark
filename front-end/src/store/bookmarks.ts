@@ -18,7 +18,7 @@ import { MaybeRef, shallowRef, watch, computed, Ref, ref } from 'vue';
 import { apiCall, useAxios, WebMessage } from '@vnuge/vnlib.browser';
 import { useToggle, get, set, useOffsetPagination, watchDebounced, syncRef } from '@vueuse/core';
 import { PiniaPluginContext, PiniaPlugin, storeToRefs } from 'pinia'
-import { isArray, join, map, split, sortBy } from 'lodash-es';
+import { isArray, join, map, split, sortBy, filter, isEmpty } from 'lodash-es';
 import { useQuery } from './index';
 
 export interface Bookmark{
@@ -189,7 +189,7 @@ const searchQuery = (search: Ref<string | null>, tags: Ref<string[]>) => {
     const tagQuery = useQuery('t')
 
     const currentTags = computed({
-        get: () => split(tagQuery.value, ' '),
+        get: () => filter(split(tagQuery.value, ' '), p => !isEmpty(p)),
         set: (value) => set(tagQuery, join(value, ' '))
     })
 

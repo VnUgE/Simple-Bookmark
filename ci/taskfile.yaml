@@ -7,6 +7,7 @@ version: "3"
 
 vars:
   BUILDS_URL: https://www.vaughnnugent.com/public/resources/software/builds
+  SQLITE_OUT_DIR: "plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite"
 
 includes:
   install:
@@ -30,22 +31,33 @@ tasks:
     - cmd: powershell -Command "rm -Recurse -Force ./dist"
       ignore_error: true
 
-    #copy setup script for linux
     - cmd: powershell -Command "mkdir lib -Force"
       ignore_error: true
-    - cmd: wsl dos2unix ./setup.sh #convert the setup script to unix line endings for linux
-      platform: [ win-x64 ]
-    - powershell -Command "cp setup.sh lib/ -Force"
   
-    - task: install-plugins
+    - task: plugins:all
     - task: install-webserver
+    - task: prune-runtimes
     
     #run container build last
     - task: container:build
 
   install-webserver:
     cmds:
-    - for: [ win-x64, linux-x64, osx-x64 ]
+    - cmd : powershell -Command "mkdir webserver -Force"
+      ignore_error: true
+    
+    #clone the webserver (it's cross platform when using dotnet command)
+    - task: install:install
+      vars:
+        PROJECT_NAME: 'VNLib.Webserver'
+        MODULE_NAME: "VNLib.Webserver"
+        FILE_NAME: "linux-x64-release.tgz"
+        DIR: 'webserver/'
+
+    #remove the executable since its not needed
+    - cmd: cd webserver/ && powershell -Command "rm VNlib.WebServer"
+
+    - for: [ windows-x86_64, linux-x86_64, osx-x86_64, windows-arm, linux-arm, osx-arm ]
       task: create-env
       vars: 
         TARGET_OS: '{{.ITEM}}'
@@ -55,7 +67,7 @@ tasks:
     #make bin dir
     - cmd: powershell -Command "mkdir bin -Force"
       ignore_error: true
-    - for: [ win-x64, linux-x64, osx-x64 ]
+    - for: [ windows-x86_64, linux-x86_64, osx-x86_64, windows-arm, linux-arm, osx-arm ]
       task: pack
       vars: 
         TARGET_OS: '{{.ITEM}}'
@@ -66,11 +78,6 @@ tasks:
       ignore_error: true
 
     - task: container:postbuild_success
-
-  install-plugins:
-    cmds:
-    #add plugins
-    - task: plugins:all
   
   build-container:
     cmds:
@@ -84,39 +91,57 @@ tasks:
     - cmd: powershell -Command "mkdir {{.BUILD_DIR}} -Force"
       ignore_error: true
     
-    #copy build files
-    - for: [ plugins, dist, lib, config ]
+    #copy build files for target os
+    - for: [ plugins, dist, lib, config, webserver ]
       cmd: powershell -Command "cp -Recurse -Force {{.ITEM}} {{.BUILD_DIR}}"
 
-    - task: get-webserver
-      vars:
-        TARGET_OS: '{{.TARGET_OS}}'
-        BUILD_DIR: '{{.BUILD_DIR}}'
-
-  get-webserver:
-    internal: true
-    cmds:
-    - task: install:install
-      vars:
-        PROJECT_NAME: 'VNLib.Webserver'
-        MODULE_NAME: "VNLib.Webserver"
-        FILE_NAME: "{{.TARGET_OS}}-release.tgz"
-        DIR: '{{.BUILD_DIR}}/webserver'
-
-    - cmd: powershell -Command "cp -Force ./config/config.json {{.BUILD_DIR}}/config.json"
+    #copy release taskfile and rename it
+    - cmd: powershell -Command "cp -Force release.taskfile.yaml {{.BUILD_DIR}}/taskfile.yaml"
  
   pack:
     internal: true
     cmds:
     - cmd: powershell -Command "mkdir build/{{.TARGET_OS}}/ -Force"
       ignore_error: true
-    - cd build/{{.TARGET_OS}} && tar -czf ../../bin/{{.TARGET_OS}}-release.tgz .
+    - cd build/{{.TARGET_OS}} && tar -czf ../../bin/{{.TARGET_OS}}-release.tgz . 
+
+  prune-runtimes:
+    cmds:
+    #prune sqlite runtime native libraries that Im not targeting
+    #windows
+    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-mips64', 'linux-musl-arm', 'linux-musl-arm64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-arm64', 'maccatalyst-x64', 'osx-arm64', 'osx-x64', 'win-arm', 'win-arm64' ]
+      cmd: cd build/windows-x86_64/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
+      ignore_error: true
+   
+    #windows arm
+    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-mips64', 'linux-musl-arm', 'linux-musl-arm64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-arm64', 'maccatalyst-x64', 'osx-arm64', 'osx-x64', 'win-x86', 'win-x64' ]
+      cmd: cd build/windows-arm/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
+      ignore_error: true
+
+    #linux x64
+    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-musl-arm', 'linux-musl-arm64', 'maccatalyst-arm64', 'maccatalyst-x64', 'osx-arm64', 'osx-x64', 'win-arm', 'win-arm64', 'win-x86', 'win-x64' ]
+      cmd: cd build/linux-x86_64/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
+      ignore_error: true
  
+    #linux arm
+    - for: ['browser-wasm', 'linux-mips64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-arm64', 'maccatalyst-x64', 'osx-arm64', 'osx-x64', 'win-arm', 'win-arm64', 'win-x86', 'win-x64' ]
+      cmd: cd build/linux-arm/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
+      ignore_error: true
+
+    #osx x64
+    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-mips64', 'linux-musl-arm', 'linux-musl-arm64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-arm64', 'win-arm', 'win-arm64', 'win-x86', 'win-x64' ]
+      cmd: cd build/osx-x86_64/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
+      ignore_error: true
+
+    #osx arm
+    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-mips64', 'linux-musl-arm', 'linux-musl-arm64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-x64', 'osx-x64', 'win-arm', 'win-arm64', 'win-x86', 'win-x64' ]
+      cmd: cd build/osx-arm/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
+      ignore_error: true
 
   clean:
     ignore_error: true
     cmds:
-    - for: [ ./build, ./bin, ./dist, ./plugins, ./lib ]
+    - for: [ build/, bin/, dist/, plugins/, lib/, webserver/ ]
       cmd: powershell -Command "rm -Recurse -Force '{{.ITEM}}'"
     
     - task: container:clean

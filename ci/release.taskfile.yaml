@@ -1,0 +1,117 @@
+# https://taskfile.dev
+
+#Inlcuded taskfile for object cache server that is used to produce
+#ci builds for standalone caching servers
+
+version: "3"
+
+vars:
+  SSL_DIR: "ssl"
+  DATA_DIR: "data"
+  DEFAULT_EC_CURVE: "secp384r1"
+
+tasks:
+  default:
+    desc: "Runs the Simple-Bookmark server"
+    cmds:
+    - task: run
+
+  run:
+    desc: "Runs the Simple-Bookmark server"
+    silent: true
+    env: 
+      #libraries intentionally do not have extensions, for cross-platform compatibility, the server will load them regardless
+      VNLIB_SHARED_HEAP_FILE_PATH: lib/vnlib_rpmalloc.dll
+      VNLIB_ARGON2_DLL_PATH: lib/argon2.dll
+    cmds:
+    - cmd: dotnet webserver/VNLib.WebServer.dll --config config/config.json {{.CLI_ARGS}}
+
+  setup-apt:
+     desc: "Performs initial setup on Debian apt amd64 based machines"
+     silent: true
+     cmds:
+     - apt update
+     - apt install -y dotnet-runtime-8.0 gcc cmake curl
+     - task: setup
+     - echo "Setup complete" 
+ 
+  setup-dnf:
+     desc: "Performs initial setup on Fedora/Redhat amd (dnf) based machines"
+     silent: true
+     cmds:
+     - dnf update
+     - dnf install -y dotnet-runtime-8.0 gcc cmake curl
+     - task: setup
+     - echo "Setup complete"
+ 
+  setup-apk:
+     desc: "Performs initial setup using the APK package manager for amd64 based machines"
+     silent: true
+     cmds:
+     - apk update
+     - apk add --no-cache dotnet8-runtime build-base cmake curl
+     - task: setup
+     - echo "Setup complete"
+
+  setup:
+    desc: "Performs platform agnostic setup tasks without installing tools (no sudo needed)"
+    cmds:
+    #build rpmalloc lib
+    - task: build-rpmalloc
+    - task: build-argon2
+    - task: build-compress
+  
+    #setup ssl dir
+    - cmd: mkdir ssl/
+      platforms: [ linux, darwin ]
+      ignore_error: true
+    - cmd: powershell -Command "mkdir ssl/"
+      platforms: [ windows/amd64 ]
+      ignore_error: true
+
+  create-cert:
+    desc: "Genereates a new self-signed TLS certificate"
+    cmds:
+    - openssl req -new -x509 -days 365 -keyout {{.SSL_DIR}}/key.pem -out {{.SSL_DIR}}/cert.pem -newkey ec -pkeyopt ec_paramgen_curve:{{.DEFAULT_EC_CURVE}} --nodes
+ 
+  set-perms:
+    desc: "(Linux/MacOS only) Sets proper file security for the entire application"
+    cmds:
+    - cmd: chmod -R 0750 . && chmod -R 0770 data/    #set to read/exec only for all files except the data dir
+      platforms: [ linux, darwin ]
+
+  build-rpmalloc:
+    internal: true
+    dir: 'lib/'
+    cmds:
+    #build rpmalloc library for linux/mac
+    - cmd: cd vnlib_rpmalloc/ && task && cp build/libvn_rpmalloc{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_rpmalloc.dll
+      platforms: [ linux, darwin ]
+      
+    #for windows just copy the existing dll
+    - cmd: powershell -Command "cp vnlib_rpmalloc/vnlib_rpmalloc.dll vnlib_rpmalloc.dll"
+      platforms: [ windows/amd64 ]
+
+  build-argon2:
+    internal: true
+    dir: 'lib/'
+    cmds:
+      #build argon2 library for linux/mac
+    - cmd: cd argon2/ && task && cp build/libargon2{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../argon2.dll
+      platforms: [ linux, darwin ]
+      
+      #for windows just copy the existing dll
+    - cmd: powershell -Command "cp argon2/argon2.dll argon2.dll"
+      platforms: [ windows/amd64 ]
+
+  build-compress:
+    internal: true
+    dir: 'lib/'
+    cmds:
+    - cd vnlib_compress/ && task
+    #build the native compressor library for linux/mac
+    - cmd: cd vnlib_compress/ && cp build/libvn_compress{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_compress.dll
+      platforms: [ linux, darwin ]
+      
+    - cmd: powershell -Command "cp vnlib_compress/build/Release/vnlib_compress.dll vnlib_compress.dll"
+      platforms: [ windows/amd64 ]  

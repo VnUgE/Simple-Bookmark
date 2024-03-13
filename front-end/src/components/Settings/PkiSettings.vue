@@ -32,6 +32,8 @@ const removeKey = async (key: PkiPublicKey) => {
             title: 'Key Removed',
             text: `${key.kid} has been successfully removed`
         })
+
+        store.mfaRefreshMethods()
     })
 }
 
@@ -117,7 +119,8 @@ const onAddKey = async () => {
             text: result
         })
 
-        hideAddKeyDialog()
+        hideAddKeyDialog();
+        store.mfaRefreshMethods();
     })
 }
 

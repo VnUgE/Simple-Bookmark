@@ -40,7 +40,7 @@ const execLookup = async () => {
             v$.value.Description.$dirty = true;
         }
 
-        if(keywords){
+        if(!isEmpty(keywords)){
             v$.value.Tags.$model = keywords;
             v$.value.Tags.$dirty = true;
         }
@@ -68,8 +68,13 @@ const showSearchButton = computed(() => lookup.isSupported && !isEmpty(v$.value.
                     :class="{'dirty': v$.Url.$dirty, 'error': v$.Url.$invalid}" required>
 
                 <div class="">
-                    <button :disabled="!showSearchButton || waiting" @click.prevent="execLookup"
-                        class="btn blue search-btn">
+                    <button 
+                        type="button"
+                        :disabled="!showSearchButton || waiting" 
+                        @click.self.prevent="execLookup"
+                        id="search-btn"
+                        class="btn blue search-btn"
+                    >
                         <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 20 20">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -98,8 +103,8 @@ const showSearchButton = computed(() => lookup.isSupported && !isEmpty(v$.value.
         </fieldset>
 
         <div class="flex justify-end">
-            <button type="submit" class="btn blue">
-                Submit
+            <button id="save-button" type="submit" form="bm-add-or-update-form" class="btn blue">
+                Save
             </button>
         </div>
     </form>

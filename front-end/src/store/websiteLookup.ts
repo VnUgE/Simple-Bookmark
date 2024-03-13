@@ -4,11 +4,11 @@ import { MaybeRef, Ref, shallowRef, watch } from 'vue';
 import { WebMessage, apiCall, useAxios } from '@vnuge/vnlib.browser'
 import { get, set } from '@vueuse/core';
 import { PiniaPluginContext, PiniaPlugin, storeToRefs } from 'pinia'
-import { defer, noop } from 'lodash-es';
+import { defer, filter, isEmpty, noop } from 'lodash-es';
 
 export interface WebsiteLookupResult {
-    title: string | undefined,
-    description: string | undefined,
+    readonly title: string | undefined,
+    readonly description: string | undefined,
     keywords: string[] | undefined,
 }
 
@@ -57,7 +57,9 @@ export const siteLookupPlugin = (lookupEndpoint: MaybeRef<string>, to: number): 
 
             //Execute test with the 'support' query parameter
             const { data } = await axios.get<WebMessage<WebsiteLookupResult>>(`${get(lookupEndpoint)}?timeout=${get(timeout)}&url=${base64Url}`)
-            return data.getResultOrThrow();
+            const lookup = data.getResultOrThrow();
+            lookup.keywords = filter(lookup.keywords, (k) => !isEmpty(k))
+            return lookup
         }
 
         //If login status changes, recheck support

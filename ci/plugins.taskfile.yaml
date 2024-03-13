@@ -15,18 +15,18 @@ tasks:
 
   all:
     deps:
-     - install-accounts
-     - install-router
-     - install-sessions
-     - install-vncache
-     - install-vncache-sessions
-     - install-users
-     - install-sqlite
-     - install-argon2-lib
-     - install-compression
-     - install-compressor-lib 
-
+    - install-rpmalloc
+    - install-compressor-lib   
+    - install-argon2-lib  
+    - install-compression
+    - install-sqlite
     cmds:
+    - task: install-accounts
+    - task: install-router
+    - task: install-sessions
+    - task: install-vncache
+    - task: install-vncache-sessions
+    - task: install-users
     - echo "Installing and configuring plugins and UI"
     - task: build-bookmarks
 
@@ -156,3 +156,20 @@ tasks:
       cmd: powershell -Command "rm ./lib/argon2/{{.ITEM}} -Recurse"
       ignore_error: true
 
+  install-rpmalloc:
+    cmds:
+    #install the rpmalloc source code package for Linux and Mac
+    - task: install:install
+      vars:
+        PROJECT_NAME: 'vnlib_rpmalloc'
+        MODULE_NAME: "VNLib.Core"
+        FILE_NAME: "src.tgz"
+        DIR: './lib/vnlib_rpmalloc'
+
+    #install the rpmalloc binary for Windows
+    - task: install:install
+      vars:
+        PROJECT_NAME: 'vnlib_rpmalloc'
+        MODULE_NAME: "VNLib.Core"
+        FILE_NAME: "win-x64-release-vnlib_rpmalloc.tgz"
+        DIR: './lib/vnlib_rpmalloc'
