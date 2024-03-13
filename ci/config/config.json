@@ -41,7 +41,7 @@
 
   //Setup the native lib
   "vnlib.net.compression": {
-    "lib_path": "lib/vnlib_compress/build/<os-dependent-lib-path>",
+    "lib_path": "lib/vnlib_compress.dll",
     "level": 1
   },
 
@@ -95,16 +95,16 @@
       //"cors_allowed_authority": [ "localhost:8080" ],
 
       //Define a TLS certificate (enables TLS on the interface)
-      "disabled ssl": {
+      "ssl": {
 
         //Cert may be pem or pfx (include private key in pfx, or include private key in a pem file)
-        "cert": "/path/to/cert.pfx|pem",
+        "cert": "ssl/cert.pem",
 
         //A pem encoded private key, REQUIRED if using a PEM certificate, may be encrypted with a password
-        "privkey": "/path/to/private_key.pem",
+        "privkey": "ssl/key.pem",
 
         //An optional password for the ssl private key
-        "password": "plain-text-password",
+        //"password": "plain-text-password",
 
         //requires that any client connecting to this host present a valid certificate
         "client_cert_required": false
@@ -129,29 +129,29 @@
     "assets": "plugins/assets/"
   },
 
-  "disabled sys_log": {
-    //"path": "path/to/syslog/file",
+  "sys_log": {
+   "path": "data/logs/syslog.txt",
     //"template": "serilog template for writing to file",
-    //"flush_sec": 5,
-    //"retained_files": 31,
-    //"file_size_limit": 10485760,
-    //"interval": "infinite"
+    "flush_sec": 5,
+    "retained_files": 10,
+    "file_size_limit": 10485760,
+    "interval": "infinite"
   },
 
   "disabled app_log": {
-    //"path": "path/to/applog/file",
+    "path": "data/logs/applog.txt",
     //"template": "serilog template for writing to file",
-    //"flush_sec": 5,
-    //"retained_files": 31,
-    //"file_size_limit": 10485760,
-    //"interval": "infinite"
+    "flush_sec": 5,
+    "retained_files": 10,
+    "file_size_limit": 10485760,
+    "interval": "infinite"
   },
 
   //Sql for the users database
   "sql": {
     "debug": false,
     "provider": "VNLib.Plugins.Extensions.Sql.SQLite.dll",
-    "source": "simple-bookmark.db" //For sqlite only 
+    "source": "data/simple-bookmark.db" //For sqlite only 
   },
 
   //caching should be setup globally after VNCache #78a47dd

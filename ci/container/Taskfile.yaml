@@ -41,13 +41,12 @@ tasks:
     cmds:
      # clean up the run.sh script to remove windows line endings in my wsl default instance
      - cmd: wsl dos2unix ./run.sh
-       platform: [ win-x64 ]
+       platforms: [ windows/amd64 ]
 
      #init build image
      - task: setup-container-image
 
      #remove the default config file as it's not needed in the container
-     - powershell -Command "rm -Force build/app/config.json"
      - powershell -Command "rm -Force -Recurse build/app/config/"
   
      - task: prune-sql-runtimes
@@ -84,7 +83,7 @@ tasks:
      #make build directory
      - powershell -Command "mkdir build, build/app, build/app/config-templates/, build/app/static/ -Force"
      #copy the existing linux-x64 build to the build folder, this will be the container base
-     - powershell -Command "cp -Recurse -Force ../build/linux-x64/* build/app/"
+     - powershell -Command "cp -Recurse -Force ../build/linux-x86_64/* build/app/"
      #copy local scripts and config data into the build folder
      - powershell -Command "cp -Force run.sh, Taskfile.yaml build/app/"
      - powershell -Command "cp -Force Dockerfile, docker-compose.yaml build/"

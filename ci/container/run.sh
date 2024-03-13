@@ -12,4 +12,4 @@ done
 cp usr/assets/* plugins/assets/ -rf
 
 #start the server
-dotnet webserver/VNLib.WebServer.dll --config config/config.json $SERVER_ARGS
+dotnet webserver/VNLib.WebServer.dll --config config/config.json --input-off $SERVER_ARGS

@@ -32,7 +32,7 @@ COPY app/ /app
 #pull compiled libs from build container
 COPY --from=native-cont /build/out /app/lib
 
-RUN apk update && apk add --no-cache gettext icu-libs dumb-init
+RUN apk update && apk add --no-cache gettext icu-libs dumb-init curl
 
 #workdir 
 WORKDIR /app

@@ -50,9 +50,10 @@ namespace SimpleBookmark
             //route the bm endpoint
             this.Route<BookmarkEndpoint>();
             this.Route<BmAccountEndpoint>();
+            this.Route<SiteLookupEndpoint>();
 
             //Ensure database is created after a delay
-            this.ObserveWork(() => this.EnsureDbCreatedAsync<SimpleBookmarkContext>(this), 1000);
+            this.ObserveWork(() => this.EnsureDbCreatedAsync<SimpleBookmarkContext>(this), 1500);
 
             Log.Information("Plugin Loaded");
             PrintHelloMessage();
