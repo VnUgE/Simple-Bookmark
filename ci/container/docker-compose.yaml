@@ -27,6 +27,7 @@ services:
       CACHE_ASM_PATH: "VNLib.Data.Caching.Providers.VNCache.dll"
       MEMCACHE_ONLY: "true"
       REDIS_CONNECTION_STRING: ""
+      #at least one node required if MEMCACHE_ONLY is false
       VNCACHE_INITIAL_NODES: "[]"
       #ACCOUNTS
       MAX_LOGIN_ATTEMPS: "10"
@@ -35,6 +36,7 @@ services:
       PASSWORD_PEPPER: ""
       DATABASE_PASSWORD: ""
       REDIS_PASSWORD: ""
+      #if MEMCACHE_ONLY is false, then the following keys are required to connect to a VNCACHE cluster
       VNCACHE_CLIENT_PRIVATE_KEY: ""
       VNCACHE_CACHE_PUBLIC_KEY: ""
 
@@ -42,5 +44,5 @@ services:
       HTTP_DOWNSTREAM_SERVERS: '[]'
       #SSL_JSON: '{"cert": "ssl/cert.pem", "privkey":"ssl/priv.pem"}'
 
-      SERVER_ARGS: "--input-off"
+      SERVER_ARGS: ""
 

@@ -34,7 +34,7 @@ tasks:
      - apt install -y dotnet-runtime-8.0 gcc cmake curl
      - task: setup
      - echo "Setup complete" 
- 
+
   setup-dnf:
      desc: "Performs initial setup on Fedora/Redhat amd (dnf) based machines"
      silent: true
@@ -43,7 +43,7 @@ tasks:
      - dnf install -y dotnet-runtime-8.0 gcc cmake curl
      - task: setup
      - echo "Setup complete"
- 
+
   setup-apk:
      desc: "Performs initial setup using the APK package manager for amd64 based machines"
      silent: true
@@ -73,12 +73,6 @@ tasks:
     desc: "Genereates a new self-signed TLS certificate"
     cmds:
     - openssl req -new -x509 -days 365 -keyout {{.SSL_DIR}}/key.pem -out {{.SSL_DIR}}/cert.pem -newkey ec -pkeyopt ec_paramgen_curve:{{.DEFAULT_EC_CURVE}} --nodes
- 
-  set-perms:
-    desc: "(Linux/MacOS only) Sets proper file security for the entire application"
-    cmds:
-    - cmd: chmod -R 0750 . && chmod -R 0770 data/    #set to read/exec only for all files except the data dir
-      platforms: [ linux, darwin ]
 
   build-rpmalloc:
     internal: true
@@ -112,6 +106,6 @@ tasks:
     #build the native compressor library for linux/mac
     - cmd: cd vnlib_compress/ && cp build/libvn_compress{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_compress.dll
       platforms: [ linux, darwin ]
-      
+
     - cmd: powershell -Command "cp vnlib_compress/build/Release/vnlib_compress.dll vnlib_compress.dll"
-      platforms: [ windows/amd64 ]  
+      platforms: [ windows/amd64 ]

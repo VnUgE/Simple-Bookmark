@@ -96,7 +96,7 @@ tasks:
       cmd: powershell -Command "cp -Recurse -Force {{.ITEM}} {{.BUILD_DIR}}"
 
     #copy release taskfile and rename it
-    - cmd: powershell -Command "cp -Force release.taskfile.yaml {{.BUILD_DIR}}/taskfile.yaml"
+    - cmd: powershell -Command "cp -Force release.taskfile.yaml {{.BUILD_DIR}}/Taskfile.yaml"
  
   pack:
     internal: true
