@@ -1,4 +1,4 @@
-﻿﻿<h1 align="center">Simple Bookmark</h1> 
+﻿﻿﻿﻿<h1 align="center">Simple Bookmark</h1> 
 
 <p align="center">
 A <a href="https://github.com/sissbruecker/linkding">linkding</a> inspired, self-hosted, bookmark manager built with my <a href="https://github.com/VnUgE/VNLib.Core">Essentials</a> framework that only requires .NET 8.0, an SQL database, and a C compiler. 
@@ -67,20 +67,43 @@ docker-compose up -d
 The image should be about 139mb when built! I'm also hoping to get it down even smaller in the future. You may also use Podman in the same format, simply substitute the word `docker` for `podman` in the previous commands.  
 
 ### Bare-metal install
-Download the latest archive for your operating system [here](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?p=Simple-Bookmark)  
+>[!NOTE]
+>Bare metal installs will always have support, but it is far more difficult to account for all operating systems and users competencies for installers, compilers, operating systems and so on
 
-#### Linux overview
-- Install [Task](https://taskfile.dev), [CMake](https://cmake.org), GCC (or your favorite libc toolchain) and dotnet-runtime-8.0 (non-ASP)  
-- Build the native libraries with the included script: `cd lib/ && sh ./setup.sh`  
-- Configure the server by opening the `config.json` file in the working directory  
-- Set required environment variables (read documentation)  
-- Run the server with: `dotnet webserver/VNLib.WebServer.dll --config config.json`  
+Please make sure yo read the quick-start guide for full installs. The following is a basic overview of how to install, build, and run the release server application on your machine. Each archive includes a Tasfile.yaml file that is used to build and run your application with just a few commands.
 
-#### Windows overview
-- Install the .NET Runtime (non-ASP) package and make sure the command `dotnet` is valid  
-- Your native dependencies should already have been built for you and included in your package, you just need to find the DLL file paths to add to your system environment variables.  
-- Set required environment variables (read documentation)  
-- Run the server with: `webserver/VNLib.WebServer.exe --config config.json`  
+#### Prerequisites
+- Download the package archive for your OS from my [builds page](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?p=Simple-Bookmark)
+- Install [go-task](https://taskfile.dev/installation) globally on your system
+
+#### Non Windows only
+``` shell
+sudo task setup-<apt | apk | dnf> #installs required tools and compiles libraries
+```
+Optionally create a self-signed TLS certificate using openssl and exports it to the proper location
+``` shell
+sudo task create-cert #runs an openssl command 
+```
+Optionally set file permissions
+```shell
+chmod -R 0750 . && chmod -R 0770 data/ #only data dir needs write permissions
+```
+#### Windows only
+``` shell
+task setup #runs all setup rules
+```
+> [!IMPORTANT]  
+> This command attempts to move or compile native libraries on your system. Windows users will have to manually adjust their config file, or install VisualStudio build tools
+
+#### First time run
+Starting the server for the first time 
+``` shell
+task -- --setup #default task runs the server
+```
+Normal operation
+``` shell
+task
+```
 
 ## Links & Support
 [Package downloads](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark) - Archives, checksums, signatures, and module source code  
