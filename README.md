@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<h1 align="center">Simple Bookmark</h1> 
+﻿﻿<h1 align="center">Simple Bookmark</h1> 
 
 <p align="center">
 A <a href="https://github.com/sissbruecker/linkding">linkding</a> inspired, self-hosted, bookmark manager built with my <a href="https://github.com/VnUgE/VNLib.Core">Essentials</a> framework that only requires .NET 8.0, an SQL database, and a C compiler. 
@@ -39,7 +39,7 @@ Simple Bookmark was built using my [Essentials](https://github.com/VnUgE/vnlib.c
 - TOTP and public-key authentication
 - HTML bookmark file import from Linkding and others
 - HTML, JSON, and CSV bookmark export
-- Bookmark quick-add for browsers
+- Bookmark quick-add for web browsers
 - Invite users with share links
 - Supports (and tested) SQLite, SQLServer, MySQL/MariaDB databases
 - It's quick <300ms load time & under 150kB with compression
@@ -51,6 +51,7 @@ Simple Bookmark was built using my [Essentials](https://github.com/VnUgE/vnlib.c
 ## Deployment overview  
 __You need to read the [quick-start guide](https://www.vaughnnugent.com/resources/software/articles/ed9285b63922fd17b5126051e3a2e592cacecf33) to fully configure Simple-Bookmark but here are the basic steps.__  
 
+>[!NOTE]
 > Simple-bookmark was built without Docker as the primary target, this is because I believe users should have the support to deploy open source apps easily outside of a container. So while a Docker deployment is an option, the container is actually built from the Linux-x64 package during CI build time.  
 
 ### Container install
@@ -64,7 +65,7 @@ docker-compose up -d
 ```
  _Of course there is more setup involved, so take a look at the docs for more info_  
  
-The image should be about 139mb when built! I'm also hoping to get it down even smaller in the future. You may also use Podman in the same format, simply substitute the word `docker` for `podman` in the previous commands.  
+The image should be about 139mb when built! I'm also hoping to get it down even smaller in the future. You may also use Podman in the same format, simply substitute the word `docker` with `podman` in the previous commands.  
 
 ### Bare-metal install
 >[!NOTE]
@@ -75,6 +76,7 @@ Please make sure yo read the quick-start guide for full installs. The following 
 #### Prerequisites
 - Download the package archive for your OS from my [builds page](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?p=Simple-Bookmark)
 - Install [go-task](https://taskfile.dev/installation) globally on your system
+- Unzip the archive. Example: `tar xzf linux-x86_64-release.tgz`
 
 #### Non Windows only
 ``` shell
@@ -93,10 +95,10 @@ chmod -R 0750 . && chmod -R 0770 data/ #only data dir needs write permissions
 task setup #runs all setup rules
 ```
 > [!IMPORTANT]  
-> This command attempts to move or compile native libraries on your system. Windows users will have to manually adjust their config file, or install VisualStudio build tools
+> This command attempts to move or compile native libraries on your system. Windows users will have to manually adjust their config file, or install VisualStudio build tools, otherwise you'll see a bunch of errors.
 
-#### First time run
-Starting the server for the first time 
+#### First start
+Starting the server for the first time you'll want to enable setup mode to allow admin registration for the first time. This is operation insecure, please read the quick-start guide.
 ``` shell
 task -- --setup #default task runs the server
 ```
