@@ -16,8 +16,8 @@ tasks:
   all:
     deps:
     - install-rpmalloc
-    - install-compressor-lib   
-    - install-argon2-lib  
+    - install-compressor-lib
+    - install-argon2-lib
     - install-compression
     - install-sqlite
     cmds:
@@ -125,6 +125,13 @@ tasks:
 
   install-compressor-lib:
     cmds:
+     #install the compressor binary for Windows
+    - task: install:install
+      vars:
+        PROJECT_NAME: 'vnlib_compress'
+        MODULE_NAME: "VNLib.Core"
+        FILE_NAME: "win-x64-release.tgz"
+        DIR: './lib/vnlib_compress'
     #install compressor plugin
     - task: install:install
       vars:
