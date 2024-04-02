@@ -8,6 +8,7 @@ version: "3"
 vars:
   BUILDS_URL: https://www.vaughnnugent.com/public/resources/software/builds
   SQLITE_OUT_DIR: "plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite"
+  WEBSERVER_VERSION: 'ed0c71876ec04528e24e612ce723d3aed8971262'
 
 includes:
   install:
@@ -46,13 +47,14 @@ tasks:
     - cmd : powershell -Command "mkdir webserver -Force"
       ignore_error: true
     
-    #clone the webserver (it's cross platform when using dotnet command)
+    #clone the webserver (it's cross platform when using dotnet command so just grab the linux version)
     - task: install:install
       vars:
         PROJECT_NAME: 'VNLib.Webserver'
         MODULE_NAME: "VNLib.Webserver"
         FILE_NAME: "linux-x64-release.tgz"
         DIR: 'webserver/'
+        VERSION: '{{.WEBSERVER_VERSION}}'
 
     #remove the executable since its not needed
     - cmd: cd webserver/ && powershell -Command "rm VNlib.WebServer"
@@ -73,7 +75,7 @@ tasks:
         TARGET_OS: '{{.ITEM}}'
 
     #cleanup unnecessary build files that clog up the pipeline
-    - for: [ build, plugins, dist, lib ]
+    - for: [ build, plugins, dist, lib, webserver ]
       cmd: powershell -Command "rm -Recurse '{{.ITEM}}'"
       ignore_error: true
 

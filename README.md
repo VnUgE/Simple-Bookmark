@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<h1 align="center">Simple Bookmark</h1> 
+﻿﻿<h1 align="center">Simple Bookmark</h1> 
 
 <p align="center">
 A <a href="https://github.com/sissbruecker/linkding">linkding</a> inspired, self-hosted, bookmark manager built with my <a href="https://github.com/VnUgE/VNLib.Core">Essentials</a> framework that only requires .NET 8.0, an SQL database, and a C compiler. 

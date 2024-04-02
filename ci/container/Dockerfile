@@ -66,6 +66,7 @@ ENV MAX_LOGIN_ATTEMPS=10
 #HC Vault
 ENV HC_VAULT_ADDR=""
 ENV HC_VAULT_TOKEN=""
+ENV HC_VAULT_TRUST_CERT=false
 
 #VNCACHE (default to memory only)
 ENV CACHE_ASM_PATH=VNLib.Data.Caching.Providers.VNCache.dll

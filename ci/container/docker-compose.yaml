@@ -23,6 +23,7 @@ services:
       #HC Vault
       HC_VAULT_ADDR: ""
       HC_VAULT_TOKEN: ""
+      HC_VAULT_TRUST_CERT: "false"
       #VNCACHE (default to memory only)
       CACHE_ASM_PATH: "VNLib.Data.Caching.Providers.VNCache.dll"
       MEMCACHE_ONLY: "true"

@@ -51,9 +51,6 @@ tasks:
   
      - task: prune-sql-runtimes
 
-     #install rpmalloc
-     - task: install-rpmalloc-lib
-
   postbuild_success:
     cmds:
      #tar up the build directory and move it to the output bin directory
@@ -65,17 +62,6 @@ tasks:
     ignore_error: true
     cmds:
     - cmd: powershell -Command "rm -Recurse -Force ./build"
-
-  install-rpmalloc-lib:
-    internal: true
-    cmds:
-    #install compressor plugin
-    - task: install:install
-      vars:
-        PROJECT_NAME: 'vnlib_rpmalloc'
-        MODULE_NAME: "VNLib.Core"
-        FILE_NAME: "src.tgz"
-        DIR: './build/app/lib/vnlib_rpmalloc'
 
   setup-container-image:
     internal: true
