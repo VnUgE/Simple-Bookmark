@@ -102,10 +102,10 @@ tasks:
     internal: true
     dir: 'lib/'
     cmds:
-    - cd vnlib_compress/ && task
     #build the native compressor library for linux/mac
-    - cmd: cd vnlib_compress/ && cp build/libvn_compress{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_compress.dll
+    - cmd: cd vnlib_compress/ && task && cp build/libvn_compress{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_compress.dll
       platforms: [ linux, darwin ]
 
-    - cmd: powershell -Command "cp vnlib_compress/build/Release/vnlib_compress.dll vnlib_compress.dll"
+    #windows now supports pre-compiled libs
+    - cmd: powershell cp vnlib_compress/vnlib_compress.dll vnlib_compress.dll
       platforms: [ windows/amd64 ]

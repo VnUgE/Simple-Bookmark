@@ -1,15 +1,12 @@
-param([String] $BaseUrl, [String] $ModuleName, [String] $ProjectName, [String]$FileName)
+param([String] $BaseUrl, [String] $ModuleName, [String] $ProjectName, [String]$FileName, [String]$Version)
 
-#get the latest file
-Invoke-WebRequest "$BaseUrl/$ModuleName/@latest" -OutFile latest.txt
-#read the file into a variable
-$latest = Get-Content latest.txt
+$_src = "$BaseUrl/$ModuleName/$Version/$ProjectName/$FileName"
 
 #download the latest version
-Invoke-WebRequest "$BaseUrl/$ModuleName/$latest/$ProjectName/$FileName" -OutFile $FileName
+Invoke-WebRequest "$_src" -OutFile $FileName
 
 #download latest sha256
-Invoke-WebRequest "$BaseUrl/$ModuleName/$latest/$ProjectName/$FileName.sha256" -OutFile "$FileName.sha256"
+Invoke-WebRequest "$_src.sha256" -OutFile "$FileName.sha256"
 
 #verify the file
 $hash = (Get-FileHash $FileName -Algorithm SHA256).Hash

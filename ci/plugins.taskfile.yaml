@@ -10,14 +10,20 @@ includes:
     taskfile: install.taskfile.yaml
 
 vars:
+  CORE_VERSION: 'e07537a3dde8e16100ef1bcc2a54f9ade8ae856f'
+  ESSENTIALS_VERSION: '27b487b6d0befdb2197a58ceadb1f1ac2b337786'
+  CACHE_VERSION: '49c3641def5ae1b7557ed61ed7bb28bbf425ccc9'
+  USERS_VERSION: '884ed18f900b59be30a6e51c2ec7b714ac860bfd'
+  SESSION_VERSION: '9c8da6ea8fabe1d752bb28fd5eaeeb0b1d06d94d'
+  EXTENSIONS_VERSION: '6da9d3b34fb0dd61cf8a81290e573e54851fcd07'
 
 tasks:
 
   all:
     deps:
     - install-rpmalloc
-    - install-compressor-lib   
-    - install-argon2-lib  
+    - install-compressor-lib
+    - install-argon2-lib
     - install-compression
     - install-sqlite
     cmds:
@@ -52,6 +58,7 @@ tasks:
         MODULE_NAME: "Plugins.Essentials"
         FILE_NAME: "release.tgz"
         DIR: './plugins/Essentials.Accounts'
+        VERSION: '{{.ESSENTIALS_VERSION}}'
 
   install-router:
     cmds:
@@ -62,6 +69,7 @@ tasks:
         MODULE_NAME: "Plugins.Essentials"
         FILE_NAME: "release.tgz"
         DIR: './plugins/PageRouter'
+        VERSION: '{{.ESSENTIALS_VERSION}}'
 
   install-sessions:
     cmds:
@@ -72,26 +80,7 @@ tasks:
         MODULE_NAME: "VNLib.Plugins.Sessions"
         FILE_NAME: "release.tgz"
         DIR: './plugins/SessionProvider'
-
-  install-users:
-    cmds:
-    #install users plugin
-    - task: install:install
-      vars:
-        PROJECT_NAME: 'VNLib.Plugins.Essentials.Users'
-        MODULE_NAME: "VNLib.Plugins.Essentials.Users"
-        FILE_NAME: "release.tgz"
-        DIR: './plugins/assets/VNLib.Plugins.Essentials.Users'
-
-  install-vncache:
-    cmds:
-    #install vncache global cache provider plugin
-    - task: install:install
-      vars:
-        PROJECT_NAME: 'VNLib.Data.Caching.Providers.VNCache'
-        MODULE_NAME: "VNLib.Data.Caching"
-        FILE_NAME: "release.tgz"
-        DIR: './plugins/assets/VNLib.Data.Caching.Providers.VNCache'
+        VERSION: '{{.SESSION_VERSION}}'
 
   install-vncache-sessions:
     cmds:
@@ -102,6 +91,29 @@ tasks:
         MODULE_NAME: "VNLib.Plugins.Sessions"
         FILE_NAME: "release.tgz"
         DIR: './plugins/assets/VNLib.Plugins.Sessions.VNCache'
+        VERSION: '{{.SESSION_VERSION}}'
+
+  install-users:
+    cmds:
+    #install users plugin
+    - task: install:install
+      vars:
+        PROJECT_NAME: 'VNLib.Plugins.Essentials.Users'
+        MODULE_NAME: "VNLib.Plugins.Essentials.Users"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/assets/VNLib.Plugins.Essentials.Users'
+        VERSION: '{{.USERS_VERSION}}'
+
+  install-vncache:
+    cmds:
+    #install vncache global cache provider plugin
+    - task: install:install
+      vars:
+        PROJECT_NAME: 'VNLib.Data.Caching.Providers.VNCache'
+        MODULE_NAME: "VNLib.Data.Caching"
+        FILE_NAME: "release.tgz"
+        DIR: './plugins/assets/VNLib.Data.Caching.Providers.VNCache'
+        VERSION: '{{.CACHE_VERSION}}'
 
   install-sqlite:
     cmds:
@@ -112,6 +124,7 @@ tasks:
         MODULE_NAME: "VNLib.Plugins.Extensions"
         FILE_NAME: "release.tgz"
         DIR: './plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite'
+        VERSION: '{{.EXTENSIONS_VERSION}}'
 
   install-compression:
     cmds:
@@ -122,9 +135,19 @@ tasks:
         MODULE_NAME: "VNLib.Core"
         FILE_NAME: "release.tgz"
         DIR: './lib/vnlib.net.compression'
+        VERSION: '{{.CORE_VERSION}}'
 
   install-compressor-lib:
     cmds:
+     #install the compressor binary for Windows
+    - task: install:install
+      vars:
+        PROJECT_NAME: 'vnlib_compress'
+        MODULE_NAME: "VNLib.Core"
+        FILE_NAME: "msvc-x64-release-vnlib_compress.tgz"
+        DIR: './lib/vnlib_compress'
+        VERSION: '{{.CORE_VERSION}}'
+
     #install compressor plugin
     - task: install:install
       vars:
@@ -132,6 +155,9 @@ tasks:
         MODULE_NAME: "VNLib.Core"
         FILE_NAME: "src.tgz"
         DIR: './lib/vnlib_compress'
+        VERSION: '{{.CORE_VERSION}}'
+
+    - cd 'lib/vnlib_compress' && powershell rm package.json 
 
   install-argon2-lib:
     cmds:
@@ -140,8 +166,9 @@ tasks:
       vars:
         PROJECT_NAME: 'phc-winner-argon2'
         MODULE_NAME: "VNLib.Core"
-        FILE_NAME: "win-x64-release-Argon2.tgz"
+        FILE_NAME: "msvc-x64-release-Argon2.tgz"
         DIR: './lib/argon2'
+        VERSION: '{{.CORE_VERSION}}'
 
     #install the argon2 source code package for Linux and Mac
     - task: install:install
@@ -150,6 +177,7 @@ tasks:
         MODULE_NAME: "VNLib.Core"
         FILE_NAME: "src.tgz"
         DIR: './lib/argon2'
+        VERSION: '{{.CORE_VERSION}}'
 
     #remove unneeded files
     - for: [ man, latex, kats, argon2-specs.pdf, package.json ]
@@ -165,11 +193,13 @@ tasks:
         MODULE_NAME: "VNLib.Core"
         FILE_NAME: "src.tgz"
         DIR: './lib/vnlib_rpmalloc'
+        VERSION: '{{.CORE_VERSION}}'
 
     #install the rpmalloc binary for Windows
     - task: install:install
       vars:
         PROJECT_NAME: 'vnlib_rpmalloc'
         MODULE_NAME: "VNLib.Core"
-        FILE_NAME: "win-x64-release-vnlib_rpmalloc.tgz"
+        FILE_NAME: "msvc-x64-release-vnlib_rpmalloc.tgz"
         DIR: './lib/vnlib_rpmalloc'
+        VERSION: '{{.CORE_VERSION}}'

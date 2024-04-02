@@ -109,7 +109,8 @@
   //HASHICORP VAULT
   "hashicorp_vault": {
     "url": "${HC_VAULT_ADDR}",
-    "token": "${HC_VAULT_TOKEN}"
+    "token": "${HC_VAULT_TOKEN}",
+    "trust_certificate": ${HC_VAULT_TRUST_CERT},
   },
 
   //SQL CONFIG

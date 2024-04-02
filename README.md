@@ -32,27 +32,27 @@ A <a href="https://github.com/sissbruecker/linkding">linkding</a> inspired, self
 ## Intro
 Simple Bookmark (name pending) is a fast, portable, and secure, self-hosted bookmark manager that was inspired by the [Linkding](https://github.com/sissbruecker/linkding) project.  
 
-Simple Bookmark was built using my [Essentials](https://github.com/VnUgE/vnlib.core) web framework which enables high performance web applications and back-end extensibility in a small package. While it comes preconfigured with SQLite by default, I have 1st party support for MySQL and SQLServer, through add-on packages. It supports memory, Redis, or VNCache session for data caching.   
+I built Simple-Bookmark mostly because I didn't want the container lock-in. I also wanted more extensibility for caching, databases, authentication methods, modern security defaults, 2FA, and a performance oriented [server framework](https://github.com/VnUgE/VNLib.Core). Finally, while I enjoy linkding's UI, I felt like it could use some modernization and a little more reactivity. 
 
 ### Features
 - Light/Dark theme
-- TOTP and public-key authentication
+- 2FA and public-key JWT authentication
 - HTML bookmark file import from Linkding and others
 - HTML, JSON, and CSV bookmark export
 - Bookmark quick-add for web browsers
 - Invite users with share links
 - Supports (and tested) SQLite, SQLServer, MySQL/MariaDB databases
 - It's quick <300ms load time & under 150kB with compression
-- It's small, 139mb Docker image
+- It's small, 142mb Docker image
 - Argon2Id password hashing with secure defaults
-- Supports downstream proxy servers
+- Supports enterprise services: HashiCorp Vault, SQLServer, Auth0, and Redis
 - Built-in TLS (TLS is required)
 
 ## Deployment overview  
 __You need to read the [quick-start guide](https://www.vaughnnugent.com/resources/software/articles/ed9285b63922fd17b5126051e3a2e592cacecf33) to fully configure Simple-Bookmark but here are the basic steps.__  
 
 >[!NOTE]
-> Simple-bookmark was built without Docker as the primary target, this is because I believe users should have the support to deploy open source apps easily outside of a container. So while a Docker deployment is an option, the container is actually built from the Linux-x64 package during CI build time.  
+> Simple-bookmark was built bare-metal as the primary target, this is because I believe users should have the support to deploy open source apps easily outside of a container. So while a container deployment is an option, the container is actually built from the Linux-x64 package during CI build time.  
 
 ### Container install
 Download the latest alpine build package: [sb-alpine3.19-oci.tgz](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?p=Simple-Bookmark)  
