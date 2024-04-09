@@ -1,31 +1,28 @@
 <script setup lang="ts">
 import { MaybeRef, Ref, computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue';
 import { useQuery, useStore } from '../store';
-import { get, set, formatTimeAgo, useToggle, useTimestamp, useFileDialog, asyncComputed, toReactive, useClipboard } from '@vueuse/core';
+import { get, set, useToggle, useFileDialog, asyncComputed, toReactive } from '@vueuse/core';
 import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, minLength, helpers } from '@vuelidate/validators';
-import { apiCall, useConfirm, useGeneralToaster, useVuelidateWrapper, useWait } from '@vnuge/vnlib.browser';
-import { clone, cloneDeep, join, defaultTo, every, filter, includes, isEmpty, isEqual, first, isString, chunk, map, forEach, isNil } from 'lodash-es';
+import { apiCall, useGeneralToaster, useVuelidateWrapper, useWait } from '@vnuge/vnlib.browser';
+import { clone, cloneDeep, defaultTo, every, filter, includes, isEmpty, isEqual, first, isString, chunk, map, forEach, isNil } from 'lodash-es';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { parseNetscapeBookmarkString } from './Boomarks/util.ts';
 import type { BatchUploadResult, Bookmark, BookmarkError } from '../store/bookmarks';
 import AddOrUpdateForm from './Boomarks/AddOrUpdateForm.vue';
+import BookmarkList from './Boomarks/BookmarkList.vue';
 const Dialog = defineAsyncComponent(() => import('./global/Dialog.vue'));
 
 const store = useStore();
 const { waiting } = useWait();
-const { reveal } = useConfirm();
 const toaster = useGeneralToaster();
 const bookmarks = computed(() => store.bookmarks.list);
 const tags = computed(() => store.bookmarks.allTags);
-const now = useTimestamp({interval: 1000});
+
 const selectedTags = computed(() => store.bookmarks.tags);
 const localSearch = shallowRef<string>(store.bookmarks.query);
 const nextPageAvailable = computed(() => isEqual(bookmarks.value?.length, get(store.bookmarks.pages.currentPageSize)));
-const { copy } = useClipboard()
 
-//Refresh on page load
-store.bookmarks.refresh();
 
 const safeNameRegex = /^[a-zA-Z0-9_\-\|\., ]*$/;
 const safeUrlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
@@ -74,27 +71,6 @@ const clear = () => {
     store.bookmarks.tags = [];
     store.bookmarks.query = '';
     set(localSearch, '');
-}
-
-const bmDelete = async (bookmark: Bookmark) => {
-    const { isCanceled } = await reveal({
-        title: 'Delete bookmark',
-        text: `Are you sure you want to delete ${bookmark.Name} ?`,
-    })
-
-    if(isCanceled) return;
-
-    apiCall(async ({ toaster }) => {
-
-        await store.bookmarks.api.delete(bookmark);
-
-        toaster.general.success({
-            title: 'Bookmark deleted',
-            text: 'Bookmark has been deleted successfully'
-        });
-
-        store.bookmarks.refresh();
-    })
 }
 
 const isTagSelected = (tag: string, currentTags: MaybeRef<string[]>) => includes(get(currentTags), tag);
@@ -441,43 +417,9 @@ const upload = (() => {
                 </div>
 
                 <div class="mx-auto sm:mt-2">
-                    <div class="grid h-full grid-cols-1 gap-1 leading-tight md:leading-normal">
-                        
-                        <div v-for="bm in bookmarks" :key="bm.Id" :id="join(['bm', bm.Id], '-')" class="w-full p-1">
-                            <div class="">
-                                <a class="bl-link" :href="bm.Url" target="_blank">
-                                    {{ bm.Name }}
-                                </a>
-                            </div>
-                            <div class="flex flex-row items-center">
-                                <span v-for="tag in bm.Tags">
-                                    <span class="mr-1 text-sm text-teal-500 cursor-pointer dark:text-teal-300" @click="toggleTag(tag)">
-                                        #{{ tag }}
-                                    </span>
-                                </span>
-                                <p class="ml-2 text-sm text-gray-500 truncate dark:text-gray-400 text-ellipsis">
-                                    {{ bm.Description }}
-                                </p>
-                            </div>
-                            <div class="">
-                                <span class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ formatTimeAgo(new Date(bm.Created), {}, now) }}
-                                </span>
-                                | 
-                                <span class="inline-flex gap-1.5">
-                                    <button class="text-xs text-gray-700 dark:text-gray-400" @click="copy(bm.Url)">
-                                        Copy
-                                    </button>
-                                    <button class="text-xs text-gray-700 dark:text-gray-400" @click="edit.editBookmark(bm)">
-                                        Edit
-                                    </button>  
-                                    <button class="text-xs text-gray-700 dark:text-gray-400" @click="bmDelete(bm)">
-                                        Delete
-                                    </button>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    
+                    <BookmarkList @toggle-tag="toggleTag" @edit="edit.editBookmark" />
+                  
                     <div class="pr-4 mt-5 mb-10 ml-auto w-fit">
                         <div class="flex flex-col items-center">
                             <div class="text-sm">
@@ -600,9 +542,6 @@ const upload = (() => {
                                 Upload
                             </button>
                         </div> 
-                        <div class="">
-                           
-                        </div>
                     </form>
                 </div>
            </div>

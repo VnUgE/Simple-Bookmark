@@ -243,20 +243,26 @@ namespace SimpleBookmark.Endpoints
                 return VirtualClose(entity, webm, HttpStatusCode.UnprocessableEntity);
             }
 
-            //See if the uses has reached their quota
-            long count = await Bookmarks.GetUserRecordCountAsync(entity.Session.UserID, entity.EventCancellation);
+            /*
+             * Add the new entry to the database if the user is below their quota
+             * and the entry does not already exist by the desired url.
+             */
+            int result = await Bookmarks.AddSingleIfNotExists(
+                entity.Session.UserID, 
+                newBookmark,
+                entity.RequestedTimeUtc.DateTime,
+                BmConfig.PerPersonQuota,
+                entity.EventCancellation
+            );
 
-            if(webm.Assert(count <= BmConfig.PerPersonQuota, "You have reached your bookmark quota"))
+            if (webm.Assert(result > -1, "You have reached your bookmark quota"))
             {
-                return VirtualClose(entity, webm, HttpStatusCode.OK);
-            }              
+                return VirtualOk(entity, webm);
+            }
 
-            //Try to create the record
-            ERRNO result = await Bookmarks.CreateUserRecordAsync(newBookmark, entity.Session.UserID, entity.EventCancellation);
-
-            if (webm.Assert(result > 0, "Failed to create new bookmark"))
+            if (webm.Assert(result > 0, "Bookmark with the same url alreay exists"))
             {
-                return VirtualClose(entity, webm, HttpStatusCode.OK);
+                return VirtualOk(entity, webm);
             }
 
             webm.Result = "Successfully created bookmark";

@@ -110,7 +110,18 @@ const onSubmit = async () => {
                     v-model="v$.password.$model"
             >
         </fieldset>
-        <button type="submit" class="btn">Sign in</button>
+        <button type="submit" class="flex justify-center btn">
+            <span v-if="waiting" class="mx-auto animate-spin">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 15 15">
+                    <path fill="currentColor" fill-rule="evenodd"
+                        d="M8 .5V5H7V.5h1ZM5.146 5.854l-3-3l.708-.708l3 3l-.708.708Zm4-.708l3-3l.708.708l-3 3l-.708-.708Zm.855 1.849L14.5 7l-.002 1l-4.5-.006l.002-1Zm-9.501 0H5v1H.5v-1Zm5.354 2.859l-3 3l-.708-.708l3-3l.708.708Zm6.292 3l-3-3l.708-.708l3 3l-.708.708ZM8 10v4.5H7V10h1Z"
+                        clip-rule="evenodd" />
+                </svg>
+            </span>
+            <span v-else>
+                Sign in
+            </span>
+        </button>
     </form>
 </template>
 

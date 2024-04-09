@@ -68,7 +68,7 @@ store.use(profilePlugin('/account/profile'))
     //Enable mfa with totp settings plugin (optional pki config)
     .use(mfaSettingsPlugin('/account/mfa', '/account/pki'))
     //Setup social mfa plugin
-    .use(socialMfaPlugin("/account/social/portals"))
+    .use(socialMfaPlugin("/login/social/portals"))
     //Add the oauth2 apps plugin
     .use(bookmarkPlugin('/bookmarks'))
     .use(siteLookupPlugin('/lookup', 2000))

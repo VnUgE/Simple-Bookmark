@@ -29,14 +29,14 @@ tasks:
     - powershell -Command "cp '{{.MODULE_DIR}}/LICENSE' -Destination '{{.OUT_DIR}}/LICENSE'"
 
     #tar the plugin output and put it in the bin dir
-    - cd {{.OUT_DIR}} && tar -czvf '{{.USER_WORKING_DIR}}/bin/release.tgz' .
+    - cd {{.OUT_DIR}} && tar -czf '{{.USER_WORKING_DIR}}/bin/release.tgz' .
 
   packsource:
     dir: '{{.USER_WORKING_DIR}}'
     internal: true
     cmds:
     #copy source code to target
-    - powershell -Command "Get-ChildItem -Include *.cs,*.csproj -Recurse | Where { \$_.FullName -notlike '*\obj\*' -and \$_.FullName -notlike '*\bin\*' } | Resolve-Path -Relative | tar --files-from - -cvzf 'bin/src.tgz'"
+    - powershell -Command "Get-ChildItem -Include *.cs,*.csproj -Recurse | Where { \$_.FullName -notlike '*\obj\*' -and \$_.FullName -notlike '*\bin\*' } | Resolve-Path -Relative | tar --files-from - -czf 'bin/src.tgz'"
  
   #clean hook
   clean:
