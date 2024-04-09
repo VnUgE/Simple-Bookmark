@@ -52,6 +52,44 @@ namespace SimpleBookmark.Model
             existing.Description = newRecord.Description;
             existing.JsonTags = newRecord.JsonTags;
         }
+     
+        public async Task<int> AddSingleIfNotExists(string userId, BookmarkEntry entry, DateTime now, uint maxRecords, CancellationToken cancellation)
+        {
+            ArgumentNullException.ThrowIfNull(userId);
+            ArgumentNullException.ThrowIfNull(entry);
+
+            //Init new db connection
+            await using SimpleBookmarkContext context = new(dbOptions.Value);
+
+            //Check if any bookmarks exist for the user with a given url
+            bool exists = await context.Bookmarks.AnyAsync(b => b.UserId == userId && b.Url == entry.Url, cancellation);
+
+            //If no bookmarks exist, add a new one
+            if (!exists)
+            {
+                //Check if the user has reached the maximum number of bookmarks
+                if (await context.Bookmarks.CountAsync(b => b.UserId == userId, cancellation) >= maxRecords)
+                {
+                    await context.SaveAndCloseAsync(true, cancellation);
+                    return -1;
+                }
+
+                context.Bookmarks.Add(new ()
+                {
+                    Id = GetNewRecordId(),      //Overwrite with new record id
+                    UserId = userId,            //Enforce user id
+                    Created = now,
+                    LastModified = now,
+                    Name = entry.Name,          //Copy over the entry data
+                    Url = entry.Url,
+                    Description = entry.Description,
+                    Tags = entry.Tags
+                });
+            }
+
+            await context.SaveAndCloseAsync(true, cancellation);
+            return exists ? 0 : 1;         //1 if added, 0 if already exists
+        }
 
         public async Task<BookmarkEntry[]> SearchBookmarksAsync(string userId, string? query, string[] tags, int limit, int page, CancellationToken cancellation)
         {

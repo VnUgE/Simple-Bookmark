@@ -27,8 +27,6 @@ namespace SimpleBookmark.Model
 
         public DbSet<BookmarkEntry> Bookmarks { get; set; }
 
-        public DbSet<UserSettingsEntry> SbSettings { get; set; }
-
         public SimpleBookmarkContext(DbContextOptions options) : base(options)
         { }
 
@@ -37,43 +35,21 @@ namespace SimpleBookmark.Model
 
         public void OnDatabaseCreating(IDbContextBuilder builder, object? userState)
         {
-            builder.DefineTable<BookmarkEntry>(nameof(Bookmarks))
-                    .WithColumn(p => p.Id)
-                    .SetIsKey()
-                    .Next()
-
-                .WithColumn(p => p.Created)
-                    .AllowNull(false)
-                    .Next()
-
-                .WithColumn(p => p.LastModified)
-                    .AllowNull(false)
-                    .Next()
-
-                .WithColumn(p => p.UserId)
-                    .AllowNull(false)
-                    .Next()
-
-                .WithColumn(p => p.Name)
-                    .AllowNull(true)
-                    .Next()
-
-                .WithColumn(p => p.Version)
-                    .TimeStamp()
-                    .AllowNull(true)
-                    .Next()
-
-                .WithColumn(p => p.Url)
-                    .AllowNull(true)
-                    .Next()
-
-                .WithColumn(p => p.Description)
-                    .AllowNull(true)
-                    .Next()
-
-                .WithColumn(p => p.Tags)
-                    .AllowNull(true)
-                    .Next();
+            /*
+             * Define the coloumn mappings for the BookmarkEntry table
+             */
+            builder.DefineTable<BookmarkEntry>(nameof(Bookmarks), table =>
+            {
+                table.WithColumn(p => p.Id).AllowNull(false);
+                table.WithColumn(p => p.Created);
+                table.WithColumn(p => p.LastModified);
+                table.WithColumn(p => p.UserId).AllowNull(false);
+                table.WithColumn(p => p.Name);
+                table.WithColumn(p => p.Version);
+                table.WithColumn(p => p.Url);
+                table.WithColumn(p => p.Description);
+                table.WithColumn(p => p.Tags);
+            });
         }
 
     }

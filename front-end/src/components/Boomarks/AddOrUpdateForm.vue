@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, toRefs } from 'vue';
-import { isEmpty, join, split } from 'lodash-es';
+import { computed, shallowRef, toRefs } from 'vue';
+import { set, watchDebounced } from '@vueuse/core'
+import { isEmpty, join, noop, split } from 'lodash-es';
 import { useStore } from '../../store';
-import { useWait } from '@vnuge/vnlib.browser';
+import { WebMessage, useWait } from '@vnuge/vnlib.browser';
+import { AxiosError } from 'axios';
 
 const emit = defineEmits(['submit'])
 const props = defineProps<{
@@ -19,6 +21,8 @@ const tags = computed({
 
 const { websiteLookup:lookup } = useStore()
 const { setWaiting, waiting } = useWait()
+
+const errMessage = shallowRef();
 
 const execLookup = async () => {
     //url must be valid before searching
@@ -45,9 +49,10 @@ const execLookup = async () => {
             v$.value.Tags.$dirty = true;
         }
     }
-    catch(e){
-        //Mostly ignore errors
+    catch(e){       
         console.error(e)
+        const res = (e as AxiosError).response?.data;
+        set(errMessage, (res as WebMessage)?.result);
     }
     finally{
         setWaiting(false)
@@ -55,6 +60,9 @@ const execLookup = async () => {
 }
 
 const showSearchButton = computed(() => lookup.isSupported && !isEmpty(v$.value.Url.$model))
+
+//Clear error message after 5 seconds
+watchDebounced(errMessage, v => v ? setTimeout(() => set(errMessage, ''), 5000) : noop())
 
 </script>
 <template>
@@ -67,21 +75,30 @@ const showSearchButton = computed(() => lookup.isSupported && !isEmpty(v$.value.
                 <input type="text" id="url" class="input" placeholder="https://www.example.com" v-model="v$.Url.$model"
                     :class="{'dirty': v$.Url.$dirty, 'error': v$.Url.$invalid}" required>
 
-                <div class="">
-                    <button 
-                        type="button"
-                        :disabled="!showSearchButton || waiting" 
-                        @click.self.prevent="execLookup"
-                        id="search-btn"
-                        class="btn blue search-btn"
-                    >
-                        <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 20 20">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                        </svg>
+                <div class="my-auto">
+                    <button type="button" :disabled="!showSearchButton || waiting" @click.prevent="execLookup"
+                        id="search-btn" class="btn blue search-btn">
+                        <span v-if="waiting" class="mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 animate-spin" viewBox="0 0 15 15">
+                                <path fill="currentColor" fill-rule="evenodd"
+                                    d="M8 .5V5H7V.5h1ZM5.146 5.854l-3-3l.708-.708l3 3l-.708.708Zm4-.708l3-3l.708.708l-3 3l-.708-.708Zm.855 1.849L14.5 7l-.002 1l-4.5-.006l.002-1Zm-9.501 0H5v1H.5v-1Zm5.354 2.859l-3 3l-.708-.708l3-3l.708.708Zm6.292 3l-3-3l.708-.708l3 3l-.708.708ZM8 10v4.5H7V10h1Z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <span v-else>
+                            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 20 20">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                            </svg>
+                        </span>
                     </button>
                 </div>
+            </div>
+            <div v-if="errMessage" class="pl-2">
+                <p class="text-xs italic text-red-800 dark:text-red-500">
+                    {{ errMessage }}
+                </p>
             </div>
         </fieldset>
         <fieldset>
