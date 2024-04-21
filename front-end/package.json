@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.17",
-    "@vnuge/vnlib.browser": "https://www.vaughnnugent.com/public/resources/software/builds/Plugins.Essentials/a7cf7c8987b8847984629293d8eb27908f3de3dd/@vnuge-vnlib.browser/release.tgz",
+    "@vnuge/vnlib.browser": "https://www.vaughnnugent.com/public/resources/software/builds/Plugins.Essentials/8d57b050d499c2d85005bebbc2892b190cbb18cc/@vnuge-vnlib.browser/release.tgz",
     "@vuelidate/core": "^2.0.2",
     "@vuelidate/validators": "^2.0.2",
     "@vueuse/core": "^10.3.x",

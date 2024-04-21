@@ -84,6 +84,7 @@ ENV VNCACHE_CACHE_PUBLIC_KEY=""
 #HTTP/PROXY Config
 ENV HTTP_DOWNSTREAM_SERVERS=[]
 ENV SSL_JSON="{}"
+ENV HTTP_TRACE_ON=false
 
 #run the init script within dumb-init
 ENTRYPOINT ["dumb-init", "--"]

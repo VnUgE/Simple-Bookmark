@@ -51,6 +51,9 @@
   //Collection of objects to define hosts+interfaces to build server listeners from
   "virtual_hosts": [
     {
+      //Enable nginx-style connection tracing for this endpoint
+      "trace": false,
+
       //The interface to bind to, you may not mix TLS and non-TLS connections on the same interface
       "interface": {
         "address": "0.0.0.0",
@@ -84,7 +87,7 @@
         "X-Content-Type-Options": "nosniff",
         "X-Xss-Protection": "1; mode=block",
         "X-Frame-Options": "DENY",
-        "Server":"VNLib.Webserver",
+        "Server": "VNLib.Webserver",
         "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; frame-src 'none'; object-src 'none'; referrer no-referrer-when-downgrade; upgrade-insecure-requests; block-all-mixed-content;"
       },
 

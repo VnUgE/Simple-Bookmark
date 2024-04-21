@@ -7,7 +7,7 @@
 
     "path": "/api/bookmarks", //Path for the bookmarks endpoint
 
-   "config": {
+    "config": {
       "max_limit": 100,                 //Max results per page
       "default_limit": 20,              //Default results per page
       "user_quota": ${MAX_BOOKMARKS}    //Max bookmarks per user
@@ -19,19 +19,17 @@
     "path": "/api/lookup",
     "exe_path": "curl", //Path to the curl executable
     "extra_args": [
-      "--globoff", //Disables unsafe url globbing
-      "--no-keepalive", //Disables keepalive, uneeded for a single lookup request
-      "--max-filesize",
-      "100K", //Max file size 100K
-      "--max-redirs",
-      "5", //Max redirects 5
-      "--location", //Follow redirects
+      "--globoff",                //Disables unsafe url globbing
+      "--no-keepalive",           //Disables keepalive, uneeded for a single lookup request
+      "--max-filesize", "100K",   //Max file size 100K
+      "--max-redirs", "5",        //Max redirects 5
+      "--location"                //Follow redirects
     ]
   },
 
   "registration": {
-    "path": "/api/register", //Path for the registration endpoint
-    "token_lifetime_mins": ${REG_TOKEN_DURATION_MIN}, //Token lifetime in minutes
-    "key_regen_interval_mins": ${REG_TOKEN_DURATION_MIN}0 //Signing key regeneration interval in minutes
+    "path": "/api/register",                                //Path for the registration endpoint
+    "token_lifetime_mins": ${REG_TOKEN_DURATION_MIN},       //Token lifetime in minutes
+    "key_regen_interval_mins": ${REG_TOKEN_DURATION_MIN}0   //Signing key regeneration interval in minutes
   }
 }

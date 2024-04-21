@@ -43,6 +43,7 @@ services:
 
       #HTTP
       HTTP_DOWNSTREAM_SERVERS: '[]'
+      HTTP_TRACE_ON: "false"
       #SSL_JSON: '{"cert": "ssl/cert.pem", "privkey":"ssl/priv.pem"}'
 
       SERVER_ARGS: ""

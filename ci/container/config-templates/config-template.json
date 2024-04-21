@@ -52,6 +52,9 @@
   //Collection of objects to define hosts+interfaces to build server listeners from
   "virtual_hosts": [
     {
+
+      "trace": ${HTTP_TRACE_ON},
+
       //The interface to bind to, you may not mix TLS and non-TLS connections on the same interface
       "interface": {
         "address": "0.0.0.0",
