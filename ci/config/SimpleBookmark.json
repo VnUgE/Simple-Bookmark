@@ -8,9 +8,9 @@
     "path": "/api/bookmarks", //Path for the bookmarks endpoint
 
     "config": {
-      "max_limit": 100, //Max results per page
-      "default_limit": 20, //Default results per page
-      "user_quota": 5000 //Max bookmarks per user
+      "max_limit": 100,       //Max results per page
+      "default_limit": 20,    //Default results per page
+      "user_quota": 5000      //Max bookmarks per user
     }
   },
 
@@ -23,7 +23,7 @@
       "--no-keepalive",           //Disables keepalive, uneeded for a single lookup request
       "--max-filesize", "100K",   //Max file size 100K
       "--max-redirs", "5",        //Max redirects 5
-      "--location",               //Follow redirects
+      "--location"                //Follow redirects
     ]
   },
 

@@ -5,7 +5,7 @@
 FROM alpine:3.19 as native-cont
 
 #install public libs and build tools
-RUN apk update && apk add build-base cmake npm git
+RUN apk update && apk add --no-cache build-base cmake npm git
 #most universal way to use Task is from NPM
 RUN npm install -g @go-task/cli
 
@@ -84,6 +84,7 @@ ENV VNCACHE_CACHE_PUBLIC_KEY=""
 #HTTP/PROXY Config
 ENV HTTP_DOWNSTREAM_SERVERS=[]
 ENV SSL_JSON="{}"
+ENV HTTP_TRACE_ON=false
 
 #run the init script within dumb-init
 ENTRYPOINT ["dumb-init", "--"]

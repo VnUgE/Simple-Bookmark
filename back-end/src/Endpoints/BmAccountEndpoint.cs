@@ -304,7 +304,7 @@ namespace SimpleBookmark.Endpoints
             //Create the new user
             UserCreationRequest newUser = new()
             {
-                EmailAddress = userName,
+                Username = userName,
                 InitialStatus = UserStatus.Active,
                 Privileges = privLevel,
                 Password = PrivateString.ToPrivateString(password, false),
@@ -470,7 +470,7 @@ namespace SimpleBookmark.Endpoints
                     .NotNull()
                     .NotEmpty()
                     .EmailAddress()
-                    .Length(1, 200);
+                    .Length(min: 1, max: 100);
 
                 return val;
             }

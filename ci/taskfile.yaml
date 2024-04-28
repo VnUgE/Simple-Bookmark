@@ -8,7 +8,7 @@ version: "3"
 vars:
   BUILDS_URL: https://www.vaughnnugent.com/public/resources/software/builds
   SQLITE_OUT_DIR: "plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite"
-  WEBSERVER_VERSION: 'ed0c71876ec04528e24e612ce723d3aed8971262'
+  WEBSERVER_VERSION: 'a04d0118b671dfc647647d4c425172013011e401'
 
 includes:
   install:
