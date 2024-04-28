@@ -5,7 +5,7 @@
 FROM alpine:3.19 as native-cont
 
 #install public libs and build tools
-RUN apk update && apk add build-base cmake npm git
+RUN apk update && apk add --no-cache build-base cmake npm git
 #most universal way to use Task is from NPM
 RUN npm install -g @go-task/cli
 
