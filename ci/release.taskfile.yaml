@@ -9,6 +9,7 @@ vars:
   SSL_DIR: "ssl"
   DATA_DIR: "data"
   DEFAULT_EC_CURVE: "secp384r1"
+  PASS_PEPPER_SIZE: 64
 
 tasks:
   default:
@@ -68,6 +69,23 @@ tasks:
     - cmd: powershell -Command "mkdir ssl/"
       platforms: [ windows/amd64 ]
       ignore_error: true
+
+  create-pepper:
+    desc: "Generates a new pepper for hashing passwords."
+    vars:
+      PEPPER_FILE: "secrets/password-pepper.txt"
+    cmds:
+    - cmd: mkdir secrets/
+      platforms: [ linux, darwin ]
+      ignore_error: true
+    - cmd: powershell -Command "mkdir secrets/"
+      platforms: [ windows/amd64 ]
+      ignore_error: true
+
+    - cmd: openssl rand -base64 {{.PASS_PEPPER_SIZE}} > {{.PEPPER_FILE}}
+      platforms: [ linux, darwin ]
+
+    - echo "DO NOT EVER LOSE OR UPDATE THIS FILE!"
 
   create-cert:
     desc: "Genereates a new self-signed TLS certificate"
