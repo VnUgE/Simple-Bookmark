@@ -26,13 +26,14 @@ tasks:
     - install-argon2-lib
     - install-compression
     - install-sqlite
+    - install-router
+    - install-accounts
+    - install-sessions
+    - install-vncache
+    - install-vncache-sessions
+    - install-users
     cmds:
-    - task: install-accounts
-    - task: install-router
-    - task: install-sessions
-    - task: install-vncache
-    - task: install-vncache-sessions
-    - task: install-users
+   
     - echo "Installing and configuring plugins and UI"
     - task: build-bookmarks
 
@@ -157,8 +158,6 @@ tasks:
         DIR: './lib/vnlib_compress'
         VERSION: '{{.CORE_VERSION}}'
 
-    - cd 'lib/vnlib_compress' && powershell rm package.json 
-
   install-argon2-lib:
     cmds:
     #install the argon2 binary for Windows
@@ -180,7 +179,7 @@ tasks:
         VERSION: '{{.CORE_VERSION}}'
 
     #remove unneeded files
-    - for: [ man, latex, kats, argon2-specs.pdf, package.json ]
+    - for: [ man, latex, kats, argon2-specs.pdf ]
       cmd: powershell -Command "rm ./lib/argon2/{{.ITEM}} -Recurse"
       ignore_error: true
 

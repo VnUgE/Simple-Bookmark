@@ -17,3 +17,6 @@ tasks:
     - cd {{.DIR}} && tar -xzf {{.FILE_NAME}}
     #remove the archive file
     - cd {{.DIR}} && powershell -Command "rm {{.FILE_NAME}}"
+    #remove all pckage.json files that could cause build issues
+    - cmd: cd {{.DIR}} && powershell 'Get-ChildItem -Path . -Recurse -File -Filter "package.json" | Remove-Item -Force'
+      ignore_error: true

@@ -177,6 +177,6 @@
   //Global secrets object, used by the host and pluings for a specialized secrets
   "secrets": {
     //"db_password": ""
-    "passwords": "yourbase64passwordsecret"
+    "passwords": "file://secrets/password-pepper.txt"
   }
 }

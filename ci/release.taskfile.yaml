@@ -9,16 +9,19 @@ vars:
   SSL_DIR: "ssl"
   DATA_DIR: "data"
   DEFAULT_EC_CURVE: "secp384r1"
+  PASS_PEPPER_SIZE: 64
 
 tasks:
   default:
     desc: "Runs the Simple-Bookmark server"
+    interactive: true
     cmds:
     - task: run
 
   run:
     desc: "Runs the Simple-Bookmark server"
     silent: true
+    interactive: true
     env: 
       #libraries intentionally do not have extensions, for cross-platform compatibility, the server will load them regardless
       VNLIB_SHARED_HEAP_FILE_PATH: lib/vnlib_rpmalloc.dll
@@ -69,8 +72,26 @@ tasks:
       platforms: [ windows/amd64 ]
       ignore_error: true
 
+  create-pepper:
+    desc: "Generates a new pepper for hashing passwords."
+    vars:
+      PEPPER_FILE: "secrets/password-pepper.txt"
+    cmds:
+    - cmd: mkdir secrets/
+      platforms: [ linux, darwin ]
+      ignore_error: true
+    - cmd: powershell -Command "mkdir secrets/"
+      platforms: [ windows/amd64 ]
+      ignore_error: true
+
+    - cmd: openssl rand -base64 {{.PASS_PEPPER_SIZE}} > {{.PEPPER_FILE}}
+      platforms: [ linux, darwin ]
+
+    - echo "DO NOT EVER LOSE OR UPDATE THIS FILE!"
+
   create-cert:
     desc: "Genereates a new self-signed TLS certificate"
+    interactive: true
     cmds:
     - openssl req -new -x509 -days 365 -keyout {{.SSL_DIR}}/key.pem -out {{.SSL_DIR}}/cert.pem -newkey ec -pkeyopt ec_paramgen_curve:{{.DEFAULT_EC_CURVE}} --nodes
 
