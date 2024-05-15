@@ -36,7 +36,11 @@ tasks:
       ignore_error: true
   
     - task: plugins:all
+     #remove runtime-shared libs before they are copied
+    - task: prune-plugin-libs  
     - task: install-webserver
+
+    #runtimes must be pruned for specific targets
     - task: prune-runtimes
     
     #run container build last
@@ -59,20 +63,38 @@ tasks:
     #remove the executable since its not needed
     - cmd: cd webserver/ && powershell -Command "rm VNlib.WebServer"
 
-    - for: [ windows-x86_64, linux-x86_64, osx-x86_64, windows-arm, linux-arm, osx-arm ]
-      task: create-env
-      vars: 
-        TARGET_OS: '{{.ITEM}}'
+    - task: parallel-envs
+
+  parallel-envs:
+    deps:
+     - task: create-env
+       vars: { TARGET_OS: 'windows-x86_64' }
+     - task: create-env
+       vars: { TARGET_OS: 'linux-x86_64' }
+     - task: create-env
+       vars: { TARGET_OS: 'osx-x86_64' }
+     - task: create-env
+       vars: { TARGET_OS: 'windows-arm' }
+     - task: create-env
+       vars: { TARGET_OS: 'linux-arm' }
+     - task: create-env
+       vars: { TARGET_OS: 'osx-arm' }
 
   postbuild_success:
+    deps:
+     - task: pack
+       vars: { TARGET_OS: 'windows-x86_64' }
+     - task: pack
+       vars: { TARGET_OS: 'linux-x86_64' }
+     - task: pack
+       vars: { TARGET_OS: 'osx-x86_64' }
+     - task: pack
+       vars: { TARGET_OS: 'windows-arm' }
+     - task: pack
+       vars: { TARGET_OS: 'linux-arm' }
+     - task: pack
+       vars: { TARGET_OS: 'osx-arm' }
     cmds:
-    #make bin dir
-    - cmd: powershell -Command "mkdir bin -Force"
-      ignore_error: true
-    - for: [ windows-x86_64, linux-x86_64, osx-x86_64, windows-arm, linux-arm, osx-arm ]
-      task: pack
-      vars: 
-        TARGET_OS: '{{.ITEM}}'
 
     #cleanup unnecessary build files that clog up the pipeline
     - for: [ build, plugins, dist, lib, webserver ]
@@ -80,11 +102,7 @@ tasks:
       ignore_error: true
 
     - task: container:postbuild_success
-  
-  build-container:
-    cmds:
-     - task: container:build
-    
+
   create-env:
     vars:
       BUILD_DIR: './build/{{.TARGET_OS}}'
@@ -107,38 +125,59 @@ tasks:
       ignore_error: true
     - cd build/{{.TARGET_OS}} && tar -czf ../../bin/{{.TARGET_OS}}-release.tgz . 
 
-  prune-runtimes:
+  prune-plugin-libs:
     cmds:
+    - for: ['vnlib.utils.dll' , 'vnlib.net.http.dll', 'VNLib.Hashing.Portable.dll', 'VNLib.Plugins.Essentials.dll', 'VNLib.Plugins.dll', 'Serilog.dll', 'Serilog.Sinks.Console.dll', 'Serilog.Sinks.File.dll']
+      cmd: cd plugins && powershell 'Get-ChildItem -Path . -Recurse -File -Filter "{{.ITEM}}" | Remove-Item -Force'
+
+  prune-runtimes:
+    deps:
     #prune sqlite runtime native libraries that Im not targeting
     #windows
-    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-mips64', 'linux-musl-arm', 'linux-musl-arm64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-arm64', 'maccatalyst-x64', 'osx-arm64', 'osx-x64', 'win-arm', 'win-arm64' ]
-      cmd: cd build/windows-x86_64/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
-      ignore_error: true
-   
+    - task: prune-files 
+      vars: 
+        ITEMS: 'browser-wasm,linux-arm,linux-arm64,linux-armel,linux-mips64,linux-musl-arm,linux-musl-arm64,linux-musl-x64,linux-ppc64le,linux-s390x,linux-x64,linux-x86,maccatalyst-arm64,maccatalyst-x64,osx-arm64,osx-x64,win-arm,win-arm64'
+        DIR: 'windows-x86_64'
+      
     #windows arm
-    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-mips64', 'linux-musl-arm', 'linux-musl-arm64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-arm64', 'maccatalyst-x64', 'osx-arm64', 'osx-x64', 'win-x86', 'win-x64' ]
-      cmd: cd build/windows-arm/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
-      ignore_error: true
+    - task: prune-files 
+      vars: 
+        ITEMS: 'browser-wasm,linux-arm,linux-arm64,linux-armel,linux-mips64,linux-musl-arm,linux-musl-arm64,linux-musl-x64,linux-ppc64le,linux-s390x,linux-x64,linux-x86,maccatalyst-arm64,maccatalyst-x64,osx-arm64,osx-x64,win-x86,win-x64'
+        DIR: 'windows-arm'
 
     #linux x64
-    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-musl-arm', 'linux-musl-arm64', 'maccatalyst-arm64', 'maccatalyst-x64', 'osx-arm64', 'osx-x64', 'win-arm', 'win-arm64', 'win-x86', 'win-x64' ]
-      cmd: cd build/linux-x86_64/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
-      ignore_error: true
+    - task: prune-files
+      vars: 
+        ITEMS: 'browser-wasm,linux-arm,linux-arm64,linux-armel,linux-musl-arm,linux-musl-arm64,maccatalyst-arm64,maccatalyst-x64,osx-arm64,osx-x64,win-arm,win-arm64,win-x86,win-x64'
+        DIR: 'linux-x86_64'
  
     #linux arm
-    - for: ['browser-wasm', 'linux-mips64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-arm64', 'maccatalyst-x64', 'osx-arm64', 'osx-x64', 'win-arm', 'win-arm64', 'win-x86', 'win-x64' ]
-      cmd: cd build/linux-arm/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
-      ignore_error: true
+    - task: prune-files
+      vars: 
+        ITEMS: 'browser-wasm,linux-mips64,linux-musl-x64,linux-ppc64le,linux-s390x,linux-x64,linux-x86,maccatalyst-arm64,maccatalyst-x64,osx-arm64,osx-x64,win-arm,win-arm64,win-x86,win-x64'
+        DIR: 'linux-arm'
 
     #osx x64
-    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-mips64', 'linux-musl-arm', 'linux-musl-arm64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-arm64', 'win-arm', 'win-arm64', 'win-x86', 'win-x64' ]
-      cmd: cd build/osx-x86_64/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
-      ignore_error: true
+    - task: prune-files
+      vars: 
+        ITEMS: 'browser-wasm,linux-arm,linux-arm64,linux-armel,linux-mips64,linux-musl-arm,linux-musl-arm64,linux-musl-x64,linux-ppc64le,linux-s390x,linux-x64,linux-x86,maccatalyst-arm64,win-arm,win-arm64,win-x86,win-x64'
+        DIR: 'osx-x86_64'
 
     #osx arm
-    - for: ['browser-wasm', 'linux-arm', 'linux-arm64', 'linux-armel', 'linux-mips64', 'linux-musl-arm', 'linux-musl-arm64', 'linux-musl-x64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'maccatalyst-x64', 'osx-x64', 'win-arm', 'win-arm64', 'win-x86', 'win-x64' ]
-      cmd: cd build/osx-arm/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
-      ignore_error: true
+    - task: prune-files
+      vars: 
+        ITEMS: 'browser-wasm,linux-arm,linux-arm64,linux-armel,linux-mips64,linux-musl-arm,linux-musl-arm64,linux-musl-x64,linux-ppc64le,linux-s390x,linux-x64,linux-x86,maccatalyst-x64,osx-x64,win-arm,win-arm64,win-x86,win-x64'
+        DIR: 'osx-arm'
+
+    cmds:
+     - echo "Pruning runtime files"
+
+  prune-files:
+    internal: true
+    cmds:
+     - for: { var: ITEMS, split: ','}
+       cmd: cd build/{{.DIR}}/{{.SQLITE_OUT_DIR}}/runtimes && powershell -Command "rm {{.ITEM}} -Recurse -Force"
+       ignore_error: true
 
   clean:
     ignore_error: true

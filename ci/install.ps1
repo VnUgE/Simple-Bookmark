@@ -1,5 +1,9 @@
 param([String] $BaseUrl, [String] $ModuleName, [String] $ProjectName, [String]$FileName, [String]$Version)
 
+#random delays to space out the downloads
+$randomDelay = Get-Random -Minimum 300 -Maximum 1000
+Start-Sleep -Milliseconds $randomDelay
+
 $_src = "$BaseUrl/$ModuleName/$Version/$ProjectName/$FileName"
 
 #download the latest version

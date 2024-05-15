@@ -8,6 +8,7 @@ version: "3"
 
 vars:
   INCLUDE_FILES: "Dockerfile, docker-compose.yaml"
+  CERT_KEY_PARAMS: "ec -pkeyopt ec_paramgen_curve:secp384r1"
 
 includes:
   install:
@@ -19,6 +20,7 @@ tasks:
   build-libs:
     vars:
       OUT_DIR: "{{.USER_WORKING_DIR}}/out"
+      SSL_DIR: "{{.USER_WORKING_DIR}}/ssl"
 
     #build stage generates the following libraries
     generates:
@@ -35,6 +37,10 @@ tasks:
       - cd lib/vnlib_compress/ && task && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so
       #build native compression lib and put in lib dir
       - cd lib/vnlib_compress && cmake -B./build && cmake --build build/ --config Release && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so
+
+      #create a fresh self-signed cert for the container during build
+      - openssl req -new -x509 -days 365 -keyout {{.SSL_DIR}}/key.pem -out {{.SSL_DIR}}/cert.pem -newkey {{.CERT_KEY_PARAMS}} --nodes
+      - echo "WARNING Self signed certificate created during build stage, DO NOT COPY THIS IMAGE"
 
   #called from ci pipline to build the package
   build:

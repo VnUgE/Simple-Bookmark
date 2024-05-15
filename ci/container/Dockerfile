@@ -5,7 +5,7 @@
 FROM alpine:3.19 as native-cont
 
 #install public libs and build tools
-RUN apk update && apk add --no-cache build-base cmake npm git
+RUN apk update && apk add --no-cache build-base cmake npm git openssl
 #most universal way to use Task is from NPM
 RUN npm install -g @go-task/cli
 
@@ -20,7 +20,7 @@ RUN task build-libs
 
 #APP CONTAINER
 #move into a clean dotnet apline lean image
-FROM mcr.microsoft.com/dotnet/runtime:8.0.2-alpine3.19-amd64 as app-cont
+FROM mcr.microsoft.com/dotnet/runtime:8.0.3-alpine3.19-amd64 as app-cont
 
 LABEL name="vnuge/simple-bookmark"
 LABEL maintainer="Vaughn Nugent <vnpublic@proton.me>"
@@ -31,6 +31,8 @@ COPY app/ /app
 
 #pull compiled libs from build container
 COPY --from=native-cont /build/out /app/lib
+#copy self signed ssl certs for first startup
+COPY --from=native-cont /build/ssl /app/ssl
 
 RUN apk update && apk add --no-cache gettext icu-libs dumb-init curl
 
@@ -83,8 +85,9 @@ ENV VNCACHE_CACHE_PUBLIC_KEY=""
 
 #HTTP/PROXY Config
 ENV HTTP_DOWNSTREAM_SERVERS=[]
-ENV SSL_JSON="{}"
 ENV HTTP_TRACE_ON=false
+#set default certificate files to the self signed ones created in the build container
+ENV SSL_JSON='{"cert": "ssl/cert.pem", "privkey":"ssl/key.pem"}'
 
 #run the init script within dumb-init
 ENTRYPOINT ["dumb-init", "--"]

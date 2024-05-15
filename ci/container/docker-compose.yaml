@@ -11,7 +11,9 @@ services:
     volumes:
       - ./data:/app/data
       - ./assets:/app/usr/assets:ro
-      - ./ssl:/app/ssl:ro
+      #uncomment to use your own ssl certs, otherwise a build-time cert will be used
+      #- ./ssl/cert.pem:/app/ssl/cert.pem:ro
+      #- ./ssl/key.pem:/app/ssl/key.pem:ro
     ports:
       - 8080:8080
     environment:
@@ -34,7 +36,7 @@ services:
       MAX_LOGIN_ATTEMPS: "10"
 
       #SECRETS
-      PASSWORD_PEPPER: ""
+      PASSWORD_PEPPER: ""   #A base64 encoded secret is required. raw string, vault://, file:// allowed
       DATABASE_PASSWORD: ""
       REDIS_PASSWORD: ""
       #if MEMCACHE_ONLY is false, then the following keys are required to connect to a VNCACHE cluster
@@ -44,7 +46,6 @@ services:
       #HTTP
       HTTP_DOWNSTREAM_SERVERS: '[]'
       HTTP_TRACE_ON: "false"
-      #SSL_JSON: '{"cert": "ssl/cert.pem", "privkey":"ssl/priv.pem"}'
-
-      SERVER_ARGS: ""
+      
+      SERVER_ARGS: "--setup" #remove the setup flag after you are done setting up the server
 
