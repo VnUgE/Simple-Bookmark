@@ -53,6 +53,12 @@ const onSubmit = async () => {
             title: 'Success!',
             text: message
         })
+
+        //Reset form on successfull creation
+        v$.value.username.$model = '';
+        v$.value.password.$model = '';
+        v$.value.repeat.$model = '';
+        v$.value.$reset();
     })
 }
 </script>

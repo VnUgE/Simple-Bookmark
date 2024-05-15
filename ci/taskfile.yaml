@@ -81,6 +81,19 @@ tasks:
        vars: { TARGET_OS: 'osx-arm' }
 
   postbuild_success:
+    cmds:
+    - cmd: powershell -Command "mkdir bin -Force"
+    - task: pb-parallel  
+
+    #cleanup unnecessary build files that clog up the pipeline
+    - for: [ build, plugins, dist, lib, webserver ]
+      cmd: powershell -Command "rm -Recurse '{{.ITEM}}'"
+      ignore_error: true
+
+    - task: container:postbuild_success
+
+  pb-parallel:
+    internal: true
     deps:
      - task: pack
        vars: { TARGET_OS: 'windows-x86_64' }
@@ -95,13 +108,7 @@ tasks:
      - task: pack
        vars: { TARGET_OS: 'osx-arm' }
     cmds:
-
-    #cleanup unnecessary build files that clog up the pipeline
-    - for: [ build, plugins, dist, lib, webserver ]
-      cmd: powershell -Command "rm -Recurse '{{.ITEM}}'"
-      ignore_error: true
-
-    - task: container:postbuild_success
+    - echo "Packing complete"
 
   create-env:
     vars:

@@ -14,12 +14,14 @@ vars:
 tasks:
   default:
     desc: "Runs the Simple-Bookmark server"
+    interactive: true
     cmds:
     - task: run
 
   run:
     desc: "Runs the Simple-Bookmark server"
     silent: true
+    interactive: true
     env: 
       #libraries intentionally do not have extensions, for cross-platform compatibility, the server will load them regardless
       VNLIB_SHARED_HEAP_FILE_PATH: lib/vnlib_rpmalloc.dll
@@ -89,6 +91,7 @@ tasks:
 
   create-cert:
     desc: "Genereates a new self-signed TLS certificate"
+    interactive: true
     cmds:
     - openssl req -new -x509 -days 365 -keyout {{.SSL_DIR}}/key.pem -out {{.SSL_DIR}}/cert.pem -newkey ec -pkeyopt ec_paramgen_curve:{{.DEFAULT_EC_CURVE}} --nodes
 
