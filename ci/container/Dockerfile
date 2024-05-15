@@ -15,7 +15,7 @@ WORKDIR /build
 COPY app/ .
 
 #build internal libraries and copy the libraries to the /lib output directory
-RUN mkdir out/
+RUN mkdir out/ ssl/
 RUN task build-libs
 
 #APP CONTAINER
