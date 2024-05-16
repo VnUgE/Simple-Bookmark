@@ -9,8 +9,8 @@ tasks:
   #update project source code
   update:
     cmds:
-     - git remote update
      - git reset --hard  
+     - git remote update
      - git pull origin {{.BRANCH_NAME}} --verify-signatures
       #re-write semver for back-end after hard reset
      - dotnet-gitversion.exe /updateprojectfiles

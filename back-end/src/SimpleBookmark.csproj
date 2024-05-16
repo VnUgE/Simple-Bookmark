@@ -33,7 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MemoryPack" Version="1.21.1" />
     <PackageReference Include="VNLib.Plugins.Extensions.Data" Version="0.1.0-ci0063" />
     <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0063" />
     <PackageReference Include="VNLib.Plugins.Extensions.Loading.Sql" Version="0.1.0-ci0063" />
