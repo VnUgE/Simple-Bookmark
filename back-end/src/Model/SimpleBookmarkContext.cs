@@ -15,6 +15,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using SimpleBookmark.Model.WebHistory;
+
 using VNLib.Plugins.Extensions.Data;
 using VNLib.Plugins.Extensions.Loading.Sql;
 
@@ -26,6 +28,10 @@ namespace SimpleBookmark.Model
     {
 
         public DbSet<BookmarkEntry> Bookmarks { get; set; }
+
+        public DbSet<WebHistoryEntry> WebHistory { get; set; }
+
+        public DbSet<WebExtensionAuth> AuthorizedExtensions { get; set; }
 
         public SimpleBookmarkContext(DbContextOptions options) : base(options)
         { }
@@ -49,6 +55,33 @@ namespace SimpleBookmark.Model
                 table.WithColumn(p => p.Url);
                 table.WithColumn(p => p.Description);
                 table.WithColumn(p => p.Tags);
+            });
+
+            /*
+             * Define the coloumn mappings for the WebHistoryEntry table                       
+             */
+            builder.DefineTable<WebHistoryEntry>(nameof(WebHistory), table =>
+            {
+                table.WithColumn(p => p.Id).AllowNull(false);
+                table.WithColumn(p => p.Created);
+                table.WithColumn(p => p.LastModified);
+                table.WithColumn(p => p.UserId).AllowNull(false);
+                table.WithColumn(p => p.Title);
+                table.WithColumn(p => p.Url).AllowNull(false);
+            });
+
+            /*
+             * Define the coloumn mappings for the authorized extensions table
+             */
+            builder.DefineTable<WebExtensionAuth>(nameof(AuthorizedExtensions), table =>
+            {
+                table.WithColumn(p => p.Id).AllowNull(false);
+                table.WithColumn(p => p.Created);
+                table.WithColumn(p => p.LastModified);
+                table.WithColumn(p => p.UserId).AllowNull(false);
+                table.WithColumn(p => p.ExtensionId).AllowNull(false);
+                table.WithColumn(p => p.PublicKey).AllowNull(false);
+                table.WithColumn(p => p.AdditionalData);
             });
         }
 
