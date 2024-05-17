@@ -1,29 +1,37 @@
 ﻿{
 
   //Comments are allowed
-  "debug": false, //Enables obnoxious debug logging
+  "debug": false,           //Enables obnoxious debug logging
 
   "bm_endpoint": {
 
-    "path": "/bookmarks", //Path for the bookmarks endpoint
+    "path": "/bookmarks",   //Path for the bookmarks endpoint
 
     "config": {
-      "max_limit": 100, //Max results per page
-      "default_limit": 20, //Default results per page
-      "user_quota": 5000 //Max bookmarks per user
+      "max_limit": 100,     //Max results per page
+      "default_limit": 20,  //Default results per page
+      "user_quota": 5000    //Max bookmarks per user
     }
+  },
+
+  "widgets": {
+    "enabled": true,      //Enables the widgets endpoint
+    "path": "/widgets",   //Path for the widgets endpoint
+    "cors-urls": "*"      //CORS allowed urls
   },
 
   //System website lookup endpoint (aka curl)
   "curl": {
     "path": "/lookup",
-    "exe_path": "curl", //Path to the curl executable
+    "exe_path": "curl",     //Path to the curl executable
     "extra_args": [
-      "--globoff",                //Disables unsafe url globbing
-      "--no-keepalive",           //Disables keepalive, uneeded for a single lookup request
-      "--max-filesize", "100K",   //Max file size 100K
-      "--max-redirs", "5",        //Max redirects 5
-      "--location",               //Follow redirects
+      "--globoff",          //Disables unsafe url globbing
+      "--no-keepalive",     //Disables keepalive, uneeded for a single lookup request
+      "--max-filesize",
+      "100K",               //Max file size 100K
+      "--max-redirs",
+      "5",                  //Max redirects 5
+      "--location"          //Follow redirects
     ]
   },
 
