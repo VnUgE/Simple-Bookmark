@@ -19,7 +19,7 @@ services:
     environment:
       MAX_BOOKMARKS: "5000"
       REG_TOKEN_DURATION_MIN: "360"  #6 hours
-      
+
       #SQL Config
       SQL_LIB_PATH: "VNLib.Plugins.Extensions.Sql.SQLite.dll"
       SQL_CONNECTION_STRING: "Data Source=data/simple-bookmark.db;"
@@ -35,7 +35,7 @@ services:
       REDIS_CONNECTION_STRING: ""
       #at least one node required if MEMCACHE_ONLY is false
       VNCACHE_INITIAL_NODES: "[]"
-      
+
       #Accounts plugin config
       MAX_LOGIN_ATTEMPS: "10"
 
@@ -58,6 +58,6 @@ services:
 
       #Very Verbose plugin logging, required --debug CLI flag, prints literally everything to the logger
       DEBUG_PLUGINS: "false"
-      
+
       SERVER_ARGS: "--setup" #remove the setup flag after you are done setting up the server
 
