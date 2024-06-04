@@ -14,6 +14,8 @@ const Login = defineAsyncComponent(() => import('./components/Login.vue'));
 const Registation = defineAsyncComponent(() => import('./components/Registation.vue'));
 const PasswordPrompt = defineAsyncComponent(() => import('./components/global/PasswordPrompt.vue'));
 
+const appVersion = APP_VERSION as string;
+
 const store = useStore();
 const { activeTab, siteTitle, loggedIn, userName } = storeToRefs(store);
 const darkMode = useDark()
@@ -42,17 +44,26 @@ const showIf = (tabId: TabId, active: TabId) => isEqual(tabId, active)
       <Confirm />
       <PasswordPrompt />
 
-      <aside id="logo-sidebar" class="fixed top-0 left-0 z-20 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
-          <div class="flex flex-col h-full px-3 py-4 overflow-y-auto bg-white dark:bg-gray-800">
-              <div class="flex-auto">
-                  <a href="/" class="flex items-center ps-2.5 mb-5">
-                      <span class="p-2 mr-2 bg-blue-500 rounded-full">
-                          <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 14 20">
-                              <path d="M13 20a1 1 0 0 1-.64-.231L7 15.3l-5.36 4.469A1 1 0 0 1 0 19V2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17a1 1 0 0 1-1 1Z"/>
-                          </svg>
-                      </span>
-                      <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">{{ siteTitle }}</span>
-                  </a>
+      <aside id="logo-sidebar"
+        class="fixed top-0 left-0 z-20 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0"
+        aria-label="Sidebar">
+        <div class="flex flex-col h-full px-3 py-4 overflow-y-auto bg-white dark:bg-gray-800">
+          <div class="flex-auto">
+            <a href="/" class="flex items-center ps-2.5 mb-5">
+              <span class="p-2 mr-2 bg-blue-500 rounded-full">
+                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor" viewBox="0 0 14 20">
+                  <path
+                    d="M13 20a1 1 0 0 1-.64-.231L7 15.3l-5.36 4.469A1 1 0 0 1 0 19V2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17a1 1 0 0 1-1 1Z" />
+                </svg>
+              </span>
+              <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">{{ siteTitle }}</span>
+              <span class="relative">
+                <div class="absolute right-0 text-xs font-bold text-blue-500 top-3 text-nowrap">
+                  v{{ appVersion }}
+                </div>
+              </span>
+            </a>
 
                   <ul class="space-y-2 font-medium">
                       <SideMenuItem :disabled="!loggedIn" :tab="TabId.Bookmarks" name="Bookmarks">
@@ -122,7 +133,7 @@ const showIf = (tabId: TabId, active: TabId) => isEqual(tabId, active)
         </div>
 
         <div v-if="showIf(TabId.Register, activeTab)" class="flex w-full h-full">
-          <Registation/>
+          <Registation />
         </div>
       </div>
 
