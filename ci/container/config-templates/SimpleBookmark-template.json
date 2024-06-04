@@ -1,7 +1,7 @@
 ﻿{
 
   //Comments are allowed
-  "debug": false, //Enables obnoxious debug logging
+  "debug": ${DEBUG_PLUGINS}, //Enables obnoxious debug logging
 
   "bm_endpoint": {
 

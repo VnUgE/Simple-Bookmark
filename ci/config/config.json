@@ -141,7 +141,7 @@
     "interval": "infinite"
   },
 
-  "disabled app_log": {
+  "app_log": {
     "path": "data/logs/applog.txt",
     //"template": "serilog template for writing to file",
     "flush_sec": 5,

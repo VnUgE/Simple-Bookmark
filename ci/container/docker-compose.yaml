@@ -19,24 +19,33 @@ services:
     environment:
       MAX_BOOKMARKS: "5000"
       REG_TOKEN_DURATION_MIN: "360"  #6 hours
+
       #SQL Config
       SQL_LIB_PATH: "VNLib.Plugins.Extensions.Sql.SQLite.dll"
       SQL_CONNECTION_STRING: "Data Source=data/simple-bookmark.db;"
-      #HC Vault
-      HC_VAULT_ADDR: ""
-      HC_VAULT_TOKEN: ""
-      HC_VAULT_TRUST_CERT: "false"
+
+      #HC Vault client config
+      #HC_VAULT_ADDR: ""
+      #HC_VAULT_TOKEN: ""
+      #HC_VAULT_TRUST_CERT: "false"
+
       #VNCACHE (default to memory only)
       CACHE_ASM_PATH: "VNLib.Data.Caching.Providers.VNCache.dll"
       MEMCACHE_ONLY: "true"
       REDIS_CONNECTION_STRING: ""
       #at least one node required if MEMCACHE_ONLY is false
       VNCACHE_INITIAL_NODES: "[]"
-      #ACCOUNTS
+
+      #Accounts plugin config
       MAX_LOGIN_ATTEMPS: "10"
 
       #SECRETS
-      PASSWORD_PEPPER: ""   #A base64 encoded secret is required. raw string, vault://, file:// allowed
+      #All secrets may be a raw value, read from a file, 
+      #an environment variable, or a vault path
+      # file://mysecret.txt     reads the secret from a file (case sensitive)
+      # env://MY_SECRET         reads the secret from an environment variable (case sensitive)
+      # vault://kv/data/secret?secret=value   reads the value of the mysecret key in the secret/data path
+      PASSWORD_PEPPER: ""     #Must be a base64 encoded value, of realtivley any size
       DATABASE_PASSWORD: ""
       REDIS_PASSWORD: ""
       #if MEMCACHE_ONLY is false, then the following keys are required to connect to a VNCACHE cluster
@@ -44,8 +53,11 @@ services:
       VNCACHE_CACHE_PUBLIC_KEY: ""
 
       #HTTP
-      HTTP_DOWNSTREAM_SERVERS: '[]'
-      HTTP_TRACE_ON: "false"
-      
+      HTTP_DOWNSTREAM_SERVERS: '[]'   #a comma separated list of downstream ip addresses
+      HTTP_TRACE_ON: "false"          #enable http trace logging, requires --debug CLI flag
+
+      #Very Verbose plugin logging, required --debug CLI flag, prints literally everything to the logger
+      DEBUG_PLUGINS: "false"
+
       SERVER_ARGS: "--setup" #remove the setup flag after you are done setting up the server
 

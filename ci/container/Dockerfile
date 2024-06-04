@@ -55,8 +55,8 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
 ENV VNLIB_ARGON2_DLL_PATH=/app/lib/libargon2.so
 
 #set default env variables
-ENV MAX_BOOKMARKS=5000
-ENV REG_TOKEN_DURATION_MIN=360
+ENV MAX_BOOKMARKS=5000           \
+ REG_TOKEN_DURATION_MIN=360
 
 #SQL Config
 ENV SQL_LIB_PATH=VNLib.Plugins.Extensions.Sql.SQLite.dll
@@ -66,28 +66,33 @@ ENV SQL_CONNECTION_STRING="Data Source=data/simple-bookmark.db;"
 ENV MAX_LOGIN_ATTEMPS=10
 
 #HC Vault
-ENV HC_VAULT_ADDR=""
-ENV HC_VAULT_TOKEN=""
-ENV HC_VAULT_TRUST_CERT=false
+ENV HC_VAULT_ADDR=""            \
+ HC_VAULT_TOKEN=""              \
+ HC_VAULT_TRUST_CERT=false
 
 #VNCACHE (default to memory only)
-ENV CACHE_ASM_PATH=VNLib.Data.Caching.Providers.VNCache.dll
-ENV MEMCACHE_ONLY=true		
-ENV REDIS_CONNECTION_STRING=""
-ENV VNCACHE_INITIAL_NODES=[]
+ENV CACHE_ASM_PATH=VNLib.Data.Caching.Providers.VNCache.dll \
+ MEMCACHE_ONLY=true             \
+ REDIS_CONNECTION_STRING=""     \
+ VNCACHE_INITIAL_NODES=[]
 
 #SECRETS
-ENV PASSWORD_PEPPER=""
-ENV DATABASE_PASSWORD=""
-ENV REDIS_PASSWORD=""
-ENV VNCACHE_CLIENT_PRIVATE_KEY=""
-ENV VNCACHE_CACHE_PUBLIC_KEY=""
+ENV PASSWORD_PEPPER=""          \
+ DATABASE_PASSWORD=""           \
+ REDIS_PASSWORD=""              \
+ VNCACHE_CLIENT_PRIVATE_KEY=""  \
+ VNCACHE_CACHE_PUBLIC_KEY=""
+
 
 #HTTP/PROXY Config
-ENV HTTP_DOWNSTREAM_SERVERS=[]
-ENV HTTP_TRACE_ON=false
+ENV HTTP_DOWNSTREAM_SERVERS=[]  \
+ HTTP_TRACE_ON=false
+
 #set default certificate files to the self signed ones created in the build container
 ENV SSL_JSON='{"cert": "ssl/cert.pem", "privkey":"ssl/key.pem"}'
+
+#disable plugin debugging by default
+ENV DEBUG_PLUGINS=false
 
 #run the init script within dumb-init
 ENTRYPOINT ["dumb-init", "--"]
