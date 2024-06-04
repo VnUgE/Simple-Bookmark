@@ -18,7 +18,8 @@ tasks:
   build:
     cmds:
      #overwrite front-end version, this must be run on build hook because update can cause the version to change 
-     - cd front-end/ && npm version {{ .BUILD_VERSION }}
+     - cmd: cd front-end/ && npm version {{ .BUILD_VERSION }}
+       ignore_error: true #error if run when version is not updated
     
   #copy artifacts to temp directory
   postbuild_success:
