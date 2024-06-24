@@ -10,6 +10,7 @@ includes:
     taskfile: install.taskfile.yaml
 
 vars:
+  PLUGIN_NAME: 'SimpleBookmark'
   CORE_VERSION: '1b590c2517fef110564943ed8a10edd11fa758b0'
   ESSENTIALS_VERSION: '451091e93b5feee7a5e01d3a81f5d63efa7ea8be'
   CACHE_VERSION: '930980a1e6b5db24dd4d8beeb115e4279ea79ee2'
@@ -35,9 +36,9 @@ tasks:
     cmds:
    
     - echo "Installing and configuring plugins and UI"
-    - task: build-bookmarks
+    - task: build-proj
 
-  build-bookmarks:
+  build-proj:
     cmds:
     #build front-end
     - cd ../front-end && npm install && npm run build
@@ -46,9 +47,9 @@ tasks:
 
     #build the plugin 
     - cmd: cd ../back-end/src && task build
-    - powershell -Command "mkdir plugins/SimpleBookmark -Force"
+    - powershell -Command "mkdir plugins/{{.PLUGIN_NAME}} -Force"
     #copy the plugin output
-    - powershell -Command "cp -Recurse -Force ../back-end/src/bin/release/net8.0/publish/* plugins/SimpleBookmark/"
+    - powershell -Command "cp -Recurse -Force ../back-end/src/bin/release/net8.0/publish/* plugins/{{.PLUGIN_NAME}}/"
 
   install-accounts:
     cmds:

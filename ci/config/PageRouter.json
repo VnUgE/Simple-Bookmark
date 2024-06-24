@@ -1,6 +1,0 @@
-{
-  "debug": false,
-  "store": {
-    "route_file": "config/routes.xml"
-  }
-}

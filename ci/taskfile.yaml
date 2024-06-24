@@ -34,6 +34,8 @@ tasks:
 
     - cmd: powershell -Command "mkdir lib -Force"
       ignore_error: true
+
+    - task: compile-config
   
     - task: plugins:all
      #remove runtime-shared libs before they are copied
@@ -86,7 +88,7 @@ tasks:
     - task: pb-parallel  
 
     #cleanup unnecessary build files that clog up the pipeline
-    - for: [ build, plugins, dist, lib, webserver ]
+    - for: [ build, plugins, dist, lib, webserver, config ]
       cmd: powershell -Command "rm -Recurse '{{.ITEM}}'"
       ignore_error: true
 
@@ -119,7 +121,7 @@ tasks:
       ignore_error: true
     
     #copy build files for target os
-    - for: [ plugins, dist, lib, config, webserver ]
+    - for: [ plugins, dist, lib, config, webserver, config ]
       cmd: powershell -Command "cp -Recurse -Force {{.ITEM}} {{.BUILD_DIR}}"
 
     #copy release taskfile and rename it
@@ -131,6 +133,15 @@ tasks:
     - cmd: powershell -Command "mkdir build/{{.TARGET_OS}}/ -Force"
       ignore_error: true
     - cd build/{{.TARGET_OS}} && tar -czf ../../bin/{{.TARGET_OS}}-release.tgz . 
+
+  compile-config:
+    internal: false
+    dotenv: ['build.env']  #use the local .env file when compiling config variables
+    cmds:
+      - cmd: powershell mkdir config/ -Force
+        ignore_error: true
+      - cmd: powershell './compile.ps1' -InputDir config-templates/ -OutputDir config/
+      - cmd: powershell cp config-templates/routes.xml config/routes.xml -Force
 
   prune-plugin-libs:
     cmds:
@@ -189,7 +200,7 @@ tasks:
   clean:
     ignore_error: true
     cmds:
-    - for: [ build/, bin/, dist/, plugins/, lib/, webserver/ ]
+    - for: [ build/, bin/, dist/, plugins/, lib/, webserver/, config/ ]
       cmd: powershell -Command "rm -Recurse -Force '{{.ITEM}}'"
     
     - task: container:clean

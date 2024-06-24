@@ -1,12 +1,12 @@
 {
-  "debug": false,
+  "debug": ${DEBUG_PLUGINS},
 
   //endpoints
 
   "login_endpoint": {
     "path": "/api/account/login",
-    "max_login_attempts": 10, //10 failed attempts in 10 minutes
-    "failed_attempt_timeout_sec": 600 //10 minutes
+    "max_login_attempts": ${MAX_LOGIN_ATTEMPS},   //10 failed attempts in 10 minutes
+    "failed_attempt_timeout_sec": 600             //10 minutes
   },
 
   "keepalive_endpoint": {
