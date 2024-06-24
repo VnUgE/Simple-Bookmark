@@ -19,6 +19,8 @@ services:
     environment:
       MAX_BOOKMARKS: "5000"
       REG_TOKEN_DURATION_MIN: "360"  #6 hours
+      MAX_CONTENT_LENGTH: 5120000    #5MB max upload size
+      MAX_LOGIN_ATTEMPS: "10"        #max login attempts before user account is locked out
 
       #SQL Config
       SQL_LIB_PATH: "VNLib.Plugins.Extensions.Sql.SQLite.dll"
@@ -36,27 +38,25 @@ services:
       #at least one node required if MEMCACHE_ONLY is false
       VNCACHE_INITIAL_NODES: "[]"
 
-      #Accounts plugin config
-      MAX_LOGIN_ATTEMPS: "10"
-
       #SECRETS
-      #All secrets may be a raw value, read from a file, 
-      #an environment variable, or a vault path
+      # All secrets may be a raw value, read from a file, 
+      # an environment variable, or a vault path
       # file://mysecret.txt     reads the secret from a file (case sensitive)
       # env://MY_SECRET         reads the secret from an environment variable (case sensitive)
       # vault://kv/data/secret?secret=value   reads the value of the mysecret key in the secret/data path
+
       PASSWORD_PEPPER: ""     #Must be a base64 encoded value, of realtivley any size
-      DATABASE_PASSWORD: ""
-      REDIS_PASSWORD: ""
+      DATABASE_PASSWORD: ""   #overrides the 'Password' field in the SQL connection string
+      REDIS_PASSWORD: ""      #only required if using a password protected redis server
       #if MEMCACHE_ONLY is false, then the following keys are required to connect to a VNCACHE cluster
       VNCACHE_CLIENT_PRIVATE_KEY: ""
       VNCACHE_CACHE_PUBLIC_KEY: ""
 
       #HTTP
-      HTTP_DOWNSTREAM_SERVERS: '[]'   #a comma separated list of downstream ip addresses
-      HTTP_TRACE_ON: "false"          #enable http trace logging, requires --debug CLI flag
+      HTTP_DOWNSTREAM_SERVERS: '[]'   #a comma separated list of downstream (proxy) server ip addresses
+      HTTP_TRACE_ON: "false"          #enable http trace logging, requires you to set --debug to SERVER_ARGS variable below
 
-      #Very Verbose plugin logging, required --debug CLI flag, prints literally everything to the logger
+      #Very Verbose plugin logging, required --debug CLI flag, prints literally everything to the logger (it's annoying)
       DEBUG_PLUGINS: "false"
 
       SERVER_ARGS: "--setup" #remove the setup flag after you are done setting up the server

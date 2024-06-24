@@ -42,28 +42,29 @@ WORKDIR /app
 #default to 8080 for TLS on TCP
 EXPOSE 8080/tcp
 
-VOLUME /app/data
-VOLUME /app/ssl
+VOLUME  /app/data    \
+        /app/ssl     \
 #expose an assets directory for custom assets install
-VOLUME /app/usr/assets
+        /app/usr/assets
 
 #disable dotnet invariant culture on alpine
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
 
 #add helper/required libraries
 #ENV VNLIB_SHARED_HEAP_FILE_PATH=/app/lib/libvn_rpmalloc.so		not ready yet, still need to debug
-ENV VNLIB_ARGON2_DLL_PATH=/app/lib/libargon2.so
+ENV VNLIB_ARGON2_DLL_PATH=/app/lib/libargon2.so \
+  COMPRESSION_LIB_PATH=/app/lib/libvn_compress.so 
 
 #set default env variables
-ENV MAX_BOOKMARKS=5000           \
- REG_TOKEN_DURATION_MIN=360
+ENV MAX_BOOKMARKS=5000          \
+ MAX_CONTENT_LENGTH=5120000     \
+ REG_TOKEN_DURATION_MIN=360     \
+ MAX_LOGIN_ATTEMPS=10
 
 #SQL Config
 ENV SQL_LIB_PATH=VNLib.Plugins.Extensions.Sql.SQLite.dll
 ENV SQL_CONNECTION_STRING="Data Source=data/simple-bookmark.db;"
 
-#ACCOUNTS
-ENV MAX_LOGIN_ATTEMPS=10
 
 #HC Vault
 ENV HC_VAULT_ADDR=""            \

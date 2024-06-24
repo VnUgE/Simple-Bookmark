@@ -13,13 +13,13 @@ vars:
 
 tasks:
   default:
-    desc: "Runs the Simple-Bookmark server"
+    desc: "Runs the server in realease mode"
     interactive: true
     cmds:
     - task: run
 
   run:
-    desc: "Runs the Simple-Bookmark server"
+    desc: "Runs the server in release mode"
     silent: true
     interactive: true
     env: 

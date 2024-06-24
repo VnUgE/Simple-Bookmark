@@ -1,6 +1,0 @@
-{
-  "debug": ${DEBUG_PLUGINS},
-  "store": {
-    "route_file": "static/routes.xml"
-  }
-}

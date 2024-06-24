@@ -35,9 +35,9 @@ tasks:
     cmds:
    
     - echo "Installing and configuring plugins and UI"
-    - task: build-bookmarks
+    - task: build-proj
 
-  build-bookmarks:
+  build-proj:
     cmds:
     #build front-end
     - cd ../front-end && npm install && npm run build
@@ -46,9 +46,9 @@ tasks:
 
     #build the plugin 
     - cmd: cd ../back-end/src && task build
-    - powershell -Command "mkdir plugins/SimpleBookmark -Force"
+    - powershell -Command "mkdir plugins/{{.PROJECT_NAME}} -Force"
     #copy the plugin output
-    - powershell -Command "cp -Recurse -Force ../back-end/src/bin/release/net8.0/publish/* plugins/SimpleBookmark/"
+    - powershell -Command "cp -Recurse -Force ../back-end/src/bin/release/net8.0/publish/* plugins/{{.PROJECT_NAME}}/"
 
   install-accounts:
     cmds:
