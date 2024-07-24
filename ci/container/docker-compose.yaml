@@ -5,6 +5,9 @@ version: '3.6'
 
 services:
   simple-bookmark:
+    build:        #builds in the current directory
+      context: .
+
     image: vnuge/simple-bookmark
     container_name: simple-bookmark
     restart: unless-stopped

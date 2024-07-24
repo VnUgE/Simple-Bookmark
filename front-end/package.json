@@ -28,13 +28,13 @@
     "base32-encode": "^2.0.0",
     "flowbite": "^2.2.1",
     "jose": "^5.0.x",
-    "otpauth": "^9.1.2",
     "lodash-es": "^4.17.21",
+    "otpauth": "^9.1.2",
     "pinia": "^2.1.7",
     "qrcode.vue": "^3.4.1",
     "universal-cookie": "^7.0.x",
     "vue": "^3.2.47",
-    "vue3-otp-input": "^0.4.1"
+    "vue3-otp-input": "^0.5.1"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.14.194",
