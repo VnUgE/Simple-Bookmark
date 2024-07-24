@@ -6,10 +6,15 @@ version: '3'
 
 tasks:
 
+  package-update:
+    cmds:
+     - for: [ front-end/ ]
+       cmd: cd {{.ITEM}} && task package-update
+
   #update project source code
   update:
     cmds:
-     - git reset --hard  
+     - git reset --hard
      - git remote update
      - git pull origin {{.BRANCH_NAME}} --verify-signatures
       #re-write semver for back-end after hard reset

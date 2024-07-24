@@ -5,6 +5,9 @@ version: '3.6'
 
 services:
   simple-bookmark:
+    build:        #builds in the current directory
+      context: .
+
     image: vnuge/simple-bookmark
     container_name: simple-bookmark
     restart: unless-stopped
@@ -19,7 +22,7 @@ services:
     environment:
       MAX_BOOKMARKS: "5000"
       REG_TOKEN_DURATION_MIN: "360"  #6 hours
-      MAX_CONTENT_LENGTH: 5120000    #5MB max upload size
+      MAX_CONTENT_LENGTH: "5120000"  #5MB max upload size
       MAX_LOGIN_ATTEMPS: "10"        #max login attempts before user account is locked out
 
       #SQL Config
