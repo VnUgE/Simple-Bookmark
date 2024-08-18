@@ -9,6 +9,8 @@ version: "3"
 vars:
   INCLUDE_FILES: "Dockerfile, docker-compose.yaml"
   CERT_KEY_PARAMS: "ec -pkeyopt ec_paramgen_curve:secp384r1"
+  OUT_DIR: "{{.USER_WORKING_DIR}}/out"
+  SSL_DIR: "{{.USER_WORKING_DIR}}/ssl"
 
 includes:
   install:
@@ -18,20 +20,37 @@ includes:
 tasks:
   #called from inside the container to build native libraries
   build-libs:
+    deps:
+     - task: build_rpmalloc
+     - task: build_argon2
+     - task: build_compres
+     - task: create_cert
+
+  build_rpmalloc:
+    internal: true
+    cmds:
+      #build rpmalloc library and rewrite to a standard .dll extension
+      - cmd: cd lib/vnlib_rpmalloc/ && task && cp build/libvn_rpmalloc.so {{.OUT_DIR}}/libvn_rpmalloc.so
+
+  build_argon2:
+    internal: true
+    cmds:
+      #build argon2 native library
+      - cmd: cd lib/argon2/ && task && cp build/libargon2.so {{.OUT_DIR}}/libargon2.so
+
+  build_compress:
+    internal: true
+    cmds:
+      #build compression and rewrite to a standard .dll extension
+      - cmd: cd lib/vnlib_compress/ && task && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so
+
+  create_cert:
+    internal: true
     vars:
-      OUT_DIR: "{{.USER_WORKING_DIR}}/out"
-      SSL_DIR: "{{.USER_WORKING_DIR}}/ssl"
       HOSTNAME: 
         sh: echo $HOSTNAME
 
     cmds:
-      #build argon2 native library
-      - cd lib/argon2/ && task && cp build/libargon2.so {{.OUT_DIR}}/libargon2.so
-      #build rpmalloc library and rewrite to a standard .dll extension
-      - cd lib/vnlib_rpmalloc/ && task && cp build/libvn_rpmalloc.so {{.OUT_DIR}}/libvn_rpmalloc.so
-      #build compression and rewrite to a standard .dll extension
-      - cd lib/vnlib_compress/ && task && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so
-
       #create a fresh self-signed cert for the container during build
       - openssl req -new -x509 -days 365 -keyout {{.SSL_DIR}}/key.pem -out {{.SSL_DIR}}/cert.pem -newkey {{.CERT_KEY_PARAMS}} --nodes -subj "/CN={{.HOSTNAME}}"
       - echo "WARNING Self signed certificate created during build stage, DO NOT COPY THIS IMAGE"

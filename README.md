@@ -60,7 +60,7 @@ Download the latest alpine build package: [sb-alpine3.19-oci.tgz](https://www.va
 This archive contains all the software needed to build the image locally. It also comes with a docker-compose.yaml file for easy setup and deployment. Here is the gist:  
 ```  shell
 tar -xzf sb-alpine3.19-oci.tgz
-docker build . -t vnuge/simple-bookmark
+docker-compose build
 docker-compose up -d
 ```
  _Of course there is more setup involved, so take a look at the docs for more info_  

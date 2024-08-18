@@ -34,7 +34,7 @@ COPY --from=native-cont /build/out /app/lib
 #copy self signed ssl certs for first startup
 COPY --from=native-cont /build/ssl /app/ssl
 
-RUN apk update && apk add --no-cache gettext icu-libs dumb-init curl
+RUN apk update && apk add --no-cache icu-libs dumb-init curl
 
 #workdir 
 WORKDIR /app
@@ -55,45 +55,17 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
 ENV VNLIB_ARGON2_DLL_PATH=/app/lib/libargon2.so \
   COMPRESSION_LIB_PATH=/app/lib/libvn_compress.so 
 
-#set default env variables
-ENV MAX_BOOKMARKS=5000          \
- MAX_CONTENT_LENGTH=5120000     \
- REG_TOKEN_DURATION_MIN=360     \
- MAX_LOGIN_ATTEMPS=10
-
 #SQL Config
 ENV SQL_LIB_PATH=VNLib.Plugins.Extensions.Sql.SQLite.dll
 ENV SQL_CONNECTION_STRING="Data Source=data/simple-bookmark.db;"
 
-
-#HC Vault
-ENV HC_VAULT_ADDR=""            \
- HC_VAULT_TOKEN=""              \
- HC_VAULT_TRUST_CERT=false
-
 #VNCACHE (default to memory only)
-ENV CACHE_ASM_PATH=VNLib.Data.Caching.Providers.VNCache.dll \
- MEMCACHE_ONLY=true             \
- REDIS_CONNECTION_STRING=""     \
- VNCACHE_INITIAL_NODES=[]
-
-#SECRETS
-ENV PASSWORD_PEPPER=""          \
- DATABASE_PASSWORD=""           \
- REDIS_PASSWORD=""              \
- VNCACHE_CLIENT_PRIVATE_KEY=""  \
- VNCACHE_CACHE_PUBLIC_KEY=""
-
-
-#HTTP/PROXY Config
-ENV HTTP_DOWNSTREAM_SERVERS=[]  \
- HTTP_TRACE_ON=false
+ENV CACHE_ASM_PATH=VNLib.Data.Caching.Providers.VNCache.dll 
 
 #set default certificate files to the self signed ones created in the build container
-ENV SSL_JSON='{"cert": "ssl/cert.pem", "privkey":"ssl/key.pem"}'
-
-#disable plugin debugging by default
-ENV DEBUG_PLUGINS=false
+ENV TLS_ENABLE=true             \
+TLS_CERT=ssl/cert.pem           \
+TLS_PRIVATE_KEY=ssl/key.pem     
 
 #run the init script within dumb-init
 ENTRYPOINT ["dumb-init", "--"]

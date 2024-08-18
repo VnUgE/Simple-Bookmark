@@ -56,6 +56,7 @@ services:
       VNCACHE_CACHE_PUBLIC_KEY: ""
 
       #HTTP
+      HTTP_PORT: "8080"
       HTTP_DOWNSTREAM_SERVERS: '[]'   #a comma separated list of downstream (proxy) server ip addresses
       HTTP_TRACE_ON: "false"          #enable http trace logging, requires you to set --debug to SERVER_ARGS variable below
 

@@ -1,7 +1,7 @@
 ﻿{
 
   //Comments are allowed
-  "debug": ${DEBUG_PLUGINS}, //Enables obnoxious debug logging
+  "debug": ${DEBUG_PLUGINS:-false}, //Enables obnoxious debug logging
 
   "bm_endpoint": {
 
@@ -10,7 +10,7 @@
     "config": {
       "max_limit": 100,                 //Max results per page
       "default_limit": 20,              //Default results per page
-      "user_quota": ${MAX_BOOKMARKS}    //Max bookmarks per user
+      "user_quota": ${MAX_BOOKMARKS:-5000}    //Max bookmarks per user
     }
   },
 
@@ -29,7 +29,7 @@
 
   "registration": {
     "path": "/api/register",                                //Path for the registration endpoint
-    "token_lifetime_mins": ${REG_TOKEN_DURATION_MIN},       //Token lifetime in minutes
-    "key_regen_interval_mins": ${REG_TOKEN_DURATION_MIN}0   //Signing key regeneration interval in minutes
+    "token_lifetime_mins": ${REG_TOKEN_DURATION_MIN:-360},       //Token lifetime in minutes
+    "key_regen_interval_mins": ${REG_TOKEN_DURATION_MIN:-360}0   //Signing key regeneration interval in minutes
   }
 }

@@ -22,9 +22,6 @@
    */
 
 using System;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 
 using VNLib.Plugins;
 using VNLib.Utils.Logging;
@@ -76,7 +73,7 @@ namespace SimpleBookmark
 @"
 ******************************************************************************
     Simple-Bookmark - A linkding inspired, self hosted, bookmark manager 
-    By Vaughn Nugent - vnpublic @proton.me
+    By Vaughn Nugent - vnpublic@proton.me
     https://www.vaughnnugent.com/resources/software
     License: GNU Affero General Public License v3.0
     This application comes with ABSOLUTELY NO WARRANTY.
@@ -84,27 +81,10 @@ namespace SimpleBookmark
     Documentation: https://www.vaughnnugent.com/resources/software/articles?tags=docs,_simple-bookmark
     GitHub: https://github.com/VnUgE/simple-bookmark
     {warning}
-    Your server is now running at the following locations:{0}
-******************************************************************************";
 
-            string[] interfaces = HostConfig.GetProperty("virtual_hosts")
-                .EnumerateArray()
-                .Select(e =>
-                {
-                    JsonElement el = e.GetProperty("interface");
-                    string ipAddress = el.GetProperty("address").GetString()!;
-                    int port = el.GetProperty("port").GetInt32();
-                    return $"{ipAddress}:{port}";
-                })
-                .ToArray();
+\******************************************************************************";
 
-            StringBuilder sb = new();
-            foreach (string intf in interfaces)
-            {
-                sb.Append("\n\t");
-                sb.AppendLine(intf);
-            }
-
+           
             //See if setup mode is enabled
             bool setupMode = HostArgs.HasArgument("--setup") && !HostArgs.HasArgument("--disable-registation");
 
@@ -112,7 +92,7 @@ namespace SimpleBookmark
                 ? "\nWARNING: This server is in setup mode. Account registation is open to all users.\n"
                 : string.Empty;
 
-            Log.Information(template, warnMessage, sb);
+            Log.Information(template, warnMessage);
         }
     }
 }
