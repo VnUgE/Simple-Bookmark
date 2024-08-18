@@ -36,11 +36,12 @@ using VNLib.Plugins.Extensions.Loading;
 using VNLib.Plugins.Extensions.Validation;
 using VNLib.Plugins.Extensions.Loading.Users;
 using VNLib.Plugins.Extensions.Loading.Events;
-
-using SimpleBookmark.Model;
+using VNLib.Plugins.Extensions.Loading.Routing;
 
 namespace SimpleBookmark.Endpoints
 {
+    [EndpointPath("{{path}}")]
+    [EndpointLogName("Accounts")]
     [ConfigurationName("registration")]
     internal sealed class BmAccountEndpoint : UnprotectedWebEndpoint
     {
@@ -58,9 +59,6 @@ namespace SimpleBookmark.Endpoints
 
         public BmAccountEndpoint(PluginBase plugin, IConfigScope config)
         {
-            string path = config.GetRequiredProperty("path", p => p.GetString()!);
-            InitPathAndLog(path, plugin.Log);
-
             //get setup mode and enabled startup arguments
             SetupMode = plugin.HostArgs.HasArgument("--setup");
             Enabled = !plugin.HostArgs.HasArgument("--disable-registation");

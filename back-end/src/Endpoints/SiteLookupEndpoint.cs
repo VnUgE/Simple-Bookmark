@@ -28,11 +28,14 @@ using VNLib.Plugins.Essentials.Endpoints;
 using VNLib.Plugins.Essentials.Extensions;
 using VNLib.Plugins.Extensions.Loading;
 using VNLib.Plugins.Extensions.Validation;
+using VNLib.Plugins.Extensions.Loading.Routing;
 
 using SimpleBookmark.PlatformFeatures.Curl;
 
 namespace SimpleBookmark.Endpoints
 {
+    [EndpointPath("{{path}}")]
+    [EndpointLogName("Site Lookup")]
     [ConfigurationName("curl")]
     internal sealed class SiteLookupEndpoint : ProtectedWebEndpoint
     {
@@ -44,11 +47,8 @@ namespace SimpleBookmark.Endpoints
 
         public SiteLookupEndpoint(PluginBase plugin, IConfigScope config)
         {
-            string path = config.GetRequiredProperty("path", p => p.GetString()!);
-            InitPathAndLog(path, plugin.Log);
-
-            string exePath = config.GetValueOrDefault("exe_path", p => p.GetString(), DefaultCurlExecName);
-            bool httspOnly = config.GetValueOrDefault("https_only", p => p.GetBoolean(), false);
+            string exePath = config.GetValueOrDefault("exe_path", DefaultCurlExecName);
+            bool httspOnly = config.GetValueOrDefault("https_only", false);
             
             //Optional extra arguments
             string[] extrArgs = config.GetValueOrDefault(

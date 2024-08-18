@@ -11,12 +11,12 @@ includes:
 
 vars:
   PLUGIN_NAME: 'SimpleBookmark'
-  CORE_VERSION: '1b590c2517fef110564943ed8a10edd11fa758b0'
+  CORE_VERSION: '0419f315e5689e043f311203ab8e61f69f1ee1d6'
   ESSENTIALS_VERSION: '451091e93b5feee7a5e01d3a81f5d63efa7ea8be'
   CACHE_VERSION: '930980a1e6b5db24dd4d8beeb115e4279ea79ee2'
-  USERS_VERSION: '6d48be92c39d0046c5d827fb86af7ea1f3877e69'
-  SESSION_VERSION: 'f2dedded2a8646273c4dd13013b8334d64e02d6f'
-  EXTENSIONS_VERSION: '1350c983c371fdd6a93596c8474345f9168284e1'
+  USERS_VERSION: '26adc7c79b1bd732c76a7c0ab3638294f697ab03'
+  SESSION_VERSION: '34902c086d1707707b806864363cfaee317213e2'
+  EXTENSIONS_VERSION: '641bdbe75cb0128c09e27f1b92709c86574026ac'
 
 tasks:
 
@@ -178,11 +178,6 @@ tasks:
         FILE_NAME: "src.tgz"
         DIR: './lib/argon2'
         VERSION: '{{.CORE_VERSION}}'
-
-    #remove unneeded files
-    - for: [ man, latex, kats, argon2-specs.pdf ]
-      cmd: powershell -Command "rm ./lib/argon2/{{.ITEM}} -Recurse"
-      ignore_error: true
 
   install-rpmalloc:
     cmds:

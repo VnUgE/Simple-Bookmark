@@ -39,6 +39,7 @@ using VNLib.Plugins.Essentials.Accounts;
 using VNLib.Plugins.Essentials.Endpoints;
 using VNLib.Plugins.Essentials.Extensions;
 using VNLib.Plugins.Extensions.Loading;
+using VNLib.Plugins.Extensions.Loading.Routing;
 using VNLib.Plugins.Extensions.Data.Extensions;
 using VNLib.Plugins.Extensions.Validation;
 
@@ -47,25 +48,15 @@ using SimpleBookmark.Model;
 namespace SimpleBookmark.Endpoints
 {
 
+    [EndpointPath("{{path}}")]
+    [EndpointLogName("Bookmarks")]
     [ConfigurationName("bm_endpoint")]
-    internal sealed class BookmarkEndpoint : ProtectedWebEndpoint
+    internal sealed class BookmarkEndpoint(PluginBase plugin, IConfigScope config) : ProtectedWebEndpoint
     {
         private static readonly IValidator<BookmarkEntry> BmValidator = BookmarkEntry.GetValidator();
 
-        private readonly BookmarkStore Bookmarks;
-        private readonly BookmarkStoreConfig BmConfig;
-
-        public BookmarkEndpoint(PluginBase plugin, IConfigScope config)
-        {
-            string? path = config.GetRequiredProperty("path", p => p.GetString()!);
-            InitPathAndLog(path, plugin.Log);
-
-            //Init bookmark store
-            Bookmarks = plugin.GetOrCreateSingleton<BookmarkStore>();
-
-            //Load config
-            BmConfig = config.GetRequiredProperty("config", p => p.Deserialize<BookmarkStoreConfig>()!);
-        }
+        private readonly BookmarkStore Bookmarks = plugin.GetOrCreateSingleton<BookmarkStore>();
+        private readonly BookmarkStoreConfig BmConfig = config.GetRequiredProperty<BookmarkStoreConfig>("config");
 
         ///<inheritdoc/>
         protected override async ValueTask<VfReturnType> GetAsync(HttpEntity entity)
