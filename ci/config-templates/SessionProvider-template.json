@@ -1,6 +1,6 @@
 {
 
-  "debug": false,
+  "debug": ${DEBUG_PLUGINS},
 
   //Provider assemblies to load
   "provider_assemblies": [ "VNLib.Plugins.Sessions.VNCache.dll" ],

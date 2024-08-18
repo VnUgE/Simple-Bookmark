@@ -15,7 +15,7 @@
     //The maxium ammount of data (in bytes) allows for mulitpart/form data file uploads
     "multipart_max_size": 80240,
     //Absolute maximum size (in bytes) of the request entity body (exludes headers)
-    "max_entity_size": 1024000,
+    "max_entity_size": ${MAX_CONTENT_LENGTH},
     //Keepalive ms for HTTP1.1 keepalive connections
     "keepalive_ms": 1000000,
     //The buffer size to use when parsing headers (also the maxium request header size allowed)
@@ -25,7 +25,7 @@
     //The maxium number of allowed network connections, before 503s will be issued automatically and connections closed
     "max_connections": 5000,
     //The size in bytes of the buffer to use when writing response messages
-    "response_buf_size": 4096,
+    "response_buf_size": 65536,
     //time (in ms) to wait for a response from an active connection in recv mode, before dropping it
     "recv_timeout_ms": 5000,
     //Time in ms to wait for the client to accept transport data before terminating the connection
@@ -41,7 +41,7 @@
 
   //Setup the native lib
   "vnlib.net.compression": {
-    "lib_path": "lib/libvn_compress.so",
+    "lib_path": "${COMPRESSION_LIB_PATH}",
     "level": 1
   },
 
@@ -71,7 +71,7 @@
       //A list of file extensions to deny access to, if a resource is requested and has one of the following extensions, a 404 is returned
       "deny_extensions": [ ".ts", ".json", ".htaccess", ".php" ],
       //The default file extensions to append to a resource that does not have a file extension
-      "default_files": [ "index.html", "index.htm" ],
+      "default_files": [ "index.html" ],
 
       //A list of error file objects, files are loaded into memory (and watched for changes) and returned when the specified error code occurs
       "error_files": [],

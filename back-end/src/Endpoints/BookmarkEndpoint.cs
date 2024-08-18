@@ -131,7 +131,13 @@ namespace SimpleBookmark.Endpoints
                 {
                     //Get the collection of bookmarks
                     List<BookmarkEntry> list = Bookmarks.ListRental.Rent();
-                    await Bookmarks.GetUserPageAsync(list, entity.Session.UserID, 0, (int)BmConfig.PerPersonQuota);
+                    
+                    await Bookmarks.GetUserPageAsync(
+                        collection: list, 
+                        userId: entity.Session.UserID, 
+                        page: 0, 
+                        limit: (int)BmConfig.PerPersonQuota
+                    );
 
                     //Alloc memory stream for output
                     VnMemoryStream output = new(MemoryUtil.Shared, 16 * 1024, false);
@@ -205,13 +211,13 @@ namespace SimpleBookmark.Endpoints
 
             //Get bookmarks
             BookmarkEntry[] bookmarks = await Bookmarks.SearchBookmarksAsync(
-                entity.Session.UserID,
+                userId : entity.Session.UserID,
                 query,
                 tags,
                 (int)limit,
                 (int)offset,
-                entity.EventCancellation
-            );
+                cancellation: entity.EventCancellation
+            ); 
 
             //Return result
             return VirtualOkJson(entity, bookmarks);
@@ -248,11 +254,11 @@ namespace SimpleBookmark.Endpoints
              * and the entry does not already exist by the desired url.
              */
             int result = await Bookmarks.AddSingleIfNotExists(
-                entity.Session.UserID, 
-                newBookmark,
-                entity.RequestedTimeUtc.DateTime,
-                BmConfig.PerPersonQuota,
-                entity.EventCancellation
+                userId: entity.Session.UserID, 
+                entry: newBookmark,
+                now: entity.RequestedTimeUtc.DateTime,
+                maxRecords: BmConfig.PerPersonQuota,
+                cancellation: entity.EventCancellation
             );
 
             if (webm.Assert(result > -1, "You have reached your bookmark quota"))
@@ -386,7 +392,12 @@ namespace SimpleBookmark.Endpoints
             try
             {
                 //Try to update the records
-                ERRNO result = await Bookmarks.AddBulkAsync(sanitized, entity.Session.UserID, entity.RequestedTimeUtc, entity.EventCancellation);
+                ERRNO result = await Bookmarks.AddBulkAsync(
+                    bookmarks: sanitized, 
+                    userId: entity.Session.UserID, 
+                    now: entity.RequestedTimeUtc, 
+                    cancellation: entity.EventCancellation
+                );
 
                 webm.Result = $"Successfully added {result} of {batch.Length} bookmarks";
                 webm.Success = true;

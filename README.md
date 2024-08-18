@@ -43,7 +43,7 @@ I built Simple-Bookmark mostly because I didn't want the container lock-in. I al
 - Invite users with share links
 - Supports (and tested) SQLite, SQLServer, MySQL/MariaDB databases
 - It's quick <300ms load time & under 150kB with compression
-- It's small, 142mb Docker image
+- It's small, 127mb Docker image
 - Argon2Id password hashing with secure defaults
 - Supports enterprise services: HashiCorp Vault, SQLServer, Auth0, and Redis
 - Built-in TLS (TLS is required)
@@ -64,8 +64,9 @@ docker build . -t vnuge/simple-bookmark
 docker-compose up -d
 ```
  _Of course there is more setup involved, so take a look at the docs for more info_  
+ _This container does not need root permissions to run_
  
-The image should be about 139mb when built! I'm also hoping to get it down even smaller in the future. You may also use Podman in the same format, simply substitute the word `docker` with `podman` in the previous commands.  
+The image should be about 127mb when built! I'm also hoping to get it down even smaller in the future. You may also use Podman in the same format, simply substitute the word `docker` with `podman` in the previous commands.  
 
 ### Bare-metal install
 >[!NOTE]
@@ -86,6 +87,10 @@ Optionally create a self-signed TLS certificate using openssl and exports it to 
 ``` shell
 sudo task create-cert #runs an openssl command 
 ```
+Optionally generate a password pepper file
+``` shell
+task create-pepper #creates a pepper file in the secrets directory
+```
 Optionally set file permissions
 ```shell
 chmod -R 0750 . && chmod -R 0770 data/ #only data dir needs write permissions
@@ -95,7 +100,7 @@ chmod -R 0750 . && chmod -R 0770 data/ #only data dir needs write permissions
 task setup #runs all setup rules
 ```
 > [!IMPORTANT]  
-> This command attempts to move or compile native libraries on your system. Windows users will have to manually adjust their config file, or install VisualStudio build tools, otherwise you'll see a bunch of errors.
+> By default this copies pre-compiled C libraries, you must be using Windows version 1904 or later. Quick start guide has more info, if you need to build the libraries yourself.
 
 #### First start
 Starting the server for the first time you'll want to enable setup mode to allow admin registration for the first time. This is operation insecure, please read the quick-start guide.

@@ -24,18 +24,12 @@ tasks:
       HOSTNAME: 
         sh: echo $HOSTNAME
 
-    #build stage generates the following libraries
-    generates:
-     - "{{.USER_WORKING_DIR}}/out/libargon2.so"
-     - "{{.USER_WORKING_DIR}}/out/libvn_rpmalloc.so"
-     - "{{.USER_WORKING_DIR}}/out/libvn_compress.so"
-
     cmds:
       #build argon2 native library
       - cd lib/argon2/ && task && cp build/libargon2.so {{.OUT_DIR}}/libargon2.so
-      #build rpmalloc library
-      - cd lib/vnlib_rpmalloc/ && task && cp build/libvn_rpmalloc.so {{.OUT_DIR}}/libvn_rpmalloc.so 
-      #build compression
+      #build rpmalloc library and rewrite to a standard .dll extension
+      - cd lib/vnlib_rpmalloc/ && task && cp build/libvn_rpmalloc.so {{.OUT_DIR}}/libvn_rpmalloc.so
+      #build compression and rewrite to a standard .dll extension
       - cd lib/vnlib_compress/ && task && cp build/libvn_compress.so {{.OUT_DIR}}/libvn_compress.so
 
       #create a fresh self-signed cert for the container during build
@@ -76,11 +70,10 @@ tasks:
      - powershell -Command "mkdir build, build/app, build/app/config-templates/, build/app/static/ -Force"
      #copy the existing linux-x64 build to the build folder, this will be the container base
      - powershell -Command "cp -Recurse -Force ../build/linux-x86_64/* build/app/"
-     #copy local scripts and config data into the build folder
+     #copy local scripts and raw config templates into the build folder
      - powershell -Command "cp -Force run.sh, Taskfile.yaml build/app/"
      - powershell -Command "cp -Force Dockerfile, docker-compose.yaml build/"
-     - powershell -Command "cp -Force static/* build/app/static/"
-     - powershell -Command "cp -Force config-templates/* build/app/config-templates/"
+     - powershell -Command "cp -Force ../config-templates/* build/app/config-templates/"
 
   prune-sql-runtimes:
     internal: true

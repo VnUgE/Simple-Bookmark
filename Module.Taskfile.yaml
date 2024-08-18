@@ -6,10 +6,15 @@ version: '3'
 
 tasks:
 
+  package-update:
+    cmds:
+     - for: [ front-end/ ]
+       cmd: cd {{.ITEM}} && task package-update
+
   #update project source code
   update:
     cmds:
-     - git reset --hard  
+     - git reset --hard
      - git remote update
      - git pull origin {{.BRANCH_NAME}} --verify-signatures
       #re-write semver for back-end after hard reset
@@ -17,6 +22,9 @@ tasks:
 
   build:
     cmds:
+     #overwrite front-end version, this must be run on build hook because update can cause the version to change 
+     - cmd: cd front-end/ && npm version {{ .BUILD_VERSION }}
+       ignore_error: true #error if run when version is not updated
     
   #copy artifacts to temp directory
   postbuild_success:

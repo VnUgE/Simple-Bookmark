@@ -6,6 +6,9 @@ echo "Generating configuration files"
 
 rm -rf config && mkdir config
 
+#move the routes xml file to the output config dir
+cp config-templates/routes.xml config/routes.xml
+
 #substitude all -template files in the config-templates dir and write them to the config dir
 for file in config-templates/*-template.json; do
 	envsubst < $file > config/$(basename $file -template.json).json
