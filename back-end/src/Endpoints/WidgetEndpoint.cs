@@ -15,8 +15,10 @@
 
 using System;
 using System.Net;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
+using System.Collections.Generic;
 
 using VNLib.Utils.IO;
 using VNLib.Utils.Memory;
@@ -43,7 +45,14 @@ namespace SimpleBookmark.Endpoints
         private readonly BookmarkStore bookmarks = plugin.GetOrCreateSingleton<BookmarkStore>();
         private readonly WidgetAuthManager authManager = plugin.GetOrCreateSingleton<WidgetAuthManager>();
         private readonly bool Enabled = config.GetValueOrDefault("enabled", false);
-        private readonly string? CorsAclHeaerDomains = config.GetValueOrDefault<string?>("cors-urls", null);
+        private readonly string? CorsAclHeaderDomains = config.GetValueOrDefault<string?>("cors-urls", null);
+
+        protected override ProtectionSettings EndpointProtectionSettings { get; } = new()
+        {
+            DisableSessionsRequired = true,
+            DisabledTlsRequired = true,
+            DisableRefererMatch = true,
+        };
 
         protected override async ValueTask<VfReturnType> GetAsync(HttpEntity entity)
         {
@@ -52,15 +61,44 @@ namespace SimpleBookmark.Endpoints
                 return VfReturnType.NotFound;
             }
 
+            string limitStr = entity.QueryArgs.GetValueOrDefault("l", "25");
+            string pageStr = entity.QueryArgs.GetValueOrDefault("p", "1");
+
+            //Get any query arguments
+            if (entity.QueryArgs.TryGetNonEmptyValue("q", out string? query))
+            {
+                //Replace percent encoding with spaces
+                query = query.Replace('+', ' ');
+            }
+
+            string[] tags = [];
+
+            //Get tags
+            if (entity.QueryArgs.TryGetNonEmptyValue("t", out string? tagsS))
+            {
+                //Split tags at spaces and remove empty entries
+                tags = tagsS.Split('+')
+                    .Where(static t => !string.IsNullOrWhiteSpace(t))
+                    .ToArray();
+            }
+
+            if (!int.TryParse(limitStr, out int limit) || !int.TryParse(pageStr, out int page))
+            {
+                return VirtualClose(entity, HttpStatusCode.BadRequest);
+            }
+
+            limit = Math.Clamp(limit, 0, 100);
+            page = Math.Clamp(page, 0, 100);
+
             /* if (!await authManager.IsTokenValidAsync(entity))
              {
                  return VirtualClose(entity, HttpStatusCode.Unauthorized);
              }*/
 
             //Widgets might be loaded in an iframe, so we need to allow cross-site requests
-            if (CorsAclHeaerDomains is not null && entity.Server.IsCrossSite())
+            if (CorsAclHeaderDomains is not null && entity.Server.IsCrossSite())
             {
-                entity.Server.Headers.Append("Access-Control-Allow-Origin", CorsAclHeaerDomains);
+                entity.Server.Headers.Append("Access-Control-Allow-Origin", CorsAclHeaderDomains);
             }
 
             /*
@@ -69,11 +107,11 @@ namespace SimpleBookmark.Endpoints
              */
 
             BookmarkEntry[] boomarks = await bookmarks.SearchBookmarksAsync(
-                entity.Session.UserID,
-                query: null,
-                tags: ["favorite"],
-                limit: 25,
-                page: 1,
+                userId: entity.Session.UserID,
+                query: query,
+                tags: tags,
+                limit: limit,
+                page: page,
                 entity.EventCancellation
             );
 
@@ -87,7 +125,7 @@ namespace SimpleBookmark.Endpoints
                 CompileGlanceTemplate(baseUrl, output, boomarks);
 
                 //Assign glance template
-                entity.Server.Headers["Widget-Title"] = "Simple-Bookmark Widget";
+                entity.Server.Headers["Widget-Title"] = "Simple-Bookmark";
                 entity.Server.Headers["Widget-Content-Type"] = "html";
 
                 return VirtualClose(entity, HttpStatusCode.OK, ContentType.Html, output);
@@ -96,7 +134,7 @@ namespace SimpleBookmark.Endpoints
             {
                 output.Dispose();
 
-                Log.Error(ex, "Failed to complie glance template");
+                Log.Error(ex, "Failed to complie glance widget template");
                 return VirtualClose(entity, HttpStatusCode.InternalServerError);
             }
         }
@@ -117,27 +155,35 @@ namespace SimpleBookmark.Endpoints
             writer.Append("<p class='size-h3'>");
             writer.Append("<a class='bookmarks-link color-highlight size-h3' href='");
             writer.Append(hostUrl);
-            writer.Append("'>Favorites:</a>");
+            writer.Append("'>Favorites</a>");
             writer.Append("</p>");
             writer.Append("<hr class='margin-block-15'/>");
 
             //Start bookmarks list
-            writer.Append("<ul class='list-horizontal-text'>");
+            writer.Append("<ul class='list list-gap-24 list-with-separator'>");
+            writer.Append("<li class='bookmarks-group'>");
+            writer.Append("<ul class='list list-gap-2'>");
 
             foreach (BookmarkEntry entry in bookmarks)
             {
-                writer.Append("<li>");
+                ReadOnlySpan<char> nameSpan = entry.Name.AsSpan();
+
+                nameSpan = nameSpan[..Math.Min(nameSpan.Length, 20)];
+
+                writer.Append("<li class='flex items-center gap-10'>");
 
                 //Enable the built-in bookmarks link (makes it prettier)
-                writer.Append("<a class='bookmarks-link color-highlight size-h4' href='");
+                writer.Append("<a class='bookmarks-link color-highlight' href='");
                 writer.Append(entry.Url);
                 writer.Append("'>");
-                writer.Append(entry.Name);
+                writer.Append(nameSpan);
 
                 writer.Append("</a>");
                 writer.Append("</li>");
             }
 
+            writer.Append("</ul>");
+            writer.Append("</li>");
             writer.Append("</ul>");
 
             //Close the document
