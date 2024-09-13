@@ -20,7 +20,7 @@ RUN task build-libs
 
 #APP CONTAINER
 #move into a clean dotnet apline lean image
-FROM mcr.microsoft.com/dotnet/runtime:8.0.3-alpine3.19-amd64 as app-cont
+FROM mcr.microsoft.com/dotnet/runtime:8.0.8-alpine3.19-amd64 as app-cont
 
 LABEL name="vnuge/simple-bookmark"
 LABEL maintainer="Vaughn Nugent <vnpublic@proton.me>"
