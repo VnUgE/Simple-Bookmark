@@ -27,7 +27,7 @@ tasks:
       VNLIB_SHARED_HEAP_FILE_PATH: lib/vnlib_rpmalloc.dll
       VNLIB_ARGON2_DLL_PATH: lib/argon2.dll
     cmds:
-    - cmd: dotnet webserver/VNLib.WebServer.dll --config config/config.json {{.CLI_ARGS}}
+    - cmd: dotnet webserver/VNLib.WebServer.dll --config config/config.json {{ .CLI_ARGS }}
 
   setup-apt:
      desc: "Performs initial setup on Debian apt amd64 based machines"
@@ -36,7 +36,7 @@ tasks:
      - apt update
      - apt install -y dotnet-runtime-8.0 gcc cmake curl
      - task: setup
-     - echo "Setup complete" 
+     - echo "Setup complete"
 
   setup-dnf:
      desc: "Performs initial setup on Fedora/Redhat amd (dnf) based machines"
@@ -84,7 +84,7 @@ tasks:
       platforms: [ windows/amd64 ]
       ignore_error: true
 
-    - cmd: openssl rand -base64 {{.PASS_PEPPER_SIZE}} > {{.PEPPER_FILE}}
+    - cmd: openssl rand -base64 {{ .PASS_PEPPER_SIZE }} > {{ .PEPPER_FILE }}
       platforms: [ linux, darwin ]
 
     - echo "DO NOT EVER LOSE OR UPDATE THIS FILE!"
@@ -124,7 +124,9 @@ tasks:
     dir: 'lib/'
     cmds:
     #build the native compressor library for linux/mac
-    - cmd: cd vnlib_compress/ && task && cp build/libvn_compress{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_compress.dll
+    - cmd: cd vnlib_compress/ 
+        && task 
+        && cp build/libvn_compress{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_compress.dll
       platforms: [ linux, darwin ]
 
     #windows now supports pre-compiled libs
