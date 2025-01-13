@@ -15,6 +15,7 @@
     "max_waiting_connections": 100,     //The maxium number of connections waiting for the cache server responses
 
     ///Enforces strict TLS to help prevent tls downgrades based on stored session variables (privacy note: this can be leaked through brute-forced if session id is stolen)
-    "strict_tls_protocol": ${SESSION_STRICT_TLS:-true}    
+    "strict_tls_protocol": ${SESSION_STRICT_TLS:-true},
+    "strict_cors": ${CORS_STRICT_ORIGIN:-true}
   } 
 }

@@ -217,7 +217,7 @@ namespace SimpleBookmark.Endpoints
         ///<inheritdoc/>
         protected override async ValueTask<VfReturnType> PostAsync(HttpEntity entity)
         {
-            ValErrWebMessage webm = new();
+            WebMessage webm = new();
 
             if (webm.Assert(entity.Session.CanWrite(), "You do not have permissions to create records"))
             {
@@ -271,7 +271,7 @@ namespace SimpleBookmark.Endpoints
         ///<inheritdoc/>
         protected override async ValueTask<VfReturnType> PatchAsync(HttpEntity entity)
         {
-            ValErrWebMessage webm = new();
+            WebMessage webm = new();
 
             if (webm.Assert(entity.Session.CanWrite(), "You do not have permissions to update records"))
             {
@@ -320,7 +320,7 @@ namespace SimpleBookmark.Endpoints
         ///<inheritdoc/>
         protected override async ValueTask<VfReturnType> PutAsync(HttpEntity entity)
         {
-            ValErrWebMessage webm = new();
+            WebMessage webm = new();
 
             if (webm.Assert(entity.Session.CanWrite(), "You do not have permissions to update records"))
             {
@@ -406,7 +406,7 @@ namespace SimpleBookmark.Endpoints
         ///<inheritdoc/>
         protected override async ValueTask<VfReturnType> DeleteAsync(HttpEntity entity)
         {
-            ValErrWebMessage webm = new();
+            WebMessage webm = new();
 
             if (webm.Assert(entity.Session.CanDelete(), "You do not have permissions to delete records"))
             {

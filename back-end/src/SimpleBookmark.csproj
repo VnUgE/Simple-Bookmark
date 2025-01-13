@@ -33,11 +33,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="VNLib.Plugins.Extensions.Data" Version="0.1.0-ci0065" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0065" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Loading.Sql" Version="0.1.0-ci0065" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-ci0065" />
-    <PackageReference Include="VNLib.Plugins.Extensions.VNCache" Version="0.1.0-ci0057" />
+    <PackageReference Include="VNLib.Plugins.PluginBase" Version="0.1.0-ci0212" />
+    <PackageReference Include="VNLib.Plugins.Essentials" Version="0.1.0-ci0212" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Data" Version="0.1.0-ci0075" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0075" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Loading.Sql" Version="0.1.0-ci0075" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-ci0075" />
+    <PackageReference Include="VNLib.Plugins.Extensions.VNCache" Version="0.1.0-ci0061" />
   </ItemGroup>
 
   <ItemGroup>

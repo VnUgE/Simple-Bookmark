@@ -125,7 +125,7 @@ namespace SimpleBookmark.Endpoints
 
         protected override async ValueTask<VfReturnType> PutAsync(HttpEntity entity)
         {
-            ValErrWebMessage webm = new();
+            WebMessage webm = new();
 
             if (webm.Assert(Enabled, "User registation was disabled via commandline"))
             { 
@@ -196,7 +196,7 @@ namespace SimpleBookmark.Endpoints
 
         protected override async ValueTask<VfReturnType> PostAsync(HttpEntity entity)
         {
-            ValErrWebMessage webm = new();
+            WebMessage webm = new();
 
             if (webm.Assert(Enabled, "User registation was disabled via commandline."))
             {
@@ -305,10 +305,10 @@ namespace SimpleBookmark.Endpoints
                 Username = userName,
                 InitialStatus = UserStatus.Active,
                 Privileges = privLevel,
-                Password = PrivateString.ToPrivateString(password, false),
+                Password = PrivateString.ToPrivateString(password, ownsString: false),
             };
 
-            using IUser user = await Users.CreateUserAsync(newUser, null, cancellation);
+            using IUser user = await Users.CreateUserAsync(newUser, null, Users.GetHashProvider(), cancellation);
             
             //Assign a local account status and email address
             user.SetAccountOrigin(AccountUtil.LOCAL_ACCOUNT_ORIGIN);

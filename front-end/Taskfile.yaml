@@ -6,27 +6,27 @@ version: '3'
 tasks:
 
   package-update:
-    dir: '{{.USER_WORKING_DIR}}'
+    dir: '{{ .USER_WORKING_DIR }}'
     cmds:
-     - npm update
+     - cmd: npm update
 
   build:
     cmds:
     #install deps and run build
-    - npm install && npm run build
+    - cmd: npm install && npm run build
     
   #copy artifacts to temp directory
   postbuild_success:
     cmds:
-    - powershell -Command "mkdir bin -Force"
+    - cmd: powershell mkdir -Force bin
     #tar the dist output and put it in the output dir
-    - cd dist && tar -czf '../bin/release.tgz' .
+    - cmd: cd dist && tar -czf '../bin/release.tgz' .
 
   #clean hook
   clean:
     ignore_error: true
     cmds:
     - for: [ node_modules/, dist/, bin/ ]
-      cmd: powershell -Command "Remove-Item -Recurse -Force {{.ITEM}}"
+      cmd: powershell Remove-Item -Recurse -Force "{{ .ITEM }}"
 
-    - cmd: powershell -Command "Remove-Item release.tgz"
+    - cmd: powershell Remove-Item -Force release.tgz

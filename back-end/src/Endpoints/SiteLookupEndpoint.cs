@@ -16,7 +16,7 @@
 using System;
 using System.Net;
 using System.Text;
-using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -51,11 +51,7 @@ namespace SimpleBookmark.Endpoints
             bool httspOnly = config.GetValueOrDefault("https_only", false);
             
             //Optional extra arguments
-            string[] extrArgs = config.GetValueOrDefault(
-                "extra_args", 
-                p => p.EnumerateArray().Select(s => s.GetString()!).ToArray(), 
-                Array.Empty<string>()
-            );
+            string[] extrArgs = config.GetValueOrDefault("extra_args", p => p.Deserialize<string[]>(), []);
 
             _curl = new SystemCurlApp(exePath, httspOnly, extrArgs);
 

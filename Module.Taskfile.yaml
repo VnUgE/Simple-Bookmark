@@ -14,23 +14,25 @@ tasks:
   #update project source code
   update:
     cmds:
-     - git reset --hard
-     - git remote update
-     - git pull origin {{.BRANCH_NAME}} --verify-signatures
-      #re-write semver for back-end after hard reset
-     - dotnet-gitversion.exe /updateprojectfiles
+     - cmd: git reset --hard
+     - cmd: git remote update
+     - cmd: git pull origin {{ .BRANCH_NAME }} --verify-signatures
+
+  test:
+    cmds:
 
   build:
     cmds:
+     - cmd: dotnet-gitversion.exe /updateprojectfiles
      #overwrite front-end version, this must be run on build hook because update can cause the version to change 
      - cmd: cd front-end/ && npm version {{ .BUILD_VERSION }}
        ignore_error: true #error if run when version is not updated
-    
+
   #copy artifacts to temp directory
   postbuild_success:
     cmds:
      #git archive in the module directory
-     - git archive --format {{.ARCHIVE_FILE_FORMAT}} --output {{.ARCHIVE_FILE_NAME}} HEAD
+     - cmd: git archive --format {{ .ARCHIVE_FILE_FORMAT }} --output {{ .ARCHIVE_FILE_NAME }} HEAD
 
   #clean hook
   clean:
