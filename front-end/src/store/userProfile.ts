@@ -14,9 +14,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'pinia'
-import { MaybeRef, watch } from 'vue';
-import { ServerDataBuffer, ServerObjectBuffer, UserProfile, WebMessage, apiCall, useAxios, useDataBuffer, useUser } from '@vnuge/vnlib.browser';
-import { get, useToggle } from '@vueuse/core';
+import { computed, watch } from 'vue';
+import { 
+    type ServerDataBuffer,
+    type ServerObjectBuffer,
+    type UserProfile,
+    type WebMessage,
+    apiCall,
+    useDataBuffer,
+    useAccountRpc,
+    useAccount
+} from '@vnuge/vnlib.browser';
+import { useToggle } from '@vueuse/core';
 import { PiniaPlugin, PiniaPluginContext, storeToRefs } from 'pinia'
 import { defer } from 'lodash-es';
 
@@ -47,19 +56,21 @@ declare module 'pinia' {
     }
 }
 
-export const profilePlugin = (accountsUrl:MaybeRef<string>) :PiniaPlugin => {
+type AccProfileRpcMethods = 'profile.set' | 'profile.get'
+
+export const profilePlugin = () :PiniaPlugin => {
 
     return ({ store }: PiniaPluginContext) => {
 
         const { loggedIn } = storeToRefs(store)
-        const { getProfile, userName } = useUser()
-        const axios = useAxios(null)
+        const { getProfile } = useAccount()
+        const { exec } = useAccountRpc<AccProfileRpcMethods>()
 
         const [onRefresh, refreshProfile] = useToggle()
 
         const updateUserProfile = async (profile: ServerObjectBuffer<ExUserProfile>) => {
             // Apply the buffer to the profile
-            const { data } = await axios.post<WebMessage<string>>(get(accountsUrl), profile.buffer)
+            const { getResultOrThrow } = await exec('profile.set', profile.buffer)
 
             //Get the new profile from the server
             const newProfile = await getProfile() as ExUserProfile
@@ -67,10 +78,11 @@ export const profilePlugin = (accountsUrl:MaybeRef<string>) :PiniaPlugin => {
             //Apply the new profile to the buffer
             profile.apply(newProfile)
 
-            return data;
+            return getResultOrThrow();
         }
 
         const userProfile = useDataBuffer({} as any, updateUserProfile)
+        const userName = computed(() => userProfile.data.email);
 
         const loadProfile = async () => {
             //Get the user profile

@@ -2,12 +2,11 @@
 import { computed, defineAsyncComponent, shallowRef } from 'vue';
 import { useStore } from '../../store';
 import { set, get } from '@vueuse/core';
-import { MfaMethod, useGeneralToaster, usePassConfirm, useSession } from '@vnuge/vnlib.browser';
-import { defaultTo, includes, isEmpty, isNil } from 'lodash-es';
+import { useGeneralToaster, usePassConfirm, useSession, useTotpApi } from '@vnuge/vnlib.browser';
+import { defaultTo, isEmpty, isNil } from 'lodash-es';
 import { TOTP } from 'otpauth'
 import base32Encode from 'base32-encode'
 const QrCode = defineAsyncComponent(() => import('qrcode.vue'));
-const Dialog = defineAsyncComponent(() => import('../global/Dialog.vue'));
 const VOtpInput = defineAsyncComponent(() => import('vue3-otp-input'))
 
 interface TotpConfig {
@@ -23,7 +22,8 @@ const { elevatedApiCall } = usePassConfirm()
 const { success, error } = useGeneralToaster()
 const store = useStore()
 const newTotpConfig = shallowRef<TotpConfig | undefined>()
-const totpEnabled = computed(() => includes(store.mfaEndabledMethods, MfaMethod.TOTP)) 
+const totpEnabled = store.mfaIsEnabled('totp')
+const totpApi = useTotpApi(store.mfaConfig)
 
 const qrCode = computed(() => {
 
@@ -49,7 +49,7 @@ const showUpdateDialog = computed(() => !isEmpty(get(qrCode)))
 const disableTotp = async () => {
 
     elevatedApiCall(async ({ password, toaster }) =>{
-        const { getResultOrThrow } = await store.mfaConfig.disableMethod(MfaMethod.TOTP, password);
+        const { getResultOrThrow } = await totpApi.disable({ password })
         getResultOrThrow();
 
         toaster.general.success({
@@ -62,9 +62,8 @@ const disableTotp = async () => {
 const addOrUpdate = async () => {
 
     elevatedApiCall(async ({ password }) =>{
-        const { getResultOrThrow } = await store.mfaConfig.initOrUpdateMethod<TotpConfig>(MfaMethod.TOTP, password);
-        const newConfig = getResultOrThrow();
-
+        const newConfig = await totpApi.enable({ password });
+        
         // Decrypt the server sent secret
         const decSecret = await KeyStore.decryptDataAsync(newConfig.secret);
         // Encode the secret to base32

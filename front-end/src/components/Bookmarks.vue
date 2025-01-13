@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MaybeRef, Ref, computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue';
+import { MaybeRef, Ref, computed, ref, shallowRef, watch } from 'vue';
 import { useQuery, useStore } from '../store';
 import { get, set, useToggle, useFileDialog, asyncComputed, toReactive } from '@vueuse/core';
 import { useVuelidate } from '@vuelidate/core';
@@ -11,7 +11,6 @@ import { parseNetscapeBookmarkString } from './Boomarks/util.ts';
 import type { BatchUploadResult, Bookmark, BookmarkError } from '../store/bookmarks';
 import AddOrUpdateForm from './Boomarks/AddOrUpdateForm.vue';
 import BookmarkList from './Boomarks/BookmarkList.vue';
-const Dialog = defineAsyncComponent(() => import('./global/Dialog.vue'));
 
 const store = useStore();
 const { waiting } = useWait();

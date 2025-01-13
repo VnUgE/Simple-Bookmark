@@ -14,12 +14,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'pinia'
-import { MaybeRef, shallowRef, watch } from 'vue';
+import { MaybeRef, watch } from 'vue';
 import { WebMessage, useAxios } from '@vnuge/vnlib.browser';
-import { get } from '@vueuse/core';
+import { get, useAsyncState } from '@vueuse/core';
 import { PiniaPluginContext, PiniaPlugin, storeToRefs } from 'pinia'
 import { defer } from 'lodash-es';
-import { TabId } from '.';
+import { type TabName } from '.';
 
 export interface SignupToken {
     readonly link: string
@@ -49,7 +49,7 @@ declare module 'pinia' {
 }
 
 
-const useRegApi = (endpoint: MaybeRef<string>): UserRegistationApi => {
+export const registationPlugin = (endpoint: MaybeRef<string>): PiniaPlugin => {
 
     const axios = useAxios(null);
 
@@ -61,7 +61,7 @@ const useRegApi = (endpoint: MaybeRef<string>): UserRegistationApi => {
 
         const token = data.getResultOrThrow();
 
-        return { link: `${window.location.origin}?tab=${TabId.Register}&token=${token}` }
+        return { link: `${window.location.origin}?tab=${'register' as TabName}&token=${token}` }
     }
 
     const getStatus = async (): Promise<RegistationStatus> => {
@@ -79,31 +79,22 @@ const useRegApi = (endpoint: MaybeRef<string>): UserRegistationApi => {
         return data;
     }
 
-    return {
-        createSignupLink,
-        getStatus,
-        completeRegistation,
-        registerAdmin
-    }
-}
-
-export const registationPlugin = (regEndpoint: MaybeRef<string>): PiniaPlugin => {
-
     return ({ store }: PiniaPluginContext): any => {
 
         const { loggedIn } = storeToRefs(store)
-      
-        const regApi = useRegApi(regEndpoint)
-        const status = shallowRef<RegistationStatus | undefined>()
 
-        const getStatus = async () => status.value = await regApi.getStatus()
-
-        watch(loggedIn, () => defer(getStatus), { immediate: true })
+        const { state: status, execute } = useAsyncState<RegistationStatus | undefined>(getStatus, undefined);
+        watch(loggedIn, () => defer(execute))
 
         return{
             registation: {
-                api: regApi,
                 status,
+                api: {
+                    createSignupLink,
+                    getStatus,
+                    completeRegistation,
+                    registerAdmin
+                }
             }
         }
     }

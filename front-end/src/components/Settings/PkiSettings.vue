@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { defineAsyncComponent, shallowRef } from 'vue';
+import { shallowRef } from 'vue';
 import { useStore } from '../../store';
 import { get, set } from '@vueuse/core';
 import { PkiPublicKey, apiCall, debugLog, useConfirm, useGeneralToaster } from '@vnuge/vnlib.browser';
-import { storeToRefs } from 'pinia';
 import { isEmpty, toLower } from 'lodash-es';
-const Dialog = defineAsyncComponent(() => import('../global/Dialog.vue'));
+import { useOtpApi } from '@vnuge/vnlib.browser';
 
 const store = useStore();
-const { pkiPublicKeys } = storeToRefs(store);
 const { reveal } = useConfirm()
 const toaster = useGeneralToaster()
+const otpData = store.mfaGetOtpData()
+const otpApi = useOtpApi(store.mfaConfig)
 
 const keyData = shallowRef<string | undefined>()
 const showAddKeyDialog = () => set(keyData, '');
 const hideAddKeyDialog = () => set(keyData, undefined);
 
-const removeKey = async (key: PkiPublicKey) => {    
+const removeKey = async (key: PkiPublicKey) => {
     const { isCanceled } = await reveal({
         title: 'Remove Key',
         text: `Are you sure you want to remove ${key.kid}?`
@@ -25,8 +25,8 @@ const removeKey = async (key: PkiPublicKey) => {
     if (isCanceled) return
     
     apiCall(async ({ toaster }) => {
-        //const { getResultOrThrow } = await store.pkiConfig.removeKey(key.kid);
-        //await getResultOrThrow();
+        const { getResultOrThrow } = await otpApi.removeKey({ kid: key.kid } as any);
+        getResultOrThrow();
 
         toaster.general.success({
             title: 'Key Removed',
@@ -51,7 +51,7 @@ const onDisable = async () => {
 
         //Disable pki
         //TODO: require password or some upgrade to disable
-        const { success } = await store.pkiConfig.disable();
+        const { success } = await otpApi.disable();
 
         if (success) {
             toaster.success({
@@ -111,7 +111,7 @@ const onAddKey = async () => {
 
         //init/update the key
         //TODO: require password or some upgrade to disable
-        const { getResultOrThrow } = await store.pkiConfig.addOrUpdate(jwk);
+        const { getResultOrThrow } = await otpApi.addOrUpdate(jwk);
         const result = getResultOrThrow();
 
         toaster.success({
@@ -164,7 +164,7 @@ const onAddKey = async () => {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="key in pkiPublicKeys" :key="key.kid"
+                    <tr v-for="key in otpData?.keys" :key="key.kid"
                         class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             {{ toLower(key.kid) }}

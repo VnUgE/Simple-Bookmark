@@ -19,7 +19,6 @@ import { configureApi } from '@vnuge/vnlib.browser'
 import { createApp } from "vue";
 import { useDark } from "@vueuse/core";
 import { createPinia } from "pinia";
-import { oauth2AppsPlugin } from './store/oauthAppsPlugin'
 
 import App from './App.vue'
 //Import your main style file
@@ -31,16 +30,17 @@ import { socialMfaPlugin } from './store/socialMfaPlugin'
 import { bookmarkPlugin } from './store/bookmarks'
 import { registationPlugin } from './store/registation';
 import { siteLookupPlugin } from './store/websiteLookup';
+import Dialog from './components/global/Dialog.vue';
 
 //Setup the vnlib api
 configureApi({
+    account:{
+        endpointUrl: '/account',
+    },
     session: {
         //The identifier of the login cookie, see Essentials.Accounts docs
         loginCookieName: import.meta.env.VITE_LOGIN_COOKIE_ID,
         browserIdSize: 32,
-    },
-    user: {
-        accountBasePath: '/account',
     },
     axios: {
         //The base url to make api requests against
@@ -64,18 +64,17 @@ useDark({
 });
 
 //User-profile plugin
-store.use(profilePlugin('/account/profile'))
+store.use(profilePlugin())
     //Enable mfa with totp settings plugin (optional pki config)
-    .use(mfaSettingsPlugin('/account/mfa', '/account/pki'))
+    .use(mfaSettingsPlugin())
     //Setup social mfa plugin
     .use(socialMfaPlugin("/login/social/portals"))
     //Add the oauth2 apps plugin
     .use(bookmarkPlugin('/bookmarks'))
     .use(siteLookupPlugin('/lookup', 2000))
     .use(registationPlugin('/register'))
-    //Setup oauth apps plugin (disabled for now)
-    //.use(oauth2AppsPlugin('/oauth/apps', '/oauth/scopes'))
 
 createApp(App)
+    .component('Dialog', Dialog)
     .use(store)         //Add pinia to the app
     .mount('#app')      //Mount the app to the #app element

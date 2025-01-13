@@ -2,22 +2,22 @@
 import { ref, shallowRef, reactive } from 'vue'
 import { useTimeoutFn, set } from '@vueuse/core'
 import { useVuelidate } from '@vuelidate/core'
-import { isEqual } from 'lodash-es'
 import { required, maxLength, minLength, email, helpers } from '@vuelidate/validators'
 import {
-    useVuelidateWrapper, useMfaLogin, totpMfaProcessor, IMfaFlowContinuiation, MfaMethod,
+    type IMfaContinuation, fidoMfaProcessor,
+    useVuelidateWrapper, useMfaLogin, totpMfaProcessor,
     apiCall, useMessage, useWait, debugLog, WebMessage
 } from '@vnuge/vnlib.browser'
 
-import OptInput from '../global/OtpInput.vue'//So small it does not need to be async
+import MfaSelection from './MfaContinue.vue'//So small it does not need to be async
 
 const { setMessage } = useMessage();
 const { waiting } = useWait();
 
 //Setup mfa login with TOTP support
-const { login } = useMfaLogin([ totpMfaProcessor() ])
+const { login } = useMfaLogin([ totpMfaProcessor(), fidoMfaProcessor() ])
 
-const mfaUpgrade = shallowRef<IMfaFlowContinuiation | undefined>();
+const mfaUpgrade = shallowRef<IMfaContinuation | undefined>();
 
 const mfaTimeout = ref<number>(600 * 1000);
 const mfaTimer = useTimeoutFn(() => {
@@ -55,23 +55,23 @@ const onSubmit = async () => {
     await apiCall(async ({ toaster }) => {
 
         //Attempt to login
-        const response = await login(
-            v$.value.username.$model,
-            v$.value.password.$model
-        );
+        const response = await login({
+            userName: v$.value.username.$model,
+            password: v$.value.password.$model
+        });
 
         debugLog('Mfa-login', response);
 
         //See if the response is a web message
-        if (response.getResultOrThrow) {
+        if ('getResultOrThrow' in response) {
             (response as WebMessage).getResultOrThrow();
         }
 
         //Try to get response as a flow continuation
-        const mfa = response as IMfaFlowContinuiation
+        const mfa = response as IMfaContinuation
 
         // Response is a totp upgrade request
-        if (isEqual(mfa.type, MfaMethod.TOTP)) {
+        if ('methods' in mfa) {
             //Store the upgrade message
             set(mfaUpgrade, mfa);
             //Setup timeout timer
@@ -79,7 +79,7 @@ const onSubmit = async () => {
             mfaTimer.start();
         }
         //If login without mfa was successful
-        else if (response.success) {
+        else if ('success' in response) {
             // Push a new toast message
             toaster.general.success({
                 title: 'Success',
@@ -92,23 +92,20 @@ const onSubmit = async () => {
 
 <template>
     <form v-if="mfaUpgrade" @submit.prevent="" class="max-w-sm mx-auto">
-        <OptInput :upgrade="mfaUpgrade" />
-        <p id="helper-text-explanation" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Please enter your 6 digit TOTP code from your authenticator app.
-        </p>
+
+        <MfaSelection :upgrade="mfaUpgrade" />
+
     </form>
     <form v-else class="space-y-4 md:space-y-6" action="#" @submit.prevent="onSubmit" :disabled="waiting">
         <fieldset>
             <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
             <input type="email" name="email" id="email" class="input" placeholder="name@company.com" required
-                v-model="v$.username.$model"
-            >
+                v-model="v$.username.$model">
         </fieldset>
         <fieldset>
             <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
             <input type="password" name="password" id="password" class="input" placeholder="••••••••" required
-                    v-model="v$.password.$model"
-            >
+                v-model="v$.password.$model">
         </fieldset>
         <button type="submit" class="flex justify-center btn">
             <span v-if="waiting" class="mx-auto animate-spin">

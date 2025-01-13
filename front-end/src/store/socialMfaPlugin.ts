@@ -1,7 +1,7 @@
 import 'pinia'
 import { MaybeRef } from 'vue';
 import {
-    useUser,
+    useAccount,
     useOauthLogin,
     useSocialDefaultLogout,
     fetchSocialPortals,
@@ -25,7 +25,7 @@ export const socialMfaPlugin = (portalEndpoint?: MaybeRef<string>): PiniaPlugin 
     return ({ store }: PiniaPluginContext) => {
 
         const { } = storeToRefs(store)
-        const { logout } = useUser()
+        const { logout } = useAccount()
 
         //Create social login from available portals
         const defaultSocial = useSocialDefaultLogout(

@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "module": "ES2015",
+        "moduleResolution": "node",
+        "declaration": true,
+        "outDir": "./dist",
+        "strict": true,
+       
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+
+        "lib": [
+            "es2016",
+            "dom",
+            "es5"
+        ]
+    },
+    "include": [ "./src/**/*"],
+    "exclude": [
+        "node_modules",
+        "**/__tests__/*"
+    ]
+}

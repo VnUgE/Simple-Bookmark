@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, shallowReactive } from 'vue';
+import { computed, shallowReactive } from 'vue';
 import { useStore } from '../../store';
 import { get, useToggle } from '@vueuse/core';
-import { MfaMethod, apiCall, useUser, useVuelidateWrapper } from '@vnuge/vnlib.browser';
-import { includes, isEmpty, toSafeInteger } from 'lodash-es';
+import { apiCall, useAccount, useVuelidateWrapper } from '@vnuge/vnlib.browser';
+import { isEmpty, toSafeInteger } from 'lodash-es';
 import { useVuelidate } from '@vuelidate/core'
 import { required, maxLength, minLength, helpers } from '@vuelidate/validators'
-const Dialog = defineAsyncComponent(() => import('../global/Dialog.vue'));
 
 const store = useStore();
-const { resetPassword } = useUser()
-const totpEnabled = computed(() => includes(store.mfaEndabledMethods, MfaMethod.TOTP))
+const { resetPassword } = useAccount()
+const totpEnabled = store.mfaIsEnabled('totp')
 
 const [ isOpen, toggleOpen ] = useToggle(false)
 const vState = shallowReactive({
@@ -55,7 +54,12 @@ const onSubmit = async () => {
 
     apiCall(async ({toaster}) => {
         //Rest password and pass totp code
-        const { getResultOrThrow } = await resetPassword(vState.current, vState.newPassword, { totp_code: toSafeInteger(vState.totpCode) })
+        const { getResultOrThrow } = await resetPassword(
+            vState.current, 
+            vState.newPassword, 
+            { totp_code: toSafeInteger(vState.totpCode) }
+        )
+
         getResultOrThrow()
 
         toaster.general.success({

@@ -14,67 +14,104 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'pinia'
-import { MaybeRef, shallowRef, watch } from 'vue';
-import { MfaMethod, PkiPublicKey, apiCall, useMfaConfig, usePkiConfig, usePkiAuth } from '@vnuge/vnlib.browser';
-import { useToggle, get } from '@vueuse/core';
+import { shallowRef, watch, type Ref, computed } from 'vue';
+import { type MfaGetResponse, type MfaMethod, type PkiPublicKey, apiCall, useMfaApi } from '@vnuge/vnlib.browser';
+import { set, useToggle, refDefault, get } from '@vueuse/core';
 import { PiniaPluginContext, PiniaPlugin, storeToRefs } from 'pinia'
-import { defer, includes } from 'lodash-es';
+import { defer, find, includes } from 'lodash-es';
+import {  } from '@vnuge/vnlib.browser';
+
+export interface PkOtpData{
+    keys: PkiPublicKey[],
+    can_add_keys: boolean,
+    data_size: number,
+    max_size: number
+}
 
 declare module 'pinia' {
     export interface PiniaCustomProperties {
-        mfaEndabledMethods: MfaMethod[]
-        mfaConfig: ReturnType<typeof useMfaConfig>
-        pkiConfig: ReturnType<typeof usePkiConfig>
-        pkiAuth: ReturnType<typeof usePkiAuth>
-        pkiPublicKeys: PkiPublicKey[]
+        mfaData: Readonly<MfaGetResponse | undefined>
+        mfaConfig: ReturnType<typeof useMfaApi>
         mfaRefreshMethods: () => void
+        isMethodSupported: (method: MfaMethod) => Ref<boolean>
+        readonly mfaIsEnabled: (method: MfaMethod) => Ref<boolean>
+          /**
+         * Gets the MFA data slot returned by the server for the given mfa method
+         * This data is specific to the mfa method and does not have a fixed schema
+         * @param type The mfa method to get the data for
+         * @returns A reactive ref that contains the data for the mfa method
+         */
+        readonly mfaGetDataFor: <T>(type: MfaMethod) => Ref<T | undefined>
+
+        /**
+         * Gets the OTP data for the PKI OTP method
+         */
+        readonly mfaGetOtpData:() => Ref<PkOtpData | undefined>
     }
 }
 
-export const mfaSettingsPlugin = (mfaEndpoint: MaybeRef<string>, pkiEndpoint?:MaybeRef<string>): PiniaPlugin => {
+export const mfaSettingsPlugin = (): PiniaPlugin => {
 
     return ({ store }: PiniaPluginContext) => {
 
         const { loggedIn } = storeToRefs(store)
-        const mfaConfig = useMfaConfig(mfaEndpoint)
-        const pkiConfig = usePkiConfig(pkiEndpoint || '/')
-        const pkiAuth = usePkiAuth(pkiEndpoint || '/')
+        const mfaConfig = useMfaApi()
         const [onRefresh, mfaRefreshMethods] = useToggle()
 
-        const mfaEndabledMethods = shallowRef<MfaMethod[]>([])
-        const pkiPublicKeys = shallowRef<PkiPublicKey[]>([])
+        const _mfaData = shallowRef<MfaGetResponse>();
+        const mfaData = refDefault(_mfaData, { supported_methods: [], methods: [] })
 
         watch([loggedIn, onRefresh], ([ li ]) => {
             if(!li){
-                mfaEndabledMethods.value = []
+                set(_mfaData, undefined)
                 return
             }
 
             //load the mfa methods if the user is logged in
-            apiCall(async () => mfaEndabledMethods.value = await mfaConfig.getMethods())
-        })
-
-        //Watch for changes to mfa methods (refresh) and update the pki keys
-        watch([mfaEndabledMethods], ([ methods ]) => {
-            if(!includes(methods, 'pki' as MfaMethod) || !get(pkiEndpoint)){
-                pkiPublicKeys.value = []
-                return
-            }
-
-            //only load the pki keys if pki is enabled on the server
-            apiCall(async () => pkiPublicKeys.value = await pkiConfig.getAllKeys())
+            apiCall(async () => _mfaData.value = await mfaConfig.getData())
         })
 
         //Initial load when page loads
         defer(mfaRefreshMethods)
+        
+        const isMethodSupported = (method: MfaMethod) => {
+            return computed(() => includes(mfaData.value.supported_methods, method))
+        }
+
+        const mfaGetDataFor = <T>(type: MfaMethod): Ref<T | undefined> => {
+            return computed(() => {
+                const { methods } = get(mfaData)
+                const m = find(methods, { type })
+                return m ? m.data as T : undefined
+            })
+        }
+
+        const mfaIsEnabled = (type: MfaMethod): Ref<boolean> => {
+            return computed(() => {
+                const { methods } = get(mfaData)
+                const m = find(methods, { type })
+                return m ? m.enabled : false
+            })
+        }
+
+        const mfaGetOtpData = () => {
+            const _otpData = mfaGetDataFor<PkOtpData>('pkotp')
+            return refDefault(_otpData, { 
+                keys: [], 
+                can_add_keys: false, 
+                data_size: 0, 
+                max_size: 0 
+            })
+        }
 
         return{
             mfaRefreshMethods,
-            mfaEndabledMethods,
+            mfaData,
             mfaConfig,
-            pkiConfig,
-            pkiAuth,
-            pkiPublicKeys
+            isMethodSupported,
+            mfaIsEnabled,
+            mfaGetDataFor,
+            mfaGetOtpData
         }
     }
 }
