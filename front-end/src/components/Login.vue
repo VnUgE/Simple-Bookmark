@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent } from 'vue'
-import { apiCall, useWait } from '@vnuge/vnlib.browser'
+import { apiCall, useAccountRpc, useWait } from '@vnuge/vnlib.browser'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue'
+import { useAsyncState } from '@vueuse/core'
+import { filter } from 'lodash-es'
 import UserPass from './Login/UserPass.vue'
 import PkiLogin from './Login/PkiLogin.vue'
 const AdminReg = defineAsyncComponent(() => import('./Login/AdminReg.vue'))
@@ -11,6 +13,7 @@ const AdminReg = defineAsyncComponent(() => import('./Login/AdminReg.vue'))
 const { waiting } = useWait();
 const store = useStore();
 const { loggedIn, siteTitle } = storeToRefs(store);
+const { getMethods } = useAccountRpc();
 
 const adminRegEnabled = computed(() => store.registation.status?.enabled && store.registation.status?.setup_mode);
 
@@ -19,6 +22,14 @@ const logout = () => {
         const { logout } = await store.socialOauth()
         await logout()
     })
+}
+
+//Determines if otp login is enabled on the server, if it's not we can hide the token tab
+const { execute, state:accountRpcMethods } = useAsyncState(getMethods, [], { delay:200, immediate: false })
+const isOtpEnabled = computed(() => filter(accountRpcMethods.value, { method: 'otp.login' }).length > 0);
+
+if(loggedIn.value == false){
+    execute();
 }
 
 </script>
@@ -60,7 +71,7 @@ const logout = () => {
                                         Email
                                     </div>
                                 </Tab>
-                                <Tab as="template" v-slot="{ selected }" class="cursor-pointer me-2">
+                                <Tab v-if="isOtpEnabled" as="template" v-slot="{ selected }" class="cursor-pointer me-2">
                                     <div class="tab group" :class="{ selected }">
                                         <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M8 18A18.55 18.55 0 0 1 0 3l8-3 8 3a18.549 18.549 0 0 1-8 15Z"/>
@@ -76,7 +87,7 @@ const logout = () => {
                                 <TabPanel :unmount="false">
                                     <UserPass />
                                 </TabPanel>
-                                <TabPanel>
+                                <TabPanel v-if="isOtpEnabled" :unmount="false">
                                     <PkiLogin />
                                 </TabPanel>
                             </TabPanels>

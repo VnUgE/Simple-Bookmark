@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "copyright": "Copyright © 2024 Vaughn Nugent",
-  "description": "The Simple Bookmark front-end client side web application",
+  "description": "The Simple-Bookmark front-end web application",
   "repository": "https://github.com/VnUgE/simple-bookmark/tree/master/front-end",
   "author": "Vaughn Nugent",
   "output_dir": "bin",

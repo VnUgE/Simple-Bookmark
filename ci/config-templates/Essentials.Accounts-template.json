@@ -1,7 +1,6 @@
 {
   "debug": ${DEBUG_PLUGINS:-false}, //Enables obnoxious debug logging
 
-
   "rpc": {
     "path": "/api/account",
 
