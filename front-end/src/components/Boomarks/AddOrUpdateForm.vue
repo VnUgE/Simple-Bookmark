@@ -7,10 +7,7 @@ import { WebMessage, useWait } from '@vnuge/vnlib.browser';
 import { AxiosError } from 'axios';
 
 const emit = defineEmits(['submit'])
-const props = defineProps<{
-    v$:any
-}>()
-
+const props = defineProps<{ v$:any }>()
 const { v$ } = toRefs(props)
 
 //Convert tags array to string
@@ -105,11 +102,17 @@ watchDebounced(errMessage, v => v ? setTimeout(() => set(errMessage, ''), 5000) 
             <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Title</label>
             <input type="text" id="Name" class="input" placeholder="Hello World" v-model="v$.Name.$model"
                 :class="{'dirty': v$.Name.$dirty, 'error': v$.Name.$invalid}" required>
+            <p v-if="v$.Name.$errors.length > 0 && v$.Name.$model?.length > 0" class="mt-1 ml-1 text-xs text-red-500">
+                {{ v$.Name.$errors[0].$message }}
+            </p>
         </fieldset>
         <fieldset>
             <label for="tags" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tags</label>
             <input type="text" id="tags" class="input" placeholder="tag1,tag2,tag3" v-model="tags"
                 :class="{'dirty': v$.Tags.$dirty, 'error': v$.Tags.$invalid}">
+            <p v-if="v$.Tags.$errors.length > 0 && v$.Tags.$model?.length > 0" class="mt-1 ml-1 text-xs text-red-500">
+                {{ v$.Tags.$errors[0].$message }}
+            </p>
         </fieldset>
         <fieldset>
             <label for="description"
@@ -117,6 +120,10 @@ watchDebounced(errMessage, v => v ? setTimeout(() => set(errMessage, ''), 5000) 
             <textarea type="text" id="description" rows="5" class="input" placeholder="This is a bookmark"
                 v-model="v$.Description.$model"
                 :class="{'dirty': v$.Description.$dirty, 'error': v$.Description.$invalid}" />
+            <p v-if="v$.Description.$errors.length > 0 && v$.Description.$model?.length > 0"
+                class="mt-1 ml-1 text-xs text-red-500">
+                {{ v$.Description.$errors[0].$message }}
+            </p>
         </fieldset>
 
         <div class="flex justify-end">

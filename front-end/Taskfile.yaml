@@ -14,7 +14,7 @@ tasks:
     cmds:
     #install deps and run build
     - cmd: npm install && npm run build
-    
+
   #copy artifacts to temp directory
   postbuild_success:
     cmds:
