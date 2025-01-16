@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Vaughn Nugent
+// Copyright (C) 2025 Vaughn Nugent
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -14,104 +14,101 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'pinia'
-import { shallowRef, watch, type Ref, computed } from 'vue';
-import { type MfaGetResponse, type MfaMethod, type PkiPublicKey, apiCall, useMfaApi } from '@vnuge/vnlib.browser';
-import { set, useToggle, refDefault, get } from '@vueuse/core';
+import { computed, type Ref, ref, watch } from 'vue';
+import { 
+    apiCall,
+    useMfaApi,
+    type MfaMethod, 
+    type MfaApi,
+    type MfaGetResponse
+} from '@vnuge/vnlib.browser';
+import { useToggle, set } from '@vueuse/core';
 import { PiniaPluginContext, PiniaPlugin, storeToRefs } from 'pinia'
-import { defer, find, includes } from 'lodash-es';
-import {  } from '@vnuge/vnlib.browser';
+import { find, includes } from 'lodash-es';
 
-export interface PkOtpData{
-    keys: PkiPublicKey[],
-    can_add_keys: boolean,
-    data_size: number,
-    max_size: number
-}
-
-declare module 'pinia' {
-    export interface PiniaCustomProperties {
-        mfaData: Readonly<MfaGetResponse | undefined>
-        mfaConfig: ReturnType<typeof useMfaApi>
-        mfaRefreshMethods: () => void
-        isMethodSupported: (method: MfaMethod) => Ref<boolean>
-        readonly mfaIsEnabled: (method: MfaMethod) => Ref<boolean>
-          /**
+export interface MfaSettingsStore{
+    readonly mfa: {
+        readonly data: MfaGetResponse
+        /**
+         * Checks if the given mfa method is enabled for the current user
+         * @param type The mfa method to check if it is enabled
+         * @returns 
+         */
+        readonly isEnabled: (type: MfaMethod) => Ref<boolean>
+        /**
+         * Checks if the server announced that the given mfa method is supported
+         * on the server
+         * @param type The mfa method to check if it is supported
+         * @returns A reactive ref that is true if the method is supported
+         */
+        readonly isSupported: (type: MfaMethod) => Ref<boolean>
+        /**
          * Gets the MFA data slot returned by the server for the given mfa method
          * This data is specific to the mfa method and does not have a fixed schema
          * @param type The mfa method to get the data for
          * @returns A reactive ref that contains the data for the mfa method
          */
-        readonly mfaGetDataFor: <T>(type: MfaMethod) => Ref<T | undefined>
-
+        readonly getDataFor: <T>(type: MfaMethod) => Ref<T | undefined>
         /**
-         * Gets the OTP data for the PKI OTP method
+         * Refreshes the mfa data from the server
          */
-        readonly mfaGetOtpData:() => Ref<PkOtpData | undefined>
+        refresh: () => void
+    } & MfaApi
+}
+
+declare module 'pinia' {
+    export interface PiniaCustomProperties extends MfaSettingsStore {
     }
 }
 
 export const mfaSettingsPlugin = (): PiniaPlugin => {
 
-    return ({ store }: PiniaPluginContext) => {
+    return ({ store }: PiniaPluginContext): MfaSettingsStore => {
 
         const { loggedIn } = storeToRefs(store)
         const mfaConfig = useMfaApi()
-        const [onRefresh, mfaRefreshMethods] = useToggle()
 
-        const _mfaData = shallowRef<MfaGetResponse>();
-        const mfaData = refDefault(_mfaData, { supported_methods: [], methods: [] })
+        const [onRefresh, refresh] = useToggle()
 
-        watch([loggedIn, onRefresh], ([ li ]) => {
-            if(!li){
-                set(_mfaData, undefined)
-                return
-            }
+        const data = ref<MfaGetResponse>({} as any)
 
-            //load the mfa methods if the user is logged in
-            apiCall(async () => _mfaData.value = await mfaConfig.getData())
-        })
-
-        //Initial load when page loads
-        defer(mfaRefreshMethods)
-        
-        const isMethodSupported = (method: MfaMethod) => {
-            return computed(() => includes(mfaData.value.supported_methods, method))
-        }
-
-        const mfaGetDataFor = <T>(type: MfaMethod): Ref<T | undefined> => {
+        const isEnabled = (type: MfaMethod): Ref<boolean> => {
             return computed(() => {
-                const { methods } = get(mfaData)
-                const m = find(methods, { type })
-                return m ? m.data as T : undefined
-            })
-        }
-
-        const mfaIsEnabled = (type: MfaMethod): Ref<boolean> => {
-            return computed(() => {
-                const { methods } = get(mfaData)
-                const m = find(methods, { type })
+                const m = find(data.value.methods, m => m.type === type)
                 return m ? m.enabled : false
             })
         }
 
-        const mfaGetOtpData = () => {
-            const _otpData = mfaGetDataFor<PkOtpData>('pkotp')
-            return refDefault(_otpData, { 
-                keys: [], 
-                can_add_keys: false, 
-                data_size: 0, 
-                max_size: 0 
+        const isSupported = (type: MfaMethod): Ref<boolean> => {
+            return computed(() => includes(data.value.supported_methods, type))
+        }
+
+        const getDataFor = <T>(type: MfaMethod): Ref<T | undefined> => {
+            return computed(() => {
+                const m = find(data.value.methods, m => m.type === type)
+                return m ? m.data as T : undefined
             })
         }
 
-        return{
-            mfaRefreshMethods,
-            mfaData,
-            mfaConfig,
-            isMethodSupported,
-            mfaIsEnabled,
-            mfaGetDataFor,
-            mfaGetOtpData
+        watch([loggedIn, onRefresh], ([ li ]) => {
+            if(!li){
+                set(data, {} as any)
+                return
+            }
+
+            //load the mfa methods if the user is logged in
+            apiCall(async () => data.value = await mfaConfig.getData())
+        })
+        
+        return {
+            mfa: {
+                ...mfaConfig,
+                data,
+                isEnabled,
+                isSupported,
+                getDataFor,
+                refresh,
+            },
         }
     }
 }

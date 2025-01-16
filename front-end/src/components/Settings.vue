@@ -6,6 +6,7 @@ import PasswordReset from './Settings/PasswordReset.vue';
 import PkiSettings from './Settings/PkiSettings.vue';
 import TotpSettings from './Settings/TotpSettings.vue';
 import Bookmarks from './Settings/Bookmarks.vue';
+import FidoSettings from './Settings/FidoSettings.vue';
 const Registation = defineAsyncComponent(() => import('./Settings/Registation.vue'));
 
 const store = useStore();
@@ -57,6 +58,8 @@ const darkMode = useDark();
                     <TotpSettings />
                 </div>
             </div>
+
+            <FidoSettings />
 
             <PkiSettings />
 

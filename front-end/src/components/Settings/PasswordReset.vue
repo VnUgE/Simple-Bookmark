@@ -9,7 +9,7 @@ import { required, maxLength, minLength, helpers } from '@vuelidate/validators'
 
 const store = useStore();
 const { resetPassword } = useAccount()
-const totpEnabled = store.mfaIsEnabled('totp')
+const totpEnabled = store.mfa.isEnabled('totp')
 
 const [ isOpen, toggleOpen ] = useToggle(false)
 const vState = shallowReactive({

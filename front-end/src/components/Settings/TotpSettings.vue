@@ -22,8 +22,9 @@ const { elevatedApiCall } = usePassConfirm()
 const { success, error } = useGeneralToaster()
 const store = useStore()
 const newTotpConfig = shallowRef<TotpConfig | undefined>()
-const totpEnabled = store.mfaIsEnabled('totp')
-const totpApi = useTotpApi(store.mfaConfig)
+const totpEnabled = store.mfa.isEnabled('totp')
+const totpSupported = store.mfa.isSupported('totp')
+const totpApi = useTotpApi(store.mfa)
 
 const qrCode = computed(() => {
 
@@ -72,7 +73,7 @@ const addOrUpdate = async () => {
         set(newTotpConfig, newConfig);
 
         //refresh config
-        store.mfaRefreshMethods();
+        store.mfa.refresh();
     })
 }
 
@@ -112,7 +113,10 @@ const onVerifyOtp = async (code: string) => {
             >
             </span>
         </div>
-        <div v-if="totpEnabled" class="flex gap-2">
+        <div v-if="!totpSupported" class="text-red-500 dark:text-red-400 text-xs">
+            <p>Not supported</p>
+        </div>
+        <div v-else-if="totpEnabled" class="flex gap-2">
             <button class="btn light" @click="addOrUpdate()">
                 Regenerate
             </button>

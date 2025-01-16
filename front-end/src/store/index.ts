@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Vaughn Nugent
+// Copyright (C) 2025 Vaughn Nugent
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,7 +17,7 @@ import { useSession, useAutoHeartbeat } from "@vnuge/vnlib.browser";
 import { toRefs, set, watchDebounced, useLocalStorage, refWithControl } from "@vueuse/core";
 import { defaults, defer } from "lodash-es";
 import { defineStore } from "pinia";
-import { shallowRef, watch } from "vue";
+import { ref, shallowRef, watch } from "vue";
 
 export type { DownloadContentType } from './bookmarks'
 
@@ -63,8 +63,8 @@ export const useStore = defineStore('main', () => {
     const setSiteTitle = (title: string) => set(siteTitle, title);
 
     const activeTab = useQuery<TabName>('tab');
-    const loggedIn = refWithControl<boolean>(false)
-    const isLocalAccount = refWithControl<boolean>(false)
+    const loggedIn = ref<boolean>(false)
+    const isLocalAccount = ref<boolean>(false)
 
     //Get shared global state storage
     const mainState = useLocalStorage("vn-state", { autoHeartbeat: false });
@@ -72,39 +72,35 @@ export const useStore = defineStore('main', () => {
     defaults(mainState.value, { autoHeartbeat: false })
     const { autoHeartbeat } = toRefs(mainState)
 
-    //If not logged in, redirect to login tab
-    watch(loggedIn, (li) =>{
-        if (li || activeTab.untrackedGet() === 'register'){
-            return;
-        }
-
-        activeTab.set('login');
-    })
-
     //Setup heartbeat for 5 minutes
     useAutoHeartbeat(shallowRef(5 * 60 * 1000), autoHeartbeat)
 
     //Reconcile session state when the store loads, the api should have already been configured
     session.reconcileState();
 
+    const updateActiveTab = () => {
+        if (loggedIn.value || activeTab.untrackedGet() === 'register'){
+            return;
+        }
+        activeTab.set('login');
+    }
+
     const updateLoginStatus = () => {
         return Promise.all([
-            (async () => {
-                const newVal = await session.isLoggedIn();
-                const current = loggedIn.peek();
-                loggedIn.set(newVal, newVal !== current);
-            })(),
-            (async () => {
-                const isLocal = await session.isLocalAccount();
-                const current = isLocalAccount.peek();
-                isLocalAccount.set(isLocal, isLocal !== current);
-            })()
+            (async () => loggedIn.value = await session.isLoggedIn())(),
+            (async () => isLocalAccount.value = await session.isLocalAccount())()
         ])
     }
     
     //Just a background poll incase the user's login status changes
     setInterval(updateLoginStatus, 1000);
-    defer(updateLoginStatus);
+
+    defer(async () => {
+        await updateLoginStatus();
+        updateActiveTab();
+    });
+
+    watch(loggedIn, updateActiveTab)
 
     return{
         autoHeartbeat,
