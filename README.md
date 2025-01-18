@@ -5,7 +5,7 @@ A <a href="https://github.com/sissbruecker/linkding">linkding</a> inspired, self
 </p>
 
 <h4 align="center">
-  <a href="https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark">Downloads</a> |
+  <a href="https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?tab=downloads">Downloads</a> |
   <a href="https://www.vaughnnugent.com/resources/software">My Software</a> |
   <a href="https://www.vaughnnugent.com/resources/software/articles?tags=_simple-bookmark">Documentation</a>
 </h4>
@@ -54,7 +54,7 @@ __Please read the [quick start guide](https://www.vaughnnugent.com/resources/sof
 ⚠ These are only some quick and dirty commands to give you the gist of the install process.
 
 ### Container  
-Download the [sb-alpine3.19-oci.tgz package](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?p=Simple-Bookmark) 
+Download the [sb-alpine3.19-oci.tgz package](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?tab=downloads&p=Simple-Bookmark) 
 ```
 mkdir simple-bookmark && cd simple-bookmark/
 tar -xzf sb-alpine3.19-oci.tgz
@@ -65,7 +65,7 @@ podman-compose up -d
 ### Bare Metal
 __Windows users please see quick start guide__
 
-Download the [realease package](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?p=Simple-Bookmark) for your os
+Download the [realease package](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?tab=downloads&p=Simple-Bookmark) for your os
 ```
 mkdir simple-bookmark && cd simple-bookmark/
 tar -xzf <your-os>-release.tgz
