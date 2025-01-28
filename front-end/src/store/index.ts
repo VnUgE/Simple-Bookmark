@@ -14,14 +14,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { useSession, useAutoHeartbeat } from "@vnuge/vnlib.browser";
-import { toRefs, set, watchDebounced, useLocalStorage, refWithControl } from "@vueuse/core";
-import { defaults, defer } from "lodash-es";
+import { toRefs, set, watchDebounced, useLocalStorage, refWithControl, type DeepMaybeRef } from "@vueuse/core";
+import { defaultsDeep } from "lodash-es";
 import { defineStore } from "pinia";
-import { ref, shallowRef, watch } from "vue";
+import { shallowRef, type UnwrapNestedRefs } from "vue";
 
 export type { DownloadContentType } from './bookmarks'
 
 export const useQuery = <T extends string>(name: string) => {
+
+    let onPop = false;
 
     const getQuery = (): T | null => {
         const url = new URL(window.location.href);
@@ -29,83 +31,64 @@ export const useQuery = <T extends string>(name: string) => {
     }
 
     const setQuery = (value: T | null) => {
+        if(onPop){
+            onPop = false;
+            return;
+        }
+        
         const url = new URL(window.location.href);
 
         if(value){
             url.searchParams.set(name, value);
-           
         }
         else{
             url.searchParams.delete(name);
         }
 
-        window.history.replaceState({}, '', url.toString());
+        window.history.pushState({}, '', url.toString());
     }
 
     //configure reactive state
     const value = refWithControl(getQuery());
     watchDebounced(value, (value) => setQuery(value), { debounce: 20 });
 
+    //user may use back/forward buttons so watch history and update the query
+    window.addEventListener('popstate', () => {
+        onPop = true;
+        value.set(getQuery());
+    });
+
     return value;
 }
 
 export type TabName = 'bookmarks' | 'profile' | 'settings' | 'login' | 'register';
+
+export const storeExport = <T>(val: DeepMaybeRef<T>): UnwrapNestedRefs<T> => val as UnwrapNestedRefs<T>;
+
+type GlobalState = { autoHeartbeat: boolean, theme: string, loggedIn: boolean, userName: string | undefined };
+const defaultState: GlobalState = { autoHeartbeat: false, theme: '', loggedIn: false, userName: undefined };
 
 /**
  * Loads the main store for the application
  */
 export const useStore = defineStore('main', () => {
 
-    const session = useSession();
-
     //MANAGED STATE
     const siteTitle = shallowRef("");
     const setSiteTitle = (title: string) => set(siteTitle, title);
 
     const activeTab = useQuery<TabName>('tab');
-    const loggedIn = ref<boolean>(false)
-    const isLocalAccount = ref<boolean>(false)
 
     //Get shared global state storage
-    const mainState = useLocalStorage("vn-state", { autoHeartbeat: false });
-    //Set defaults to avoid undefined errors from toRefs
-    defaults(mainState.value, { autoHeartbeat: false })
-    const { autoHeartbeat } = toRefs(mainState)
+    const mainState = useLocalStorage<GlobalState | undefined>("vn-state", defaultState);
+    defaultsDeep(mainState.value, defaultState);
+    const stateRefs = toRefs<GlobalState>(mainState as any);
 
     //Setup heartbeat for 5 minutes
-    useAutoHeartbeat(shallowRef(5 * 60 * 1000), autoHeartbeat)
-
-    //Reconcile session state when the store loads, the api should have already been configured
-    session.reconcileState();
-
-    const updateActiveTab = () => {
-        if (loggedIn.value || activeTab.untrackedGet() === 'register'){
-            return;
-        }
-        activeTab.set('login');
-    }
-
-    const updateLoginStatus = () => {
-        return Promise.all([
-            (async () => loggedIn.value = await session.isLoggedIn())(),
-            (async () => isLocalAccount.value = await session.isLocalAccount())()
-        ])
-    }
+    useAutoHeartbeat(shallowRef(5 * 60 * 1000), stateRefs.autoHeartbeat)
     
-    //Just a background poll incase the user's login status changes
-    setInterval(updateLoginStatus, 1000);
-
-    defer(async () => {
-        await updateLoginStatus();
-        updateActiveTab();
-    });
-
-    watch(loggedIn, updateActiveTab)
-
-    return{
-        autoHeartbeat,
-        loggedIn,
-        isLocalAccount,
+    return {
+        ...stateRefs,
         siteTitle,
         setSiteTitle,
         activeTab

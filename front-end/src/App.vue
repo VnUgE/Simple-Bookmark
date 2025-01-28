@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { useStore, type TabName } from './store';
-import { computed, defineAsyncComponent } from 'vue';
-import { isEqual } from 'lodash-es';
-import { useDark } from '@vueuse/core';
+import { computed, defineAsyncComponent, onMounted, watch } from 'vue';
+import { defer, isEmpty, isEqual } from 'lodash-es';
+import { useDark, get } from '@vueuse/core';
+import { initFlowbite } from 'flowbite' 
 import SideMenuItem from './components/SideMenuItem.vue';
 import BottomMenuItem from './components/BottomMenuItem.vue';
 const Bookmarks = defineAsyncComponent(() => import('./components/Bookmarks.vue'));
@@ -25,6 +26,29 @@ store.setSiteTitle('Simple Bookmark')
 const isSetupMode = computed(() => store.registation.status?.setup_mode === true)
 
 const showIf = (tabId: TabName, active: TabName) => isEqual(tabId, active)
+
+//Sends logged-out users back to the login page, and sets the default tab to bookmarks
+const updateTab = async () => {
+  await store.account.wait();
+
+  const tab = get(activeTab);
+
+  if (isEmpty(tab)){
+    activeTab.value = 'bookmarks';
+  }
+
+  if (get(loggedIn) || tab === 'register') {
+    return;
+  }
+
+  activeTab.value = 'login';
+}
+
+defer(updateTab);
+watch(loggedIn, updateTab);
+
+onMounted(() => initFlowbite());
+
 
 </script>
 

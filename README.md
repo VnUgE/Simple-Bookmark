@@ -36,16 +36,16 @@ I built Simple-Bookmark mostly because I didn't want the container lock-in. I al
 
 ### Features
 - Light/Dark theme
-- 2FA and public-key JWT authentication
-- HTML bookmark file import from Linkding and others
+- 2FA w/ TOTP & Webauthn (jwt based otp also)
+- Netscape HTML bookmark file import
 - HTML, JSON, and CSV bookmark export
 - Bookmark quick-add for web browsers
 - Invite users with share links
-- Supports (and tested) SQLite, SQLServer, MySQL/MariaDB databases
+- Supports (and tested) SQLite, SQLServer, MySQL/MariaDB databases (best search on SQLServer)
 - It's quick, <300ms load time & under 150kB with compression
 - It's small, 127mb Docker image
 - Argon2Id password hashing with secure defaults
-- Supports enterprise services: HashiCorp Vault, SQLServer, Auth0, and Redis
+- Supports enterprise services: HashiCorp Vault, SQLServer, and Redis
 - Built-in TLS (TLS is required)
 
 ## Get Started
@@ -54,10 +54,10 @@ __Please read the [quick start guide](https://www.vaughnnugent.com/resources/sof
 ⚠ These are only some quick and dirty commands to give you the gist of the install process.
 
 ### Container  
-Download the [sb-alpine3.19-oci.tgz package](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?tab=downloads&p=Simple-Bookmark) 
+Download the [container-release.tgz package](https://www.vaughnnugent.com/resources/software/modules/Simple-Bookmark?tab=downloads&p=Simple-Bookmark) 
 ```
 mkdir simple-bookmark && cd simple-bookmark/
-tar -xzf sb-alpine3.19-oci.tgz
+tar -xzf container-release.tgz
 podman-compose build
 podman-compose up -d
 ```

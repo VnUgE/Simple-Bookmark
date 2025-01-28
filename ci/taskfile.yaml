@@ -13,10 +13,10 @@ vars:
   SQLITE_OUT_DIR: "plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite"
 
   PLUGIN_NAME: 'SimpleBookmark'
-  CORE_VERSION: '536e87e64915c52363cb93a5796f87d4b3bb40e0'
-  ESSENTIALS_VERSION: 'b37f0a994419d6238817ba125c2cc5644d3f0edb'
-  CACHE_VERSION: '86d3d9c5c47b84fac7d01d415b0c89a72330a10f'
-  EXTENSIONS_VERSION: 'fb252f869c87bbe9e256ebbf9e8d395dc10da98e'
+  CORE_VERSION: '80cf7ad2fc927680702e8ce03221a2df1a75d663'
+  ESSENTIALS_VERSION: '4e6d1952445797bd1d616a59f09ed0aab2985990'
+  CACHE_VERSION: '43a0356c2072315743955d9492bcfacee97a0b64'
+  EXTENSIONS_VERSION: 'a9b2146523e99b42d37475ace22c4daae9bc1348'
 
   TARGET_ARCHES: [ 'windows-x86_64', 'linux-x86_64', 'osx-x86_64', 'windows-arm', 'linux-arm', 'osx-arm', 'posix' ]
 
@@ -157,9 +157,9 @@ tasks:
     - task: pb-parallel
 
     #cleanup unnecessary build files that clog up the pipeline
-    #- for: [ build, plugins, dist, lib, webserver, config ]
-    #  cmd: powershell rm -Recurse '{{.ITEM}}'
-    #  ignore_error: true
+    - for: [ build ]
+      cmd: powershell rm -Recurse '{{ .ITEM }}'
+      ignore_error: true
 
   pb-parallel:
     internal: true

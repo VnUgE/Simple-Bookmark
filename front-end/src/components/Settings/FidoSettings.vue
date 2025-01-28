@@ -13,10 +13,8 @@ import { useStore } from '../../store'
 import { useToggle, whenever, refDefault, toRefs } from '@vueuse/core'
 import { useVuelidate } from '@vuelidate/core'
 import { maxLength, minLength, helpers, required } from '@vuelidate/validators'
-import { storeToRefs } from 'pinia'
 
 const store = useStore()
-const { isLocalAccount } = storeToRefs(store)
 const { elevatedApiCall } = usePassConfirm()
 const { reveal } = useConfirm()
 const { error, close: closeToaster } = useFormToaster()
@@ -30,7 +28,7 @@ const fidoSlot = store.mfa.getDataFor<{
     data_size: number,
     max_size: number
 }>('fido')
-const fidoData = refDefault(fidoSlot, { devices: [], can_add_devices: false, data_size: 0, max_size: 0 })
+const fidoData = refDefault(fidoSlot, { devices: [], can_add_devices: true, data_size: 0, max_size: 0 })
 const { devices, can_add_devices, data_size, max_size } = toRefs(fidoData)
 
 const [isOpen, toggleOpen] = useToggle()
@@ -82,9 +80,9 @@ const onDisable = async () => {
     }
 
     await elevatedApiCall(async ({ toaster, password }) => {
-        const text = await fido.disableAllDevices({ password });
+        const { result } = await fido.disableAllDevices({ password });
 
-        toaster.general.success({ title: 'FIDO disabled', text })
+        toaster.general.success({ title: 'FIDO disabled', text: result })
 
         //Refresh the status
         refresh()
@@ -123,7 +121,6 @@ const onRegisterDevice = async () => {
     v$.value.deviceName.$model = '';
     v$.value.$reset();
     refresh();
-
 }
 
 const getAlgNameFromCode = (code: number) => {
@@ -160,12 +157,12 @@ whenever(isOpen, () => {
 
             <div class="ml-auto">
 
-                <button v-if="can_add_devices" :disabled="!fido.isSupported()" type="button" class="btn blue me-2 disabled:cursor-not-allowed" @click.prevent="toggleOpen(true)">
+                <button v-if="fido.isSupported()" :disabled="!can_add_devices" type="button" class="btn blue me-2 disabled:cursor-not-allowed" @click.prevent="toggleOpen(true)">
                     <div class="flex flex-row items-center gap-1.5">
                         Enroll
                     </div>
                 </button>
-                <button type="button" class="btn red" @click.prevent="onDisable">
+                <button v-if="devices?.length > 0" type="button" class="btn red" @click.prevent="onDisable">
                     <div class="flex flex-row items-center gap-1.5">
                         Disable
                     </div>

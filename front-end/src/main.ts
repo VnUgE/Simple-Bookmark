@@ -26,11 +26,11 @@ import './index.scss'
 
 import { profilePlugin } from './store/userProfile'
 import { mfaSettingsPlugin } from './store/mfaSettingsPlugin'
-import { socialMfaPlugin } from './store/socialMfaPlugin'
 import { bookmarkPlugin } from './store/bookmarks'
 import { registationPlugin } from './store/registation';
 import { siteLookupPlugin } from './store/websiteLookup';
 import Dialog from './components/global/Dialog.vue';
+import { accountStatePlugin } from './store/accounStatusPlugin';
 
 //Setup the vnlib api
 configureApi({
@@ -61,18 +61,18 @@ useDark({
     selector: 'html',
     valueDark: 'dark',
     valueLight: 'light',
+    attribute: 'data-theme'
 });
 
 //User-profile plugin
-store.use(profilePlugin())
+store.use(accountStatePlugin())
+    .use(profilePlugin())
     //Enable mfa with totp settings plugin (optional pki config)
     .use(mfaSettingsPlugin())
-    //Setup social mfa plugin
-    .use(socialMfaPlugin("/login/social/portals"))
     //Add the oauth2 apps plugin
-    .use(bookmarkPlugin('/bookmarks'))
+    .use(bookmarkPlugin('/simple-bookmark'))
     .use(siteLookupPlugin('/lookup', 2000))
-    .use(registationPlugin('/register'))
+    .use(registationPlugin())
 
 createApp(App)
     .component('Dialog', Dialog)

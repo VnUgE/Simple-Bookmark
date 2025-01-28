@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { useStore, TabId } from '../store';
+import { useStore, type TabName } from '../store';
 import { toRefs } from 'vue';
 import { noop } from 'lodash-es';
 import { get, set } from '@vueuse/core';
 
 const props = defineProps<{
-    tab: TabId;
+    tab: TabName;
     name: String,
     disabled?: Boolean
 }>()
@@ -16,7 +16,7 @@ const { activeTab } = storeToRefs(store)
 const { name, disabled, tab } = toRefs(props)
 
 //const isActive = (tab: TabId, activeTab: TabId) => isEqual(activeTab, tab);
-const setActiveTab = (tab: TabId) => get(disabled) ? noop() : set(activeTab, tab)
+const setActiveTab = (tab: TabName) => get(disabled) ? noop() : set(activeTab, tab)
 
 </script>
 

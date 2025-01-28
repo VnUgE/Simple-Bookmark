@@ -22,7 +22,7 @@ declare module 'pinia' {
     export interface PiniaCustomProperties {
        websiteLookup:{
             isSupported: boolean,
-           execLookup(url: string): Promise<WebsiteLookupResult>
+            execLookup(url: string): Promise<WebsiteLookupResult>
        }
     }
 }
@@ -43,7 +43,7 @@ export const siteLookupPlugin = (lookupEndpoint: MaybeRef<string>, to: number): 
 
         const isSupported = shallowRef(false)
         const timeout = shallowRef(to)
-     
+
         const checkIsSupported = () => {
             return apiCall(async () => {
                 //Execute test with the 'support' query parameter

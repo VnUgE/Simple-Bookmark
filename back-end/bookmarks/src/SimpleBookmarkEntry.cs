@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2024 Vaughn Nugent
+﻿// Copyright (C) 2025 Vaughn Nugent
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,7 @@ using VNLib.Utils.Logging;
 using VNLib.Plugins.Extensions.Loading;
 using VNLib.Plugins.Extensions.Loading.Sql;
 using VNLib.Plugins.Extensions.Loading.Routing;
+using VNLib.Plugins.Extensions.Loading.Routing.Mvc;
 
 using SimpleBookmark.Model;
 using SimpleBookmark.Endpoints;
@@ -46,7 +47,6 @@ namespace SimpleBookmark
         {
             //route the bm endpoint
             this.Route<BookmarkEndpoint>();
-            this.Route<BmAccountEndpoint>();
             this.Route<SiteLookupEndpoint>();
 
             //Ensure database is created after a delay
@@ -63,9 +63,7 @@ namespace SimpleBookmark
         }
 
         protected override void ProcessHostCommand(string cmd)
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
         private void PrintHelloMessage()
         {
@@ -82,7 +80,7 @@ namespace SimpleBookmark
     GitHub: https://github.com/VnUgE/simple-bookmark
     {warning}
 
-\******************************************************************************";
+******************************************************************************";
 
            
             //See if setup mode is enabled

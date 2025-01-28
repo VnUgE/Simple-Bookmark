@@ -1,30 +1,16 @@
-// Copyright (C) 2025 Vaughn Nugent
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 import 'pinia'
-import { computed, type Ref, ref, watch } from 'vue';
+import { computed, type Ref, watch } from 'vue';
 import { 
-    apiCall,
     useMfaApi,
     type MfaMethod, 
     type MfaApi,
-    type MfaGetResponse
+    type MfaGetResponse,
+    useGeneralToaster
 } from '@vnuge/vnlib.browser';
-import { useToggle, set } from '@vueuse/core';
+import { useAsyncState } from '@vueuse/core';
 import { PiniaPluginContext, PiniaPlugin, storeToRefs } from 'pinia'
 import { find, includes } from 'lodash-es';
+import { storeExport } from './index';
 
 export interface MfaSettingsStore{
     readonly mfa: {
@@ -68,9 +54,25 @@ export const mfaSettingsPlugin = (): PiniaPlugin => {
         const { loggedIn } = storeToRefs(store)
         const mfaConfig = useMfaApi()
 
-        const [onRefresh, refresh] = useToggle()
+        const { error } = useGeneralToaster();
 
-        const data = ref<MfaGetResponse>({} as any)
+        const { state: data, execute } = useAsyncState<MfaGetResponse>(async () => {
+            const { rpc_methods } = await store.account.wait();
+
+            if (!loggedIn.value || find(rpc_methods, m => m.method === 'mfa.get') === undefined) {
+                return {} as MfaGetResponse
+            }
+
+            try{
+
+                //errors are swallowed here
+                return await mfaConfig.getData()
+            }
+            catch(e){
+                error({ title: 'MFA Failure', text: "Failed to load MFA settings"});
+                return {} as MfaGetResponse
+            }
+        }, {} as any, { delay: 100, immediate: true })
 
         const isEnabled = (type: MfaMethod): Ref<boolean> => {
             return computed(() => {
@@ -90,25 +92,17 @@ export const mfaSettingsPlugin = (): PiniaPlugin => {
             })
         }
 
-        watch([loggedIn, onRefresh], ([ li ]) => {
-            if(!li){
-                set(data, {} as any)
-                return
-            }
+        watch(loggedIn, () => execute());
 
-            //load the mfa methods if the user is logged in
-            apiCall(async () => data.value = await mfaConfig.getData())
-        })
-        
-        return {
+        return storeExport({
             mfa: {
                 ...mfaConfig,
                 data,
                 isEnabled,
                 isSupported,
                 getDataFor,
-                refresh,
+                refresh: execute,
             },
-        }
+        }) as unknown as MfaSettingsStore
     }
 }

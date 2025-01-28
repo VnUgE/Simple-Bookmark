@@ -31,16 +31,35 @@ tasks:
     - task: build-proj
 
   build-proj:
+    deps:
+    - build-front-end
+    - build-admin-plugin
+    - build-sb-plugin
     cmds:
-    #build front-end
-    - cmd: cd ../front-end && task build
-    #move dist files to web root
-    - cmd: powershell cp -Recurse -Force "../front-end/dist" "build/"
+    - cmd: echo "{{ .PLUGIN_NAME }} libraries built"
+      silent: true
 
-    #build the plugin 
-    - cmd: cd ../back-end/src && task build
-    - cmd: powershell mkdir -Force "build/plugins/{{ .PLUGIN_NAME }}"
-    - cmd: powershell cp -Recurse -Force "../back-end/src/bin/release/net8.0/publish/*" "build/plugins/{{ .PLUGIN_NAME }}/"
+  build-front-end:
+    internal: true
+    cmds:
+    - cmd: cd ../front-end && task build
+    - cmd: powershell mkdir -Force "build/dist/"
+    - cmd: powershell cp -Recurse -Force "../front-end/dist/*" "build/dist/"
+
+  #build admin rpc library
+  build-admin-plugin:
+    internal: true
+    cmds:
+     - cmd: cd ../back-end/admin/src && task build
+     - cmd: powershell mkdir -Force "build/plugins/assets/simplebookmark.admin"
+     - cmd: powershell cp -Recurse -Force "../back-end/admin/src/bin/release/net8.0/publish/*" "build/plugins/assets/simplebookmark.admin/"
+
+  build-sb-plugin:
+    internal: true
+    cmds:
+     - cmd: cd ../back-end/bookmarks/src && task build
+     - cmd: powershell mkdir -Force "build/plugins/{{ .PLUGIN_NAME }}"
+     - cmd: powershell cp -Recurse -Force "../back-end/bookmarks/src/bin/release/net8.0/publish/*" "build/plugins/{{ .PLUGIN_NAME }}/"
 
   install-webserver:
     cmds:

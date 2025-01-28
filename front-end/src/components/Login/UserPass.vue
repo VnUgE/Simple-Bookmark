@@ -1,48 +1,70 @@
 <script setup lang="ts">
-import { ref, shallowRef, reactive } from 'vue'
+import { ref, shallowRef, reactive, computed, type Ref } from 'vue'
 import { useTimeoutFn, set } from '@vueuse/core'
 import { useVuelidate } from '@vuelidate/core'
+import { isArray } from 'lodash-es'
 import { required, maxLength, minLength, email, helpers } from '@vuelidate/validators'
 import {
-    type IMfaContinuation, fidoMfaProcessor,
     useVuelidateWrapper, useMfaLogin, totpMfaProcessor,
-    apiCall, useMessage, useWait, debugLog, WebMessage
+    apiCall, useMessage, useWait, debugLog,
+    fidoMfaProcessor,
+    type WebMessage,
+    type IMfaFlow,
+    type IMfaContinuation,
+    type VuelidateInstance
 } from '@vnuge/vnlib.browser'
-
-import MfaSelection from './MfaContinue.vue'//So small it does not need to be async
+import { useStore } from '../../store'
+import MfaSelection from './MfaContinue.vue'
 
 const { setMessage } = useMessage();
 const { waiting } = useWait();
+const { account } = useStore()
 
-//Setup mfa login with TOTP support
-const { login } = useMfaLogin([ totpMfaProcessor(), fidoMfaProcessor() ])
+interface LoginAccountPropertyData {
+    readonly enforce_email: boolean;
+    readonly username_max_chars: number;
+}
 
-const mfaUpgrade = shallowRef<IMfaContinuation | undefined>();
+//Stores dynamic account data from the server
+const loginData = account.getPropertyData<LoginAccountPropertyData>('login', {
+    enforce_email: false,
+    username_max_chars: 50
+});
+
+const { login } = useMfaLogin([
+    totpMfaProcessor(),     //Enable totp mfa support
+    fidoMfaProcessor()      //Enable fido mfa support
+])
+
+const mfaUpgrades = shallowRef<IMfaFlow[]>();
+
+const clearUpgrade = () => {
+    set(mfaUpgrades, []);
+}
 
 const mfaTimeout = ref<number>(600 * 1000);
 const mfaTimer = useTimeoutFn(() => {
     //Clear upgrade message
-    set(mfaUpgrade, undefined);
-    setMessage('Your TOTP request has expired')
+    clearUpgrade();
+    setMessage('Your request has expired')
 }, mfaTimeout, { immediate: false })
 
 const vState = reactive({ username: '', password: '' })
-
-const rules = {
+const rules = computed(() => ({
     username: {
         required: helpers.withMessage('Email cannot be empty', required),
-        email: helpers.withMessage('Your email address is not valid', email),
-        maxLength: helpers.withMessage('Email address must be less than 50 characters', maxLength(50))
+        email: helpers.withMessage('Your email address is not valid', loginData.value.enforce_email ? email : () => true),
+        maxLength: helpers.withMessage('Email address must be less than 50 characters', maxLength(loginData.value.username_max_chars))
     },
     password: {
         required: helpers.withMessage('Password cannot be empty', required),
         minLength: helpers.withMessage('Password must be at least 8 characters', minLength(8)),
         maxLength: helpers.withMessage('Password must have less than 128 characters', maxLength(128))
     }
-}
+}));
 
 const v$ = useVuelidate(rules, vState)
-const { validate } = useVuelidateWrapper(v$ as any);
+const { validate } = useVuelidateWrapper(v$ as Ref<VuelidateInstance>);
 
 const onSubmit = async () => {
 
@@ -63,37 +85,56 @@ const onSubmit = async () => {
         debugLog('Mfa-login', response);
 
         //See if the response is a web message
-        if ('getResultOrThrow' in response) {
+        if ((response as WebMessage).getResultOrThrow) {
             (response as WebMessage).getResultOrThrow();
         }
 
         //Try to get response as a flow continuation
-        const mfa = response as IMfaContinuation
+        const { methods, expires } = response as IMfaContinuation
 
-        // Response is a totp upgrade request
-        if ('methods' in mfa) {
-            //Store the upgrade message
-            set(mfaUpgrade, mfa);
-            //Setup timeout timer
-            set(mfaTimeout, mfa.expires! * 1000);
+        // Response is an mfa upgrade
+        if (isArray(methods) && methods.length > 0) {
+
+            /**
+             * If mfa has a type assicated, then we should have a handler matched 
+             * with it to continue the flow
+             * 
+             * All mfa upgrades will have a token expiration, and an assoicated 
+             * type string name (string) 
+             */
+
+            set(mfaUpgrades, methods);
+
+            set(mfaTimeout, expires! * 1000);
+
             mfaTimer.start();
         }
         //If login without mfa was successful
-        else if ('success' in response) {
+        else if ((response as WebMessage).success) {
             // Push a new toast message
             toaster.general.success({
                 title: 'Success',
                 text: 'You have been logged in',
             })
+
+            // Refresh the account data
+            account.refresh();
         }
     })
 }
+
+const mfaClear = () => {
+    mfaTimer.stop();
+    clearUpgrade();
+    account.refresh();
+}
+
 </script>
 
 <template>
-    <form v-if="mfaUpgrade" @submit.prevent="" class="max-w-sm mx-auto">
+    <form v-if="mfaUpgrades" @submit.prevent="" class="max-w-sm mx-auto">
 
-        <MfaSelection :upgrade="mfaUpgrade" />
+        <MfaSelection :upgrade="mfaUpgrades" @clear="mfaClear" />
 
     </form>
     <form v-else class="space-y-4 md:space-y-6" action="#" @submit.prevent="onSubmit" :disabled="waiting">

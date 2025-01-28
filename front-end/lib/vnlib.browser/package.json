@@ -1,6 +1,6 @@
 {
   "name": "@vnuge/vnlib.browser",
-  "version": "0.1.0-ci0082",
+  "version": "0.1.0-ci0084",
   "author": "Vaughn Nugent",
   "description": "Client JavaScript helper library for vuejs3 web-apps for connecting with Essentials.Accounts plugin and vuejs helpers.",
   "repository": "https://github.com/VnUgE/Plugins.Essentials/tree/master/lib/vnlib.browser",

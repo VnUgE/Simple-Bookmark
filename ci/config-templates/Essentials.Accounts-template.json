@@ -24,6 +24,12 @@
       {
         "type": "heartbeat",
         "enabled": true
+      },
+      {
+        //enables the sb admin plugin
+        "type": "external",
+        "enabled": true,
+        "assembly_path": "SimpleBookmark.Admin.dll"
       }
     ]
   },
@@ -110,5 +116,11 @@
 
     //An optional list of allowed origins for the client's OTP signature
     "allowed_origins": ${CORS_ALLOWED_ORIGINS:-[]}
+  },
+
+  //Defines the regiration/admin rpc configuration
+  "simple_bookmark":{
+      "token_lifetime_mins": ${REG_TOKEN_DURATION_MIN:-360},       //Token lifetime in minutes
+      "key_regen_interval_mins": ${REG_TOKEN_DURATION_MIN:-360}0   //Signing key regeneration interval in minutes
   }
 }

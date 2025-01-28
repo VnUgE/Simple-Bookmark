@@ -13,9 +13,9 @@
     <Company>Vaughn Nugent</Company>
     <Product>simple-bookmark</Product>
     <Description>A VNLib.Plugins.Essentials plugin that adds Simple Bookmark back-end functionality</Description>
-    <Copyright>Copyright © 2024 Vaughn Nugent</Copyright>
+    <Copyright>Copyright © 2025 Vaughn Nugent</Copyright>
     <PackageProjectUrl>https://www.vaughnnugent.com/resources/software/modules/simple-bookmark</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/VnUgE/simple-bookmark/tree/master/back-end</RepositoryUrl>
+    <RepositoryUrl>https://github.com/VnUgE/simple-bookmark/tree/master/back-end/bookmarks</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
@@ -25,7 +25,7 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Include="..\..\LICENSE">
+    <None Include="..\..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -33,13 +33,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="VNLib.Plugins.PluginBase" Version="0.1.0-ci0212" />
-    <PackageReference Include="VNLib.Plugins.Essentials" Version="0.1.0-ci0212" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Data" Version="0.1.0-ci0075" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0075" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Loading.Sql" Version="0.1.0-ci0075" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-ci0075" />
-    <PackageReference Include="VNLib.Plugins.Extensions.VNCache" Version="0.1.0-ci0061" />
+    <PackageReference Include="VNLib.Plugins.PluginBase" Version="0.1.0-ci0214" />
+    <PackageReference Include="VNLib.Plugins.Essentials" Version="0.1.0-ci0214" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Data" Version="0.1.0-ci0076" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0076" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Loading.Sql" Version="0.1.0-ci0076" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-ci0076" />
+    <PackageReference Include="VNLib.Net.Messaging.FBM" Version="0.1.0-ci0214" />
+    <PackageReference Include="VNLib.Plugins.Extensions.VNCache" Version="0.1.0-ci0062" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,5 +48,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
 
 </Project>

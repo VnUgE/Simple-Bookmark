@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { capitalize, shallowRef, toRefs } from 'vue';
-import { type IMfaContinuation, type IMfaFlow, type IFidoMfaFlow, apiCall, useMessage, useWait } from '@vnuge/vnlib.browser';
+import { type IMfaFlow, type IFidoMfaFlow, apiCall, useMessage, useWait } from '@vnuge/vnlib.browser';
 import { toSafeInteger } from 'lodash-es';
 import { get } from '@vueuse/core';
 import VOtpInput from 'vue3-otp-input';
@@ -8,7 +8,7 @@ import VOtpInput from 'vue3-otp-input';
 const emit = defineEmits(['clear'])
 
 const props = defineProps<{
-    upgrade: IMfaContinuation
+    upgrade: IMfaFlow[]
 }>()
 
 const { upgrade } = toRefs(props)
@@ -123,7 +123,7 @@ const submitFido = () => {
                 </div>
                 <div class="flex justify-center w-full">
                     <div class="flex flex-col space-y-2 md:space-y-4 flex-auto max-w-[12rem]">
-                        <button v-for="method in upgrade.methods" @click="selectedMethod = method" class="btn w-full">
+                        <button v-for="method in upgrade" @click="selectedMethod = method" class="btn w-full">
                             {{ capitalize(method.type) }}
                         </button>
                     </div>

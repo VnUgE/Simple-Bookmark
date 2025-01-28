@@ -2,9 +2,8 @@
 import { computed, defineAsyncComponent, shallowRef } from 'vue';
 import { useStore } from '../../store';
 import { set, get } from '@vueuse/core';
-import { useGeneralToaster, usePassConfirm, useSession, useTotpApi } from '@vnuge/vnlib.browser';
-import { defaultTo, isEmpty, isNil } from 'lodash-es';
-import { TOTP } from 'otpauth'
+import { apiCall, useGeneralToaster, usePassConfirm, useSession, useTotpApi } from '@vnuge/vnlib.browser';
+import { defaultTo, isEmpty, isNil, toNumber } from 'lodash-es';
 import base32Encode from 'base32-encode'
 const QrCode = defineAsyncComponent(() => import('qrcode.vue'));
 const VOtpInput = defineAsyncComponent(() => import('vue3-otp-input'))
@@ -57,6 +56,8 @@ const disableTotp = async () => {
             title: 'TOTP Disabled',
             text: 'TOTP has been disabled for your account.'
         })
+
+        store.mfa.refresh();
     })
 }
 
@@ -77,25 +78,24 @@ const addOrUpdate = async () => {
     })
 }
 
-const onVerifyOtp = async (code: string) => {
-    // Create a new TOTP instance from the current message
-    const totp = new TOTP(get(newTotpConfig))
+const onVerifyOtp = (code: string) => {
+    apiCall(async () => {
+        const { getResultOrThrow, success: isValid } = await totpApi.verify(toNumber(code));
 
-    // validate the code
-    const valid = totp.validate({ token: code, window: 4 })
+        getResultOrThrow();
 
-    if (valid) {
-        success({
-            title: 'Success',
-            text: 'Your code is valid and TOPT has been enabled.'
-        })
+        if (isValid) {
+            success({
+                title: 'Success',
+                text: 'Your code is valid and TOPT has been enabled.'
+            })
 
-        //Close the dialog
-        set(newTotpConfig, undefined)
+            //Close the dialog
+            set(newTotpConfig, undefined)
 
-    } else {
-        error({ title: 'The code you entered is invalid.'})
-    }
+            store.mfa.refresh();
+        }
+    })
 }
 
 </script>
