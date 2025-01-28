@@ -388,3 +388,4 @@ dist-ssr
 *.sw?
 
 !*.build.sln
+!front-end/lib/vnlib.browser/**/
