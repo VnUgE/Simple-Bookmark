@@ -43,7 +43,6 @@ I built Simple-Bookmark mostly because I didn't want the container lock-in. I al
 - Invite users with share links
 - Supports (and tested) SQLite, SQLServer, MySQL/MariaDB databases (best search on SQLServer)
 - It's quick, <300ms load time & under 150kB with compression
-- It's small, 127mb Docker image
 - Argon2Id password hashing with secure defaults
 - Supports enterprise services: HashiCorp Vault, SQLServer, and Redis
 - Built-in TLS (TLS is required)
