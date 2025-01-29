@@ -12,6 +12,8 @@ tasks:
 
   build:
     cmds:
+    - defer: { task: clean-vnlib-browser }
+    - task: pull-vnlib-browser
     #install deps and run build
     - cmd: npm install && npm run build
 
@@ -21,6 +23,20 @@ tasks:
     - cmd: powershell mkdir -Force bin
     #tar the dist output and put it in the output dir
     - cmd: cd dist && tar -czf '../bin/release.tgz' .
+
+  pull-vnlib-browser:
+    internal: true
+    cmds:
+     - cmd: powershell mkdir -Force lib/vnlib.browser
+     - cmd: curl{{ exeExt }} 
+        https://www.vaughnnugent.com/public/resources/software/builds/Plugins.Essentials/785bb68b2670e982a199fe3be93aa50a08c7af77/@vnuge-vnlib.browser/release.tgz
+        -o lib/vnlib.browser/release.tgz
+     - cmd: cd lib/vnlib.browser && tar -xzf release.tgz
+
+  clean-vnlib-browser:
+    internal: true
+    cmds:
+     - cmd: powershell rm -Recurse -Force lib/vnlib.browser
 
   #clean hook
   clean:
