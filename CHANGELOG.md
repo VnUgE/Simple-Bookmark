@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+ - Container builds now use the same release scripts as metal builds
+ - Container pacakge is slightly more trimmed down
+ - Container image now uses a Debain base instead of Alpine Linux
+
+### Removed
+ - Confusing compose variables that exist for powerusers only
+
+## [0.1.8-alpha]
+
+### Added
+ - Webauthn Support
+ - Allow loading custom password hashing libraries
+ - A posix portable package for all platforms 
+ - This changelog!
+
+### Changed
+ - Browser history should work between tab changes now so forward/back buttons work
+ - Form errors are now displayed below the input box
+ - MFA is all optional now and admins can disable these featuers and the UI should show/hide them accordingly
+ - RPMalloc memory allocator enabled for server
+ - Disabled Pki OTP login by default
+ - No longer relies on cookies for UI login status
+ - Reorganized server api endpoints
+
+### Removed
+ - **Container:** Container package for this pre-release was removed for now
+ - Unused code and libraries (social oauth)
+
+### Fixed
+ - Many validation and startup issues with VNLib updates
+ - Should now be more comaptible with other vnlib applications due to cookie changes
+
 ## [0.1.7]
 
 ### Added
@@ -89,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Slightly reduce static memory consumption
 - Eliminated excessive library loading (reduced OS handle count)
 
-[unreleased]: https://github.com/VnUgE/Simple-Bookmark/compare/v0.1.7...HEAD
+[unreleased]: https://github.com/VnUgE/Simple-Bookmark/compare/v0.1.8-alpha...HEAD
+[0.1.8-alpha]: https://github.com/VnUgE/Simple-Bookmark/compare/v0.1.7...v0.1.8-alpha
 [0.1.7]: https://github.com/VnUgE/Simple-Bookmark/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/VnUgE/Simple-Bookmark/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/VnUgE/Simple-Bookmark/compare/v0.1.4...v0.1.5

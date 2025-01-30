@@ -42,7 +42,7 @@ services:
       VNCACHE_INITIAL_NODES: "[]"
 
       #SECRETS
-      # All secrets may be a raw value, read from a file, # an environment variable, or a vault path
+      # All secrets may be a raw value, read from a file, an environment variable, or a vault path
       # file://mysecret.txt     reads the secret from a file (case sensitive)
       # env://MY_SECRET         reads the secret from an environment variable (case sensitive)
       # vault://kv/data/secret?secret=value   reads the value of the mysecret key in the secret/data path

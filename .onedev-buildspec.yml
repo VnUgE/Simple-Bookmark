@@ -78,7 +78,7 @@ jobs:
   maxRetries: 3
   retryDelay: 30
   timeout: 14400
-- name: Publish master
+- name: Publish Tag
   steps:
   - !CheckoutStep
     name: checkout
@@ -109,8 +109,7 @@ jobs:
     useTTY: true
     condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
   triggers:
-  - !BranchUpdateTrigger
-    branches: master
+  - !TagCreateTrigger {}
   retryCondition: never
   maxRetries: 3
   retryDelay: 30

@@ -168,9 +168,10 @@ tasks:
        task: pack 
        vars: { TARGET_OS: '{{ .ITEM }}' }
      
-     #container is built separately
-     - task: pack
-       vars: { TARGET_OS: 'container' }
+    # NOTE: Cotnainer target temorarily disabled until for this release!
+    #container is built separately
+    # - task: pack
+    #   vars: { TARGET_OS: 'container' }
     cmds:
     - echo "Packing complete"
 
