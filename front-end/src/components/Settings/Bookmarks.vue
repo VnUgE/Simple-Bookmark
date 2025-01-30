@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { apiCall, useWait } from '@vnuge/vnlib.browser';
-import { useStore, type DownloadContentType, TabId } from '../../store';
+import { useStore, type DownloadContentType } from '../../store';
 import { computed, ref } from 'vue';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
@@ -41,7 +41,7 @@ const bookmarkHref = `
 javascript: (function() {
   const bookmarkUrl = window.location; 
   let applicationUrl = '${window.location.origin}';
-  applicationUrl += '?tab=${TabId.Bookmarks}&url=' + encodeURIComponent(bookmarkUrl); 
+  applicationUrl += '?tab=bookmarks&url=' + encodeURIComponent(bookmarkUrl); 
   applicationUrl += '&title='+document.title;
   window.open(applicationUrl);
 })();`

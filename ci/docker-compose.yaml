@@ -35,15 +35,14 @@ services:
       #HC_VAULT_TRUST_CERT: "false"
 
       #VNCACHE (default to memory only)
-      CACHE_ASM_PATH: "VNLib.Data.Caching.Providers.VNCache.dll"
+      #CACHE_ASM_PATH: "VNLib.Data.Caching.Providers.VNCache.dll"
       MEMCACHE_ONLY: "true"
       REDIS_CONNECTION_STRING: ""
       #at least one node required if MEMCACHE_ONLY is false
       VNCACHE_INITIAL_NODES: "[]"
 
       #SECRETS
-      # All secrets may be a raw value, read from a file, 
-      # an environment variable, or a vault path
+      # All secrets may be a raw value, read from a file, an environment variable, or a vault path
       # file://mysecret.txt     reads the secret from a file (case sensitive)
       # env://MY_SECRET         reads the secret from an environment variable (case sensitive)
       # vault://kv/data/secret?secret=value   reads the value of the mysecret key in the secret/data path
@@ -56,6 +55,7 @@ services:
       VNCACHE_CACHE_PUBLIC_KEY: ""
 
       #HTTP
+      HTTP_BIND_PORT: "8080"
       HTTP_DOWNSTREAM_SERVERS: '[]'   #a comma separated list of downstream (proxy) server ip addresses
       HTTP_TRACE_ON: "false"          #enable http trace logging, requires you to set --debug to SERVER_ARGS variable below
 

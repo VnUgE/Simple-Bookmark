@@ -3,33 +3,37 @@
 
 version: '3'
 
-vars:
-  DOTNET_BUILD_FLAGS: '/p:RunAnalyzersDuringBuild=false /p:BuildInParallel=true /p:MultiProcessorCompilation=true'
-
 tasks:
 
   build:
     dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      DOTNET_BUILD_FLAGS: 
+        --nologo
+        /p:RunAnalyzersDuringBuild=false
+        /p:BuildInParallel=true
+        /p:MultiProcessorCompilation=true
+        /p:ErrorOnDuplicatePublishOutputFiles=false
     cmds:
     #build project
-    -  dotnet publish -c release {{.DOTNET_BUILD_FLAGS}} 
-    
+    - cmd: dotnet publish -c release {{ .DOTNET_BUILD_FLAGS }} 
+
   #postbuild to package artifaces into the archives for upload
   postbuild_success:
    dir: '{{.USER_WORKING_DIR}}'
    vars:
      #output directory for the build artifacts
-     OUT_DIR: 'bin/release/{{.TARGET_FRAMEWORK}}/publish'
+     OUT_DIR: 'bin/release/{{ .TARGET_FRAMEWORK }}/publish'
    
    cmds:
     #pack up source code
     - task: packsource
 
     #copy license to output dir
-    - powershell -Command "cp '{{.MODULE_DIR}}/LICENSE' -Destination '{{.OUT_DIR}}/LICENSE'"
+    - cmd: powershell cp '{{ .MODULE_DIR }}/LICENSE' -Destination '{{ .OUT_DIR }}/LICENSE'
 
     #tar the plugin output and put it in the bin dir
-    - cd {{.OUT_DIR}} && tar -czf '{{.USER_WORKING_DIR}}/bin/release.tgz' .
+    - cmd: cd {{ .OUT_DIR }} && tar -czf '{{ .USER_WORKING_DIR }}/bin/release.tgz' .
 
   packsource:
     dir: '{{.USER_WORKING_DIR}}'
@@ -43,6 +47,6 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     ignore_error: true
     cmds:
-    - dotnet clean -c release
-    - powershell -Command "Remove-Item -Recurse bin"
-    - powershell -Command "Remove-Item -Recurse obj"
+    - cmd: dotnet clean -c release
+    - cmd: powershell rm -Recurse bin
+    - cmd: powershell rm -Recurse obj

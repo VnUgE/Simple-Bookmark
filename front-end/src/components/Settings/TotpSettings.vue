@@ -2,12 +2,10 @@
 import { computed, defineAsyncComponent, shallowRef } from 'vue';
 import { useStore } from '../../store';
 import { set, get } from '@vueuse/core';
-import { MfaMethod, useGeneralToaster, usePassConfirm, useSession } from '@vnuge/vnlib.browser';
-import { defaultTo, includes, isEmpty, isNil } from 'lodash-es';
-import { TOTP } from 'otpauth'
+import { apiCall, useGeneralToaster, usePassConfirm, useSession, useTotpApi } from '@vnuge/vnlib.browser';
+import { defaultTo, isEmpty, isNil, toNumber } from 'lodash-es';
 import base32Encode from 'base32-encode'
 const QrCode = defineAsyncComponent(() => import('qrcode.vue'));
-const Dialog = defineAsyncComponent(() => import('../global/Dialog.vue'));
 const VOtpInput = defineAsyncComponent(() => import('vue3-otp-input'))
 
 interface TotpConfig {
@@ -23,7 +21,9 @@ const { elevatedApiCall } = usePassConfirm()
 const { success, error } = useGeneralToaster()
 const store = useStore()
 const newTotpConfig = shallowRef<TotpConfig | undefined>()
-const totpEnabled = computed(() => includes(store.mfaEndabledMethods, MfaMethod.TOTP)) 
+const totpEnabled = store.mfa.isEnabled('totp')
+const totpSupported = store.mfa.isSupported('totp')
+const totpApi = useTotpApi(store.mfa)
 
 const qrCode = computed(() => {
 
@@ -49,22 +49,23 @@ const showUpdateDialog = computed(() => !isEmpty(get(qrCode)))
 const disableTotp = async () => {
 
     elevatedApiCall(async ({ password, toaster }) =>{
-        const { getResultOrThrow } = await store.mfaConfig.disableMethod(MfaMethod.TOTP, password);
+        const { getResultOrThrow } = await totpApi.disable({ password })
         getResultOrThrow();
 
         toaster.general.success({
             title: 'TOTP Disabled',
             text: 'TOTP has been disabled for your account.'
         })
+
+        store.mfa.refresh();
     })
 }
 
 const addOrUpdate = async () => {
 
     elevatedApiCall(async ({ password }) =>{
-        const { getResultOrThrow } = await store.mfaConfig.initOrUpdateMethod<TotpConfig>(MfaMethod.TOTP, password);
-        const newConfig = getResultOrThrow();
-
+        const newConfig = await totpApi.enable({ password });
+        
         // Decrypt the server sent secret
         const decSecret = await KeyStore.decryptDataAsync(newConfig.secret);
         // Encode the secret to base32
@@ -73,29 +74,28 @@ const addOrUpdate = async () => {
         set(newTotpConfig, newConfig);
 
         //refresh config
-        store.mfaRefreshMethods();
+        store.mfa.refresh();
     })
 }
 
-const onVerifyOtp = async (code: string) => {
-    // Create a new TOTP instance from the current message
-    const totp = new TOTP(get(newTotpConfig))
+const onVerifyOtp = (code: string) => {
+    apiCall(async () => {
+        const { getResultOrThrow, success: isValid } = await totpApi.verify(toNumber(code));
 
-    // validate the code
-    const valid = totp.validate({ token: code, window: 4 })
+        getResultOrThrow();
 
-    if (valid) {
-        success({
-            title: 'Success',
-            text: 'Your code is valid and TOPT has been enabled.'
-        })
+        if (isValid) {
+            success({
+                title: 'Success',
+                text: 'Your code is valid and TOPT has been enabled.'
+            })
 
-        //Close the dialog
-        set(newTotpConfig, undefined)
+            //Close the dialog
+            set(newTotpConfig, undefined)
 
-    } else {
-        error({ title: 'The code you entered is invalid.'})
-    }
+            store.mfa.refresh();
+        }
+    })
 }
 
 </script>
@@ -113,7 +113,10 @@ const onVerifyOtp = async (code: string) => {
             >
             </span>
         </div>
-        <div v-if="totpEnabled" class="flex gap-2">
+        <div v-if="!totpSupported" class="text-red-500 dark:text-red-400 text-xs">
+            <p>Not supported</p>
+        </div>
+        <div v-else-if="totpEnabled" class="flex gap-2">
             <button class="btn light" @click="addOrUpdate()">
                 Regenerate
             </button>

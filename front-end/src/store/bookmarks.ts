@@ -94,17 +94,17 @@ const useBookmarkApi = (endpoint: MaybeRef<string>): BookmarkApi => {
             params.append('q', query)
         }
       
-        const { data } = await axios.get<Bookmark[]>(`${get(endpoint)}?${params.toString()}`)
+        const { data } = await axios.get<Bookmark[]>(`${get(endpoint)}/bookmarks?${params.toString()}`)
         return data;
     }
 
     const addBookmark = async (bookmark: Bookmark) => {
-        const { data } = await axios.post<WebMessage>(`${get(endpoint)}`, bookmark)
+        const { data } = await axios.post<WebMessage>(`${get(endpoint)}/bookmarks`, bookmark)
         data.getResultOrThrow();
     }
 
     const setBookmark = async (bookmark: Bookmark) => {
-        const { data } = await axios.patch<WebMessage<Bookmark>>(`${get(endpoint)}`, bookmark)
+        const { data } = await axios.patch<WebMessage<Bookmark>>(`${get(endpoint)}/bookmarks`, bookmark)
         data.getResultOrThrow();
     }
 
@@ -112,23 +112,23 @@ const useBookmarkApi = (endpoint: MaybeRef<string>): BookmarkApi => {
         if(isArray(bookmark)){
             //Delete multiple bookmarks with comma separated ids
             const bookmarIds = join(map(bookmark, b => b.Id), ',')
-            const { data } = await axios.delete<WebMessage<Bookmark>>(`${get(endpoint)}?ids=${bookmarIds}`)
+            const { data } = await axios.delete<WebMessage<Bookmark>>(`${get(endpoint)}/bookmarks?ids=${bookmarIds}`)
             data.getResultOrThrow();    
         }
         else {
             //Delete a single bookmark
-            const { data } = await axios.delete<WebMessage<Bookmark>>(`${get(endpoint)}?id=${bookmark.Id}`)
+            const { data } = await axios.delete<WebMessage<Bookmark>>(`${get(endpoint)}/bookmarks?id=${bookmark.Id}`)
             data.getResultOrThrow();
         }
     }
 
     const getItemsCount = async () => {
-        const { data } = await axios.get<WebMessage<number>>(`${get(endpoint)}?count=true`)
+        const { data } = await axios.get<WebMessage<number>>(`${get(endpoint)}/count`)
         return data.getResultOrThrow();
     }
 
     const getTags = async () => {
-        const { data } = await axios.get<string[]>(`${get(endpoint)}?getTags=true`)
+        const { data } = await axios.get<string[]>(`${get(endpoint)}/tags`)
         return sortBy(data);
     }
 
@@ -140,13 +140,13 @@ const useBookmarkApi = (endpoint: MaybeRef<string>): BookmarkApi => {
         }
 
         //Exec request, ignore a validation error on a 20x response
-        const { data } = await axios.put<WebMessage<BatchUploadResult>>(`${get(endpoint)}${params}`, bookmarks);
+        const { data } = await axios.post<WebMessage<BatchUploadResult>>(`${get(endpoint)}/bookmarks/bulk${params}`, bookmarks);
         return data.result;
     }
 
     const downloadAll = async (contentType: DownloadContentType) => {
         //download the bookmarks as a html file
-        const { data } = await axios.get<string>(`${get(endpoint)}?export=true`, { 
+        const { data } = await axios.get<string>(`${get(endpoint)}/export`, { 
             headers: { 'Accept': contentType }
         })
         return data;
@@ -206,8 +206,8 @@ export const bookmarkPlugin = (bookmarkEndpoint: MaybeRef<string>): PiniaPlugin 
         const [onRefresh, refresh] = useToggle()
 
         const totalBookmarks = shallowRef(0)
-        const bookmarks = shallowRef<Bookmark[]>()   
-        const allTags = shallowRef<string[]>([])     
+        const bookmarks = shallowRef<Bookmark[]>()
+        const allTags = shallowRef<string[]>([])
 
         const pages = useOffsetPagination({ page: 1, pageSize: 20 })
         const { currentPage, currentPageSize } = pages;

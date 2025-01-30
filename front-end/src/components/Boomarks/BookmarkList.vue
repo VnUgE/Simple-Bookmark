@@ -71,7 +71,7 @@ const truncatText = (desc: string) => truncate(desc, { length: 100 });
                     </span>
                     |
                     <span class="flex flex-row gap-1.5">
-                        <button class="text-xs text-gray-700 dark:text-gray-400" @click="copy(bm.Url)">
+                        <button data-tooltip-target="tooltip-copy" class="text-xs text-gray-700 dark:text-gray-400" @click="copy(bm.Url)">
                             Copy
                         </button>
                         <button class="text-xs text-gray-700 dark:text-gray-400" @click="emit('edit', bm)">
@@ -81,6 +81,11 @@ const truncatText = (desc: string) => truncate(desc, { length: 100 });
                             Delete
                         </button>
                     </span>
+
+                    <div id="tooltip-copy" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700">
+                        Tooltip content
+                        <div class="tooltip-arrow" data-popper-arrow></div>
+                    </div>
                 </div>
             </div>
             <div v-else class="leading-tight clean-layout">
@@ -127,7 +132,8 @@ const truncatText = (desc: string) => truncate(desc, { length: 100 });
                     </p>
                     <div class="flex flex-col flex-wrap items-end ml-5 class gap-x-2 max-h-16">
                         <span v-for="tag in bm.Tags">
-                            <span class="mr-1 text-xs text-gray-500 duration-75 ease-linear cursor-pointer dark:text-gray-500 hover:text-teal-500 hover:dark:text-teal-400"
+                            <span
+                                class="mr-1 text-xs text-gray-500 duration-75 ease-linear cursor-pointer dark:text-gray-500 hover:text-teal-500 hover:dark:text-teal-400"
                                 @click="emit('toggleTag', tag)">
                                 {{ tag }}
                             </span>

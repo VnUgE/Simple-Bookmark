@@ -3,11 +3,11 @@ import { isEmpty } from 'lodash-es';
 import { apiCall, debugLog, useMessage, useWait } from '@vnuge/vnlib.browser';
 import { ref } from 'vue'
 import { decodeJwt } from 'jose'
-import { useStore } from '../../store';
+import { useOtpAuth } from '@vnuge/vnlib.browser';
 
 const { setMessage } = useMessage()
-const { pkiAuth } = useStore()
 const { waiting } = useWait()
+const { login } = useOtpAuth()
 
 const otp = ref('')
 
@@ -27,7 +27,7 @@ const onSubmit = () => {
             setMessage('Your OTP is not valid')
             return
         }
-        await pkiAuth.login(otp.value)
+        await login(otp.value)
     })
 }
 </script>

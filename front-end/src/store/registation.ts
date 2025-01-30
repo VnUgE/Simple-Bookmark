@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Vaughn Nugent
+// Copyright (C) 2025 Vaughn Nugent
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -14,12 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'pinia'
-import { MaybeRef, shallowRef, watch } from 'vue';
-import { WebMessage, useAxios } from '@vnuge/vnlib.browser';
-import { get } from '@vueuse/core';
-import { PiniaPluginContext, PiniaPlugin, storeToRefs } from 'pinia'
-import { defer } from 'lodash-es';
-import { TabId } from '.';
+import { WebMessage, useAccountRpc } from '@vnuge/vnlib.browser';
+import { PiniaPluginContext, PiniaPlugin } from 'pinia'
+import { storeExport, type TabName } from '.';
 
 export interface SignupToken {
     readonly link: string
@@ -48,63 +45,41 @@ declare module 'pinia' {
     }
 }
 
+type AdminRpcCommands = 'sb.admin' | 'sb.admin.invite' | 'sb.admin.register'
 
-const useRegApi = (endpoint: MaybeRef<string>): UserRegistationApi => {
-
-    const axios = useAxios(null);
+export const registationPlugin = (): PiniaPlugin => {
+    
+    const { exec } = useAccountRpc<AdminRpcCommands>()
 
     const createSignupLink = async (username: string, hasAddPerms: boolean): Promise<SignupToken> => {
-        const { data } = await axios.put<WebMessage<string>>(get(endpoint), { 
-            username, 
-            can_add_users:hasAddPerms 
-        })
+        const { getResultOrThrow } = await exec('sb.admin.invite', { username, can_add_users: hasAddPerms })
 
-        const token = data.getResultOrThrow();
+        const token = getResultOrThrow();
 
-        return { link: `${window.location.origin}?tab=${TabId.Register}&token=${token}` }
+        return { link: `${window.location.origin}?tab=${'register' as TabName}&token=${token}` }
     }
 
-    const getStatus = async (): Promise<RegistationStatus> => {
-        const { data } = await axios.get<WebMessage<RegistationStatus>>(get(endpoint))
-        return data.getResultOrThrow();
-    }
-
-    const completeRegistation = async (token: string, password: string): Promise<WebMessage<string>> => {
-        const { data } = await axios.post<WebMessage<string>>(get(endpoint), { token, password })
-        return data;
+    const completeRegistation = (token: string, password: string): Promise<WebMessage<string>> => {
+        return exec<string>('sb.admin.register', { token, password })
     }
 
     const registerAdmin = async (username: string, password: string): Promise<WebMessage<string>> => {
-        const { data } = await axios.post<WebMessage<string>>(get(endpoint), { admin_username:username, password })
-        return data;
+        return exec<string>('sb.admin.register', { admin_username:username, password })
     }
-
-    return {
-        createSignupLink,
-        getStatus,
-        completeRegistation,
-        registerAdmin
-    }
-}
-
-export const registationPlugin = (regEndpoint: MaybeRef<string>): PiniaPlugin => {
 
     return ({ store }: PiniaPluginContext): any => {
 
-        const { loggedIn } = storeToRefs(store)
-      
-        const regApi = useRegApi(regEndpoint)
-        const status = shallowRef<RegistationStatus | undefined>()
+        const status = store.account.getPropertyData<RegistationStatus | undefined>('sb.admin', undefined);
 
-        const getStatus = async () => status.value = await regApi.getStatus()
-
-        watch(loggedIn, () => defer(getStatus), { immediate: true })
-
-        return{
+        return storeExport({
             registation: {
-                api: regApi,
                 status,
+                api: {
+                    createSignupLink,
+                    completeRegistation,
+                    registerAdmin
+                }
             }
-        }
+        });
     }
 }

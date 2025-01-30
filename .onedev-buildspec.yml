@@ -1,4 +1,4 @@
-version: 17
+version: 37
 jobs:
 - name: GitHub Push
   steps:
@@ -7,8 +7,7 @@ jobs:
     remoteUrl: https://github.com/VnUgE/Simple-Bookmark.git
     userName: VnUgE
     passwordSecret: github-access-token
-    withLfs: false
-    force: false
+    force: true
     condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
   triggers:
   - !TagCreateTrigger
@@ -18,27 +17,100 @@ jobs:
   retryCondition: never
   maxRetries: 3
   retryDelay: 30
-  cpuRequirement: 250
-  memoryRequirement: 256
   timeout: 3600
-- name: GitHub Pull
+- name: Unit Testing
   steps:
-  - !PullRepository
-    name: GitHub sync pull
-    remoteUrl: https://github.com/VnUgE/Simple-Bookmark.git
-    userName: VnUgE
-    passwordSecret: github-access-token
-    refs: refs/heads/* refs/tags/*
+  - !CheckoutStep
+    name: checkout
+    cloneCredential: !DefaultCredential {}
     withLfs: false
-    force: false
+    withSubmodules: false
+    checkoutPath: '@project_name@'
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  - !CommandStep
+    name: run unit tests
+    runInContainer: false
+    interpreter: !DefaultInterpreter
+      commands: |
+        cd @project_name@
+        task -t Module.Taskfile.yaml test
+    useTTY: true
     condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
   triggers:
-  - !ScheduleTrigger
-    cronExpression: 0 15 10 ? * *
-    projects: Simple-Bookmark
+  - !BranchUpdateTrigger
+    branches: '** -master'
   retryCondition: never
   maxRetries: 3
   retryDelay: 30
-  cpuRequirement: 250
-  memoryRequirement: 256
-  timeout: 3600
+  timeout: 14400
+- name: Staging build
+  steps:
+  - !CheckoutStep
+    name: checkout
+    cloneCredential: !DefaultCredential {}
+    withLfs: false
+    withSubmodules: false
+    checkoutPath: '@project_name@'
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  - !CommandStep
+    name: mock build
+    runInContainer: false
+    interpreter: !DefaultInterpreter
+      commands: |
+        vnbuild build -S --include @project_name@ --verbose
+    useTTY: true
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  - !CommandStep
+    name: mock publish
+    runInContainer: false
+    interpreter: !DefaultInterpreter
+      commands: |
+        vnbuild publish -i @project_name@
+    useTTY: true
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  triggers:
+  - !BranchUpdateTrigger
+    branches: develop
+  jobDependencies:
+  - jobName: Unit Testing
+    requireSuccessful: true
+  retryCondition: never
+  maxRetries: 3
+  retryDelay: 30
+  timeout: 14400
+- name: Publish Tag
+  steps:
+  - !CheckoutStep
+    name: checkout
+    cloneCredential: !DefaultCredential {}
+    withLfs: false
+    withSubmodules: false
+    checkoutPath: '@project_name@'
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  - !CommandStep
+    name: VNBuild build
+    runInContainer: false
+    interpreter: !DefaultInterpreter
+      commands: |
+        vnbuild build -S --include @project_name@
+    useTTY: true
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  - !CommandStep
+    name: VNBuild publish
+    runInContainer: false
+    interpreter: !DefaultInterpreter
+      commands: |
+        vnbuild publish -i @project_name@ --ftp "@secret:ftp_server_address@" --sign
+    envVars:
+    - name: FTP_USERNAME
+      value: '@secret:ftp_username@'
+    - name: FTP_PASSWORD
+      value: '@secret:ftp_password@'
+    useTTY: true
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  triggers:
+  - !TagCreateTrigger {}
+  retryCondition: never
+  maxRetries: 3
+  retryDelay: 30
+  timeout: 14400

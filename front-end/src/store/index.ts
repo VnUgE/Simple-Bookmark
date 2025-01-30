@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Vaughn Nugent
+// Copyright (C) 2025 Vaughn Nugent
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -14,88 +14,81 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { useSession, useAutoHeartbeat } from "@vnuge/vnlib.browser";
-import { toRefs, set, watchDebounced, useLocalStorage } from "@vueuse/core";
-import { toSafeInteger, toString, defaults } from "lodash-es";
+import { toRefs, set, watchDebounced, useLocalStorage, refWithControl, type DeepMaybeRef } from "@vueuse/core";
+import { defaultsDeep } from "lodash-es";
 import { defineStore } from "pinia";
-import { computed, shallowRef, watch } from "vue";
+import { shallowRef, type UnwrapNestedRefs } from "vue";
 
 export type { DownloadContentType } from './bookmarks'
 
-export const useQuery = (name: string) => {
+export const useQuery = <T extends string>(name: string) => {
 
-    const getQuery = () => {
+    let onPop = false;
+
+    const getQuery = (): T | null => {
         const url = new URL(window.location.href);
-        return url.searchParams.get(name) as string | null | undefined;
+        return url.searchParams.get(name) as T | null;
     }
 
-    const setQuery = (value: string | null | undefined) => {
+    const setQuery = (value: T | null) => {
+        if(onPop){
+            onPop = false;
+            return;
+        }
+        
         const url = new URL(window.location.href);
 
         if(value){
             url.searchParams.set(name, value);
-           
         }
         else{
             url.searchParams.delete(name);
         }
 
-        window.history.replaceState({}, '', url.toString());
+        window.history.pushState({}, '', url.toString());
     }
 
     //configure reactive state
-    const value = shallowRef(getQuery());
+    const value = refWithControl(getQuery());
     watchDebounced(value, (value) => setQuery(value), { debounce: 20 });
+
+    //user may use back/forward buttons so watch history and update the query
+    window.addEventListener('popstate', () => {
+        onPop = true;
+        value.set(getQuery());
+    });
 
     return value;
 }
 
-export enum TabId{
-    Bookmarks,
-    Profile,
-    Settings,
-    Login,
-    Register
-}
+export type TabName = 'bookmarks' | 'profile' | 'settings' | 'login' | 'register';
+
+export const storeExport = <T>(val: DeepMaybeRef<T>): UnwrapNestedRefs<T> => val as UnwrapNestedRefs<T>;
+
+type GlobalState = { autoHeartbeat: boolean, theme: string, loggedIn: boolean, userName: string | undefined };
+const defaultState: GlobalState = { autoHeartbeat: false, theme: '', loggedIn: false, userName: undefined };
 
 /**
  * Loads the main store for the application
  */
 export const useStore = defineStore('main', () => {
 
-    const { loggedIn, isLocalAccount } = useSession();
-
     //MANAGED STATE
     const siteTitle = shallowRef("");
     const setSiteTitle = (title: string) => set(siteTitle, title);
 
+    const activeTab = useQuery<TabName>('tab');
+
     //Get shared global state storage
-    const mainState = useLocalStorage("vn-state", { autoHeartbeat: false });
-    //Set defaults to avoid undefined errors from toRefs
-    defaults(mainState.value, { autoHeartbeat: false })
-    const { autoHeartbeat } = toRefs(mainState)
-
-    const tab = useQuery('tab');
-    const activeTab = computed<TabId>({
-        get: () => tab.value ? toSafeInteger(tab.value) : TabId.Bookmarks,
-        set: (value) => tab.value = toString(value)
-    })
-
-    //If not logged in, redirect to login tab
-    watch(loggedIn, (li) =>{
-        if (li || activeTab.value == TabId.Register){
-            return;
-        }
-
-        set(activeTab, TabId.Login);
-    }, { immediate: true })
+    const mainState = useLocalStorage<GlobalState | undefined>("vn-state", defaultState);
+    defaultsDeep(mainState.value, defaultState);
+    const stateRefs = toRefs<GlobalState>(mainState as any);
 
     //Setup heartbeat for 5 minutes
-    useAutoHeartbeat(shallowRef(5 * 60 * 1000), autoHeartbeat)
-
-    return{
-        autoHeartbeat,
-        loggedIn,
-        isLocalAccount,
+    useAutoHeartbeat(shallowRef(5 * 60 * 1000), stateRefs.autoHeartbeat)
+    
+    return {
+        ...stateRefs,
         siteTitle,
         setSiteTitle,
         activeTab

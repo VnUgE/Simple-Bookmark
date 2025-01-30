@@ -7,9 +7,9 @@ import { get } from '@vueuse/core';
 import { delay, isEmpty, noop } from 'lodash-es';
 import { decodeJwt } from 'jose';
 
-const { waiting } = useWait();
 const store = useStore();
-const { siteTitle } = storeToRefs(store)
+const { siteTitle } = storeToRefs(store);
+const { waiting } = useWait();
 
 const enabled = computed(() => store.registation.status?.enabled === true);
 

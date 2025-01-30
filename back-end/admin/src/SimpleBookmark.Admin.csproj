@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>SimpleBookmark.Admin</RootNamespace>
+    <AssemblyName>SimpleBookmark.Admin</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Vaughn Nugent</Authors>
+    <Company>Vaughn Nugent</Company>
+    <Product>simple-bookmark.admin</Product>
+    <Description>An Essentials.Accounts rpc plugin to add administration and registration funtionality</Description>
+    <Copyright>Copyright © 2025 Vaughn Nugent</Copyright>
+    <PackageProjectUrl>https://www.vaughnnugent.com/resources/software/modules/simple-bookmark</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/VnUgE/simple-bookmark/tree/master/back-end/admin</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="VNLib.Utils" Version="0.1.0-ci0215" />
+    <PackageReference Include="VNLib.Plugins.PluginBase" Version="0.1.0-ci0215" />
+    <PackageReference Include="VNLib.Plugins.Essentials" Version="0.1.0-ci0215" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0078" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-ci0078" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Essentials.Accounts">
+      <HintPath>..\essentials.accounts\Essentials.Accounts.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -9,14 +9,36 @@ tasks:
 
   install:
     internal: true
+    requires: { BUILDS_URL, MODULE_NAME, VERSION, PROJECT_NAME, FILE_NAME, DIR, HASH }
+    vars:
+      DOWNLOAD_URL: '{{ .BUILDS_URL }}/{{ .MODULE_NAME }}/{{ .VERSION }}/{{ .PROJECT_NAME }}/{{ .FILE_NAME }}'
     cmds:
-    #make the plugin directory
-    - cmd: powershell -Command "mkdir {{.DIR}} -Force"
-      ignore_error: true
-    - cd {{.DIR}} && powershell "{{ .PROJECT_DIR }}/install.ps1" -BaseUrl {{.BUILDS_URL}} -ModuleName {{.MODULE_NAME}} -ProjectName {{.PROJECT_NAME}} -FileName {{.FILE_NAME}} -Version {{.VERSION}}
-    - cd {{.DIR}} && tar -xzf {{.FILE_NAME}}
+     #make the plugin directory
+     - cmd: powershell mkdir -Force {{ .DIR }}
+
+     - task: install-internal
+       vars:
+         DOWNLOAD_URL: '{{ .DOWNLOAD_URL }}'
+         FILE_NAME: '{{ .FILE_NAME }}'
+         DIR: '{{ .DIR }}'
+         HASH: '{{ .HASH }}'
+
+  install-internal:
+    internal: true
+    requires: { DOWNLOAD_URL, FILE_NAME, DIR, HASH }
+    dir: '{{ .DIR }}'
+    cmds:
+    - cmd: powershell Invoke-WebRequest "{{ .DOWNLOAD_URL }}" -OutFile "{{ .FILE_NAME }}" -ErrorAction Stop
+
+    #ensure file hashes match
+    #- cmd: powershell "(Get-FileHash {{ .FILE_NAME }} -Algorithm SHA256).Hash -eq '{{ .HASH }}'"
+
+    #extract the archive
+    - cmd: tar -xzf {{ .FILE_NAME }}
+
     #remove the archive file
-    - cd {{.DIR}} && powershell -Command "rm {{.FILE_NAME}}"
+    - cmd: powershell rm "{{ .FILE_NAME }}"
+
     #remove all pckage.json files that could cause build issues
-    - cmd: cd {{.DIR}} && powershell 'Get-ChildItem -Path . -Recurse -File -Filter "package.json" | Remove-Item -Force'
+    - cmd: powershell 'Get-ChildItem -Path . -Recurse -File -Filter "package.json" | Remove-Item -Force'
       ignore_error: true

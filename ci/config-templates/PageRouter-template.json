@@ -1,5 +1,5 @@
 {
-  "debug": ${DEBUG_PLUGINS},
+  "debug": ${DEBUG_PLUGINS:-false}, //Enables obnoxious debug logging
   "store": {
     //All builds require the routes.xml file in the config directory even after variable substitution
     "route_file": "config/routes.xml"

@@ -17,7 +17,7 @@ using VNLib.Plugins.Essentials.Accounts;
 using VNLib.Plugins.Essentials.Users;
 using VNLib.Plugins.Essentials.Sessions;
 
-namespace SimpleBookmark
+namespace SimpleBookmark.Admin
 {
     internal static class RoleHelpers
     {

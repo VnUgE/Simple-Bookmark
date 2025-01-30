@@ -11,59 +11,92 @@ vars:
   DEFAULT_EC_CURVE: "secp384r1"
   PASS_PEPPER_SIZE: 64
 
+  #lib file names
+  RPMALLOC_LIB_NAME: "vnlib_rpmalloc"
+  COMPRESS_LIB_NAME: "vnlib_compress"
+  ARGON2_LIB_NAME: "argon2"
+
 tasks:
-  default:
-    desc: "Runs the server in realease mode"
-    interactive: true
-    cmds:
-    - task: run
 
   run:
+    aliases: [ default ]
     desc: "Runs the server in release mode"
     silent: true
     interactive: true
     env: 
       #libraries intentionally do not have extensions, for cross-platform compatibility, the server will load them regardless
-      VNLIB_SHARED_HEAP_FILE_PATH: lib/vnlib_rpmalloc.dll
-      VNLIB_ARGON2_DLL_PATH: lib/argon2.dll
+      VNLIB_SHARED_HEAP_FILE_PATH: lib/{{ .RPMALLOC_LIB_NAME }}
+      VNLIB_COMPRESS_DLL_PATH: lib/{{ .COMPRESS_LIB_NAME }}
+      VNLIB_ARGON2_DLL_PATH: lib/{{ .ARGON2_LIB_NAME }}
     cmds:
-    - cmd: dotnet webserver/VNLib.WebServer.dll --config config/config.json {{ .CLI_ARGS }}
+    - cmd: dotnet webserver/VNLib.WebServer.dll --config config/config.json {{ .CLI_ARGS }} {{ .SERVER_ARGS }}
+
+  container-run:
+    desc: "Runs the server if called from inside a container"
+    interactive: true
+    platforms: [ linux ]
+    env:
+      #since the cert is created at build time, we can use the same path for the container
+      TLS_ENABLE: "true"
+      TLS_CERT: "{{ .SSL_DIR }}/cert.pem"
+      TLS_PRIVATE_KEY: "{{ .SSL_DIR }}/key.pem"
+    cmds:
+     - defer: 'rm -rf config/'
+
+     #merge user assets
+     - cmd: cp -r 'usr/assets/*' 'plugins/assets/'
+       ignore_error: true
+
+     #merge config files from environment
+     - task: merge-config
+
+     - cmd: echo "Config merged, starting server"
+       silent: true
+
+     - task: run
+       vars: { SERVER_ARGS: '{{ env "SERVER_ARGS" }}' }
 
   setup-apt:
-     desc: "Performs initial setup on Debian apt amd64 based machines"
-     silent: true
-     cmds:
-     - apt update
-     - apt install -y dotnet-runtime-8.0 gcc cmake curl
+    desc: "Performs initial setup on Debian apt amd64 based machines"
+    silent: true
+    platforms: [ linux ]
+    cmds:
+     - cmd: apt update
+     - cmd: apt install -y dotnet-runtime-8.0 gcc cmake curl git
      - task: setup
-     - echo "Setup complete"
+     - cmd: echo "Setup complete"
+       silent: true 
 
   setup-dnf:
-     desc: "Performs initial setup on Fedora/Redhat amd (dnf) based machines"
-     silent: true
-     cmds:
-     - dnf update
-     - dnf install -y dotnet-runtime-8.0 gcc cmake curl
+    desc: "Performs initial setup on Fedora/Redhat amd (dnf) based machines"
+    silent: true
+    platforms: [ linux ]
+    cmds:
+     - cmd: dnf update
+     - cmd: dnf install -y dotnet-runtime-8.0 gcc cmake curl git
      - task: setup
-     - echo "Setup complete"
+     - cmd: echo "Setup complete"
+       silent: true 
 
   setup-apk:
-     desc: "Performs initial setup using the APK package manager for amd64 based machines"
-     silent: true
-     cmds:
-     - apk update
-     - apk add --no-cache dotnet8-runtime build-base cmake curl
+    desc: "Performs initial setup using the APK package manager for amd64 based machines"
+    silent: true
+    platforms: [ linux ]
+    cmds:
+     - cmd: apk update
+     - cmd: apk add --no-cache dotnet8-runtime build-base cmake curl git
      - task: setup
-     - echo "Setup complete"
+     - cmd: echo "Setup complete"
+       silent: true 
 
   setup:
     desc: "Performs platform agnostic setup tasks without installing tools (no sudo needed)"
+    deps:
+      #build rpmalloc lib
+      - task: build-rpmalloc
+      - task: build-argon2
+      - task: build-compress
     cmds:
-    #build rpmalloc lib
-    - task: build-rpmalloc
-    - task: build-argon2
-    - task: build-compress
-  
     #setup ssl dir
     - cmd: mkdir ssl/
       platforms: [ linux, darwin ]
@@ -72,39 +105,65 @@ tasks:
       platforms: [ windows/amd64 ]
       ignore_error: true
 
+    - cmd: echo "SETUP INCOMPLETE - You must create a self-signed certificate, and password pepper file before running the server"
+      silent: true
+      platforms: [ windows ]
+
   create-pepper:
     desc: "Generates a new pepper for hashing passwords."
     vars:
       PEPPER_FILE: "secrets/password-pepper.txt"
     cmds:
-    - cmd: mkdir secrets/
-      platforms: [ linux, darwin ]
-      ignore_error: true
-    - cmd: powershell -Command "mkdir secrets/"
-      platforms: [ windows/amd64 ]
-      ignore_error: true
+      - cmd: mkdir secrets/
+        platforms: [ linux, darwin ]
+        ignore_error: true
+      - cmd: powershell -Command "mkdir secrets/"
+        platforms: [ windows/amd64 ]
+        ignore_error: true
 
-    - cmd: openssl rand -base64 {{ .PASS_PEPPER_SIZE }} > {{ .PEPPER_FILE }}
-      platforms: [ linux, darwin ]
+      - cmd: openssl rand -base64 {{ .PASS_PEPPER_SIZE }} > {{ .PEPPER_FILE }}
+        platforms: [ linux, darwin ]
 
-    - echo "DO NOT EVER LOSE OR UPDATE THIS FILE!"
+      - cmd: echo "DO NOT EVER LOSE OR UPDATE THIS FILE!"
+        silent: true
 
   create-cert:
-    desc: "Genereates a new self-signed TLS certificate"
+    desc: "Generates a new self-signed TLS certificate"
     interactive: true
     cmds:
-    - openssl req -new -x509 -days 365 -keyout {{.SSL_DIR}}/key.pem -out {{.SSL_DIR}}/cert.pem -newkey ec -pkeyopt ec_paramgen_curve:{{.DEFAULT_EC_CURVE}} --nodes
+    - cmd: openssl req 
+       -new 
+       -x509 
+       -days 365 
+       -keyout {{ .SSL_DIR }}/key.pem 
+       -out {{ .SSL_DIR }}/cert.pem 
+       -newkey ec 
+       -pkeyopt ec_paramgen_curve:{{.DEFAULT_EC_CURVE}} 
+       --nodes
+       {{ .ADD_ARGS }}
+
+  container-create-cert:
+    vars:
+      HOSTNAME:
+        sh: echo $HOSTNAME
+    cmds:
+      #when setting cn it should not be interactive
+      - task: create-cert
+        vars: { ADD_ARGS: "-subj '/CN={{ .HOSTNAME }}'" }
+      
+      - cmd: echo "WARNING Self signed certificate created during build stage, DO NOT COPY THIS IMAGE"
+        silent: true
 
   build-rpmalloc:
     internal: true
     dir: 'lib/'
     cmds:
     #build rpmalloc library for linux/mac
-    - cmd: cd vnlib_rpmalloc/ && task && cp build/libvn_rpmalloc{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_rpmalloc.dll
+    - cmd: cd vnlib_rpmalloc/ && task && cp build/{{ OS }}/libvn_rpmalloc{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../{{ .RPMALLOC_LIB_NAME }}.so
       platforms: [ linux, darwin ]
-      
+
     #for windows just copy the existing dll
-    - cmd: powershell -Command "cp vnlib_rpmalloc/vnlib_rpmalloc.dll vnlib_rpmalloc.dll"
+    - cmd: powershell cp vnlib_rpmalloc/vnlib_rpmalloc.dll {{ .RPMALLOC_LIB_NAME }}.dll
       platforms: [ windows/amd64 ]
 
   build-argon2:
@@ -112,11 +171,11 @@ tasks:
     dir: 'lib/'
     cmds:
       #build argon2 library for linux/mac
-    - cmd: cd argon2/ && task && cp build/libargon2{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../argon2.dll
+    - cmd: cd argon2/ && task && cp build/{{ OS }}/libargon2{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../{{ .ARGON2_LIB_NAME }}.so
       platforms: [ linux, darwin ]
       
       #for windows just copy the existing dll
-    - cmd: powershell -Command "cp argon2/argon2.dll argon2.dll"
+    - cmd: powershell cp argon2/argon2.dll {{ .ARGON2_LIB_NAME }}.dll
       platforms: [ windows/amd64 ]
 
   build-compress:
@@ -124,11 +183,41 @@ tasks:
     dir: 'lib/'
     cmds:
     #build the native compressor library for linux/mac
-    - cmd: cd vnlib_compress/ 
-        && task 
-        && cp build/libvn_compress{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../vnlib_compress.dll
+    - cmd: cd vnlib_compress/ && task && cp build/{{ OS }}/libvn_compress{{if eq OS "darwin"}}.dylib{{else}}.so{{end}} ../{{ .COMPRESS_LIB_NAME }}.so
       platforms: [ linux, darwin ]
 
     #windows now supports pre-compiled libs
-    - cmd: powershell cp vnlib_compress/vnlib_compress.dll vnlib_compress.dll
+    - cmd: powershell cp vnlib_compress/vnlib_compress.dll {{ .COMPRESS_LIB_NAME }}.dll
       platforms: [ windows/amd64 ]
+
+  merge-config:
+    internal: true
+    platforms: [ linux, darwin ]
+    vars:
+      #find all config templates
+      CONFIG_TEMPLATES: 
+        sh: 'find config-templates/ -type f -name "*.json"'
+    cmds:
+      - cmd: mkdir -p config
+      - for: { var: CONFIG_TEMPLATES }
+        cmd: sh compile.sh '{{ .ITEM }}' 'config/{{ .ITEM | base | replace "-template" "" }}'
+
+  container-set-perms:
+    desc: "Sets file and folder permissions for container deployment"
+    platforms: [ linux ]
+    vars:
+      READONLY_FILES: |
+        lib/
+        webserver/
+        usr/
+        root/
+        config-templates/
+        compile.sh
+        Taskfile.yaml
+
+    cmds:
+    - cmd: mkdir root
+    - cmd: chown -R 1000:1000 /app
+    #set all files to read only
+    - for: { var: READONLY_FILES }
+      cmd: chmod -R 500 {{ .ITEM }}

@@ -3,69 +3,71 @@
   //Host application config, config is loaded as a read-only DOM that is available
   //to the host and loaded child plugins, all elements are available to plugins via the 'HostConfig' property
 
-  "http": {
-    //The defaut HTTP version to being requests with (does not support http/2 yet)
-    "default_version": "HTTP/1.1",
-    //The maxium size (in bytes) of response messges that will be compressed
-    "compression_limit": 512000,
-    //Minium response size (in bytes) to compress
-    "compression_minimum": 2048,
-    //The size of the buffer to use when parsing multipart/form data uploads
-    "multipart_max_buf_size": 8192,
-    //The maxium ammount of data (in bytes) allows for mulitpart/form data file uploads
-    "multipart_max_size": 80240,
-    //Absolute maximum size (in bytes) of the request entity body (exludes headers)
-    "max_entity_size": ${MAX_CONTENT_LENGTH},
-    //Keepalive ms for HTTP1.1 keepalive connections
-    "keepalive_ms": 1000000,
-    //The buffer size to use when parsing headers (also the maxium request header size allowed)
-    "header_buf_size": 8128,
-    //The maxium number of headers allowed in an HTTP request message
-    "max_request_header_count": 50,
-    //The maxium number of allowed network connections, before 503s will be issued automatically and connections closed
-    "max_connections": 5000,
-    //The size in bytes of the buffer to use when writing response messages
-    "response_buf_size": 65536,
-    //time (in ms) to wait for a response from an active connection in recv mode, before dropping it
-    "recv_timeout_ms": 5000,
-    //Time in ms to wait for the client to accept transport data before terminating the connection
-    "send_timeout_ms": 60000,
-    //The size (in bytes) of the buffer used to store all response header data
-    "response_header_buf_size": 16384,
-    //Max number of file uploads allowed per request
-    "max_uploads_per_request": 10
+  "tcp": {
+    "keepalive_sec": 60,                            //How long to wait for a keepalive response before closing the connection (0 to disable tcp keepalive)
+    "keepalive_interval_sec": 30,                   //How long to wait between keepalive probes
+    "max_recv_size": 655360,                        //640k absolute maximum recv buffer (defaults to OS socket buffer size)
+    "max_connections": ${HTTP_MAX_CONS:-5000}0,     //Per listener instance
+    "backlog": 1000,                                //OS socket backlog,
+
+    "tx_buffer": 65536,           //OS socket send buffer size
+    "rx_buffer": 65536            //OS socket recv buffer size
   },
 
-  //Compression is installed in the container at lib/ directory along with the native library supporting gzip and brotli
-  "compression_lib": "lib/vnlib.net.compression/VNLib.Net.Compression.dll",
-
+  "http": {
+    "default_version": "HTTP/1.1",                  //The defaut HTTP version to being requests with (does not support http/2 yet)
+    "multipart_max_buf_size": 64,                   //The size of the buffer to use when parsing multipart/form data uploads
+    "multipart_max_size": 0,                        //The maxium ammount of data (in bytes) allows for mulitpart/form data file uploads
+    "max_entity_size": ${MAX_CONTENT_LENGTH:-5120000}, //Absolute maximum size (in bytes) of the request entity body (exludes headers)    
+    "header_buf_size": 8128,                        //The buffer size to use when parsing headers (also the maxium request header size allowed) 
+    "max_request_header_count": 50,                 //The maxium number of headers allowed in an HTTP request message
+    "max_connections": ${HTTP_MAX_CONS:-5000},      //The maxium number of allowed network connections, before 503s will be issued automatically and connections closed   
+    "response_header_buf_size": 8128,               //The size (in bytes) of the buffer used to store all response header data
+    "max_uploads_per_request": 1,                   //Max number of file uploads allowed per request
+    "keepalive_ms": ${HTTP_KEEPALIVE_MS:-1000000},  //Keepalive ms for HTTP1.1 keepalive connections
+    "recv_timeout_ms": 5000,                        //Time (in ms) to wait for a response from an active connection in recv mode, before dropping it
+    "send_timeout_ms": 60000,                       //Time (in ms) to wait for the client to accept transport data before terminating the connection
+    
+    "compression": {
+      "enabled": ${COMPRESSION_ON:-true},       //controls compression globally
+      "assembly": "${COMPRESSOR_ASM_PATH}",     //A custom assembly path (ex: 'VNLib.Net.Compression.dll')
+      "max_size": ${COMPRESSION_MAX:-512000},   //Maxium size of a response to compress before it's bypassed
+      "min_size": ${COMPRESSION_MIN:-2048}      //Minium size of a response to compress, if smaller compression is bypassed
+    }
+  },
+  
   //Setup the native lib
   "vnlib.net.compression": {
-    "lib_path": "${COMPRESSION_LIB_PATH}",
     "level": 1
   },
-
-
-  //Maxium ammount of time a request is allowed to be processed (includes loading or waiting for sessions) before operations will be cancelled and a 503 returned
-  "max_execution_time_ms": 20000,
 
   //Collection of objects to define hosts+interfaces to build server listeners from
   "virtual_hosts": [
     {
-
-      "trace": ${HTTP_TRACE_ON},
+      "enabled": true,
+      "trace": ${HTTP_TRACE_ON:-false},
+      "force_port_check": ${HTTP_PORT_CHECK_ON:-false},        //disable port checking by default (useful for containers)
 
       //The interface to bind to, you may not mix TLS and non-TLS connections on the same interface
-      "interface": {
-        "address": "0.0.0.0",
-        "port": 8080
-      },
+      "interfaces": [
+        {
+          "address": "${HTTP_BIND_ADDRESS:-0.0.0.0}",
+          "port": ${HTTP_BIND_PORT:-8080},
+
+          "ssl": ${TLS_ENABLE:-true},          //Enables TLS for this interface for this host specifically
+          "certificate": "${TLS_CERT}",         //Cert may be pem or pfx (include private key in pfx, or include private key in a pem file)
+          "private_key": "${TLS_PRIVATE_KEY}",  //A pem encoded private key, REQUIRED if using a PEM certificate, may be encrypted with a password
+          "password": null,                     //An optional password for the ssl private key
+          "client_cert_required": false,        //requires that any client connecting to this host present a valid certificate
+          "use_os_ciphers": ${TLS_USE_OS_CIPHERS:-false}               //Use the OS's ciphers instead of the hard-coded ciphers
+        }
+      ],
 
       //Collection of "trusted" servers to allow proxy header support from
-      "downstream_servers": ${HTTP_DOWNSTREAM_SERVERS},
+      "downstream_servers": ${HTTP_DOWNSTREAM_SERVERS:-[]},
 
       //The hostname to listen for, "*" as wildcard, and "[system]" as the default hostname for the current machine
-      "hostname": "*",
+      "hostname": "${HTTP_HOSTNAME:-*}",
       "path": "dist/",
 
       //A list of file extensions to deny access to, if a resource is requested and has one of the following extensions, a 404 is returned
@@ -76,16 +78,38 @@
       //A list of error file objects, files are loaded into memory (and watched for changes) and returned when the specified error code occurs
       "error_files": [],
 
+      "cors": {
+        "enabled": ${CORS_ENABLED:-false},              //Enables cors protections for this host
+        "deny_cors_connections": false,                 //If true, all cors connections will be denied
+        "allowed_origins": ${CORS_ALLOWED_ORIGINS:-[]}, //A list of allowed origins
+      },
+
+      //Key-value headers object, some headers are special and are controlled by the vh processor
+      "headers": {
+        "Server": "Simple-Bookmark-Server",
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "X-XSS-Protection": "1; mode=block",
+      },
+
       //The default
       "cache_default_sec": 864000,
+      //Maxium ammount of time a request is allowed to be processed (includes loading or waiting for sessions) before operations will be cancelled and a 503 returned
+      "max_execution_time_ms": 20000,
 
-      "ssl": ${SSL_JSON},
+      // controls http cache headers
+      "file_http_max_age": {
+        ".html": 0,     //All html files will have no-cache, no-store header sent
+        ".css": 600,    //
+        ".js": 600,     //all .js files will have a max-age of 10 days   
+      },
     }
   ],
 
 
   //Defines the directory where plugin's are to be loaded from
   "plugins": {
+    "enabled": ${PLUGINS_ENABLED:-true},
     //Hot-reload creates collectable assemblies that allow full re-load support in the host application, should only be used for development purposes!
     "hot_reload": false,
     "path": "plugins/",
@@ -93,27 +117,31 @@
     "assets": "plugins/assets/"
   },
 
-  "sys_log": {
-    "path": "data/logs/sys-log.txt",
-    "flush_sec": 5,
-    "retained_files": 31,
-    "file_size_limit": 10485760,
-    "interval": "infinite"
-  },
+  "logs": {
+    "sys_log": {
+      "enabled": ${FILE_LOG_ENABLED:-true},
+      "path": "data/logs/sys-log.txt",
+      "flush_sec": 5,
+      "retained_files": 31,
+      "file_size_limit": 10485760,
+      "interval": "infinite"
+    },
 
-  "app_log": {
-    "path": "data/logs/app-log.txt",
-    "flush_sec": 5,
-    "retained_files": 31,
-    "file_size_limit": 10485760,
-    "interval": "infinite"
+    "app_log": {
+      "enabled": ${FILE_LOG_ENABLED:-true},
+      "path": "data/logs/app-log.txt",
+      "flush_sec": 5,
+      "retained_files": 31,
+      "file_size_limit": 10485760,
+      "interval": "infinite"
+    }
   },
 
   //HASHICORP VAULT
   "hashicorp_vault": {
     "url": "${HC_VAULT_ADDR}",
     "token": "${HC_VAULT_TOKEN}",
-    "trust_certificate": ${HC_VAULT_TRUST_CERT},
+    "trust_cert": ${HC_VAULT_TRUST_CERT:-false}
   },
 
   //SQL CONFIG
@@ -139,13 +167,13 @@
     "discovery_interval_sec": 120,
 
     //Initial nodes to discover from
-    "initial_nodes": ${VNCACHE_INITIAL_NODES},
+    "initial_nodes": ${VNCACHE_INITIAL_NODES:-[]},
 
-    //Disable TLS
+    //Disable TLS (its not supported yet)
     "use_tls": false,
 
     //Setting this value to true will cause the cache store to load a memory-only instance, without remote backing
-    "memory_only": ${MEMCACHE_ONLY},
+    "memory_only": ${MEMCACHE_ONLY:-true},
 
     //enable memory cache
     "memory_cache": {
@@ -156,6 +184,20 @@
       "zero_all": false,
       "max_object_size": 8128
     }
+  },
+
+  "passwords": {
+    "custom_assembly": "${PASSWORD_ASM_PATH}", //A custom assembly path empty string will load default
+
+    //Optionally specify parameters, or use defaults. If defined, you must specify all parameters
+    //Not all Argon2 native libraries support these options
+    "disabled argon2_options": {
+      "memory_cost": 65536,
+      "iterations": 4,
+      "parallelism": 4,
+      "salt_length": 16,
+      "hash_length": 32
+    },
   },
 
   "secrets": {

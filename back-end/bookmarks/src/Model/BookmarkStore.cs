@@ -74,20 +74,20 @@ namespace SimpleBookmark.Model
                     return -1;
                 }
 
-                context.Bookmarks.Add(new ()
+                context.Bookmarks.Add(new BookmarkEntry
                 {
-                    Id = GetNewRecordId(),      //Overwrite with new record id
-                    UserId = userId,            //Enforce user id
-                    Created = now,
-                    LastModified = now,
-                    Name = entry.Name,          //Copy over the entry data
-                    Url = entry.Url,
-                    Description = entry.Description,
-                    Tags = entry.Tags
+                    Id              = GetNewRecordId(),      //Overwrite with new record id
+                    UserId          = userId,            //Enforce user id
+                    Created         = now,
+                    LastModified    = now,
+                    Name            = entry.Name,          //Copy over the entry data
+                    Url             = entry.Url,
+                    Description     = entry.Description,
+                    Tags            = entry.Tags
                 });
             }
 
-            await context.SaveAndCloseAsync(true, cancellation);
+            await context.SaveAndCloseAsync(commit: true, cancellation);
             return exists ? 0 : 1;         //1 if added, 0 if already exists
         }
 
@@ -140,7 +140,8 @@ namespace SimpleBookmark.Model
                 BookmarkEntry[] bookmarkEntries = await q.ToArrayAsync(cancellation);
 
                 //filter out bookmarks that do not have all requested tags, then skip and take the requested page
-                results = bookmarkEntries.Where(b => tags.All(p => b.JsonTags!.Contains(p)))
+                results = bookmarkEntries
+                    .Where(b => tags.All(p => b.JsonTags!.Contains(p)))
                     .Skip(page * limit)
                     .Take(limit)
                     .ToArray();
@@ -148,13 +149,14 @@ namespace SimpleBookmark.Model
             else
             {
                 //execute server-side query
-                results = await q.Skip(page * limit)
+                results = await q
+                    .Skip(page * limit)
                     .Take(limit)
                     .ToArrayAsync(cancellation);               
             }           
 
             //Close db and commit transaction
-            await context.SaveAndCloseAsync(true, cancellation);
+            await context.SaveAndCloseAsync(commit: true, cancellation);
 
             return results;
         }
@@ -195,7 +197,7 @@ namespace SimpleBookmark.Model
 
             context.Bookmarks.RemoveRange(context.Bookmarks.Where(b => b.UserId == userId));
 
-            return await context.SaveAndCloseAsync(true, cancellation);
+            return await context.SaveAndCloseAsync(commit: true, cancellation);
         }
 
         public async Task<ERRNO> AddBulkAsync(IEnumerable<BookmarkEntry> bookmarks, string userId, DateTimeOffset now, CancellationToken cancellation)
@@ -206,16 +208,16 @@ namespace SimpleBookmark.Model
             //Setup clean bookmark instances
             bookmarks = bookmarks.Select(b => new BookmarkEntry
             {
-                Id = GetNewRecordId(),  //new uuid
-                UserId = userId,        //Set userid
-                LastModified = now.DateTime,
+                Id              = GetNewRecordId(),  //new uuid
+                UserId          = userId,        //Set userid
+                LastModified    = now.DateTime,
 
                 //Allow reuse of created time
-                Created = b.Created,
-                Description = b.Description,
-                Name = b.Name,
-                Tags = b.Tags,
-                Url = b.Url,
+                Created         = b.Created,
+                Description     = b.Description,
+                Name            = b.Name,
+                Tags            = b.Tags,
+                Url             = b.Url,
             });
 
             //Filter out bookmarks that already exist

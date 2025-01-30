@@ -1,24 +1,19 @@
-// Copyright (C) 2024 Vaughn Nugent
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 import 'pinia'
-import { MaybeRef, watch } from 'vue';
-import { ServerDataBuffer, ServerObjectBuffer, UserProfile, WebMessage, apiCall, useAxios, useDataBuffer, useUser } from '@vnuge/vnlib.browser';
-import { get, useToggle } from '@vueuse/core';
+import { computed, watch } from 'vue';
+import { 
+    type ServerDataBuffer, 
+    type ServerObjectBuffer, 
+    type UserProfile, 
+    type WebMessage, 
+    apiCall,
+    useDataBuffer, 
+    useAccount, 
+    useAccountRpc
+} from '@vnuge/vnlib.browser';
+import { syncRef, useToggle } from '@vueuse/core';
 import { PiniaPlugin, PiniaPluginContext, storeToRefs } from 'pinia'
 import { defer } from 'lodash-es';
+import { storeExport } from './index';
 
 export interface OAuth2Application {
     readonly Id: string,
@@ -39,27 +34,29 @@ interface ExUserProfile extends UserProfile {
     created: string | Date
 }
 
+export interface UserProfileStore{
+    readonly userProfile: ServerDataBuffer<ExUserProfile, WebMessage<string>>
+    refreshProfile(): void;
+}
+
 declare module 'pinia' {
-    export interface PiniaCustomProperties {
-        userProfile: ServerDataBuffer<ExUserProfile, WebMessage<string>>
-        userName: string | undefined
-        refreshProfile(): void;
+    export interface PiniaCustomProperties extends UserProfileStore {
     }
 }
 
-export const profilePlugin = (accountsUrl:MaybeRef<string>) :PiniaPlugin => {
+export const profilePlugin = () :PiniaPlugin => {
 
-    return ({ store }: PiniaPluginContext) => {
+    return ({ store }: PiniaPluginContext): UserProfileStore => {
 
-        const { loggedIn } = storeToRefs(store)
-        const { getProfile, userName } = useUser()
-        const axios = useAxios(null)
+        const { loggedIn, userName } = storeToRefs(store)
+        const { getProfile } = useAccount()
+        const { exec } = useAccountRpc()
 
         const [onRefresh, refreshProfile] = useToggle()
 
         const updateUserProfile = async (profile: ServerObjectBuffer<ExUserProfile>) => {
             // Apply the buffer to the profile
-            const { data } = await axios.post<WebMessage<string>>(get(accountsUrl), profile.buffer)
+            const data = await exec<string>('profile.update', profile.buffer)
 
             //Get the new profile from the server
             const newProfile = await getProfile() as ExUserProfile
@@ -79,19 +76,15 @@ export const profilePlugin = (accountsUrl:MaybeRef<string>) :PiniaPlugin => {
             userProfile.apply(profile)
         }
 
-        watch([loggedIn, onRefresh], ([li]) => {
-            //If the user is logged in, load the profile buffer
-            if (li) {
-                apiCall(loadProfile)
-            }
-        })
+        //If the user is logged in, load the profile buffer
+        watch([loggedIn, onRefresh], ([li]) => li ? apiCall(loadProfile) : userProfile.apply({} as any))
 
-        defer(refreshProfile);
+        //sync global username value with profile email
+        syncRef(userName, computed(() => userProfile.data.email), { direction: 'rtl' })
 
-        return {
+        return storeExport({
             userProfile,
-            refreshProfile,
-            userName
-        }
+            refreshProfile
+        }) as unknown as UserProfileStore
     }
 }

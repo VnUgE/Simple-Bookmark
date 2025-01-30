@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, shallowReactive, shallowRef } from 'vue';
+import { computed, ref, shallowReactive, shallowRef } from 'vue';
 import { useStore } from '../../store';
 import { get, set, useClipboard, useTimeAgo, useToggle } from '@vueuse/core';
 import { apiCall, useVuelidateWrapper } from '@vnuge/vnlib.browser';
 import { defaultTo } from 'lodash-es';
 import { useVuelidate } from '@vuelidate/core'
 import { required, maxLength, minLength, helpers, email } from '@vuelidate/validators'
-const Dialog = defineAsyncComponent(() => import('../global/Dialog.vue'));
 
 const store = useStore();
 const { copy, copied } = useClipboard()
