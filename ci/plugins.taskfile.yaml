@@ -104,7 +104,7 @@ tasks:
     #install sessions plugin
     - task: install:install
       vars:
-        PROJECT_NAME: 'SessionProvider'
+        PROJECT_NAME: 'VNLib.Plugins.Sessions.SessionProvider'
         MODULE_NAME: "Plugins.Essentials"
         FILE_NAME: "release.tgz"
         DIR: './build/plugins/SessionProvider'

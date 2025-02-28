@@ -4,24 +4,19 @@
 #use plain alpine latest to build native libraries in
 FROM ubuntu:24.04 as native-cont
 
-#install public libs and build tools
-RUN apt update \
-  && apt install -y build-essential cmake git openssl
+#download and install task (its easier and faster without npm)
+ADD --checksum=sha256:fe61611118e586e51eec55678a8a00409111ff723ada07bfb6cda2897814b42a \
+  https://github.com/go-task/task/releases/download/v3.41.0/task_linux_amd64.deb \
+  task_linux_amd64.deb
 
-WORKDIR /build
+RUN dpkg -i task_linux_amd64.deb
 
-#download and install task (t its easier an faster without npm)
-ADD --checksum=sha256:a35462ec71410cccfc428072de830e4478bc57a919d0131ef7897759270dff8f \
-  https://github.com/go-task/task/releases/download/v3.40.1/task_linux_amd64.tar.gz \
-  task_linux_amd64.tar.gz
-
-RUN tar -xzf task_linux_amd64.tar.gz && mv task /usr/local/bin/task
- 
 #include local artifacts
 COPY app/ .
 
-#runs setup tasks such as building libraries and configuring directories
-RUN task setup && task container-create-cert
+#installs required dependencies and builds the native libraries (also openssl)
+RUN task setup-apt 'ADD_PACKAGES="openssl"' \
+  && task create-cert
 
 #APP CONTAINER
 #move into a clean dotnet apline lean image

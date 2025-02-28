@@ -186,7 +186,16 @@
     }
   },
 
+  "users": {
+    "custom_assembly": null,  //Null assembly should load the default users assembly
+    "run_db_init": ${RUN_DB_INIT:-false},  //Run the database initialization on startup
+  },
+
+
   "passwords": {
+    "provider_name": "argon2",  //Only argon2 is supported atm
+    "disable_pepper": ${PASSWORD_ASM_PATH:-false},    //Optionally disable pepper
+
     "custom_assembly": "${PASSWORD_ASM_PATH}", //A custom assembly path empty string will load default
 
     //Optionally specify parameters, or use defaults. If defined, you must specify all parameters
