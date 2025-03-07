@@ -33,18 +33,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="VNLib.Plugins" Version="0.1.0-ci0217" />
-    <PackageReference Include="VNLib.Utils" Version="0.1.0-ci0217" />
-    <PackageReference Include="VNLib.Plugins.PluginBase" Version="0.1.0-ci0217" />
-    <PackageReference Include="VNLib.Plugins.Essentials" Version="0.1.0-ci0217" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0081" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-ci0081" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Essentials.Accounts">
-      <HintPath>..\essentials.accounts\Essentials.Accounts.dll</HintPath>
-    </Reference>
+    <PackageReference Include="VNLib.Plugins.Essentials.Accounts" Version="0.1.0-ci0089" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0082" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-ci0082" />
   </ItemGroup>
 
 </Project>

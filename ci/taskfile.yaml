@@ -5,19 +5,11 @@
 
 version: "3"
 
+dotenv: ['env/build.env', 'env/deps.env']
+
 vars:
-
-  BINARY_DIR: '{{ .BINARY_DIR | default "bin" }}'
-
-  BUILDS_URL: https://www.vaughnnugent.com/public/resources/software/builds
+  BINARY_DIR: '{{ .BINARY_DIR | default "bin" }}'  
   SQLITE_OUT_DIR: "plugins/assets/VNLib.Plugins.Extensions.Loading.Sql.SQLite"
-
-  PLUGIN_NAME: 'SimpleBookmark'
-  CORE_VERSION: '7f107d42f8c934da25dff4430bac2302f9ff79e4'
-  ESSENTIALS_VERSION: '02173ba1f894d30859ac01f932c9d344c4f28e0a'
-  CACHE_VERSION: '0deba06cfbe2ee20ffb0d119fbc23b2c88b84366'
-  EXTENSIONS_VERSION: '8bec566c53c5249faeb34fa8f1c52d7664fd5ebe'
-
   TARGET_ARCHES: [ 'windows-x86_64', 'linux-x86_64', 'osx-x86_64', 'windows-arm', 'linux-arm', 'osx-arm', 'posix' ]
 
 includes:
@@ -85,7 +77,7 @@ tasks:
 
   compile-config:
     internal: true
-    dotenv: ['build.env']  #use the local .env file when compiling config variables
+    dotenv: ['env/config.env']  #use the local .env file when compiling config variables
     cmds:
      - cmd: powershell mkdir -Force 'build/config/'
      - cmd: powershell './compile.ps1' -InputDir 'config-templates/' -OutputDir 'build/config/'

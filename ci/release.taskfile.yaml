@@ -61,7 +61,7 @@ tasks:
     platforms: [ linux ]
     cmds:
      - cmd: apt update
-     - cmd: apt install -y dotnet-runtime-8.0 build-essential cmake curl git {{ .ADD_PACKAGES }}
+     - cmd: apt install -y dotnet-runtime-8.0 build-essential cmake curl git
      - task: setup
      - cmd: echo "Setup complete"
        silent: true 
@@ -72,7 +72,7 @@ tasks:
     cmds:
      - cmd: dnf update
      - cmd: dnf group install -y c-development development-tools
-     - cmd: dnf install -y dotnet-runtime-8.0 cmake curl git {{ .ADD_PACKAGES }}
+     - cmd: dnf install -y dotnet-runtime-8.0 cmake curl git
      - task: setup
      - cmd: echo "Setup complete"
        silent: true 
@@ -82,7 +82,7 @@ tasks:
     platforms: [ linux ]
     cmds:
      - cmd: apk update
-     - cmd: apk add --no-cache dotnet8-runtime build-base cmake curl git {{ .ADD_PACKAGES }}
+     - cmd: apk add --no-cache dotnet8-runtime build-base cmake curl git
      - task: setup
      - cmd: echo "Setup complete"
        silent: true 

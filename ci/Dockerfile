@@ -11,15 +11,20 @@ ADD --checksum=sha256:fe61611118e586e51eec55678a8a00409111ff723ada07bfb6cda28978
 
 RUN dpkg -i task_linux_amd64.deb
 
+RUN apt update 
+RUN apt install -y \
+   build-essential \
+   openssl \
+   cmake 
+
 #include local artifacts
 COPY app/ .
 
 #installs required dependencies and builds the native libraries (also openssl)
-RUN task setup-apt 'ADD_PACKAGES="openssl"' \
-  && task create-cert
+RUN task setup && task create-cert
 
 #APP CONTAINER
-#move into a clean dotnet apline lean image
+#move into a clean dotnet ubuntu image
 FROM mcr.microsoft.com/dotnet/runtime:8.0.12-noble as app-cont
 
 LABEL name="vnuge/simple-bookmark"
