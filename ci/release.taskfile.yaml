@@ -58,29 +58,27 @@ tasks:
 
   setup-apt:
     desc: "Performs initial setup on Debian apt amd64 based machines"
-    silent: true
     platforms: [ linux ]
     cmds:
      - cmd: apt update
-     - cmd: apt install -y dotnet-runtime-8.0 gcc cmake curl git
+     - cmd: apt install -y dotnet-runtime-8.0 build-essential cmake curl git
      - task: setup
      - cmd: echo "Setup complete"
        silent: true 
 
   setup-dnf:
     desc: "Performs initial setup on Fedora/Redhat amd (dnf) based machines"
-    silent: true
     platforms: [ linux ]
     cmds:
      - cmd: dnf update
-     - cmd: dnf install -y dotnet-runtime-8.0 gcc cmake curl git
+     - cmd: dnf group install -y c-development development-tools
+     - cmd: dnf install -y dotnet-runtime-8.0 cmake curl git
      - task: setup
      - cmd: echo "Setup complete"
        silent: true 
 
   setup-apk:
     desc: "Performs initial setup using the APK package manager for amd64 based machines"
-    silent: true
     platforms: [ linux ]
     cmds:
      - cmd: apk update

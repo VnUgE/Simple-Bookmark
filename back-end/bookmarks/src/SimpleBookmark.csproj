@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -33,12 +33,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="VNLib.Plugins.PluginBase" Version="0.1.0-ci0215" />
-    <PackageReference Include="VNLib.Plugins.Essentials" Version="0.1.0-ci0215" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Data" Version="0.1.0-ci0078" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-ci0078" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Loading.Sql" Version="0.1.0-ci0078" />
-    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-ci0078" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Data" Version="0.1.0-rc0084" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Loading" Version="0.1.0-rc0084" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Loading.Sql" Version="0.1.0-rc0084" />
+    <PackageReference Include="VNLib.Plugins.Extensions.Validation" Version="0.1.0-rc0084" />
   </ItemGroup>
 
   <ItemGroup>

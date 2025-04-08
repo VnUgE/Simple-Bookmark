@@ -4,28 +4,28 @@
 #use plain alpine latest to build native libraries in
 FROM ubuntu:24.04 as native-cont
 
-#install public libs and build tools
-RUN apt update \
-  && apt install -y build-essential cmake git openssl
+#download and install task (its easier and faster without npm)
+ADD --checksum=sha256:bb660b4197bc6e5728e32d50a6eeea0c1fb095e5574dd4e7212c0ff0503ff81c \
+  https://github.com/go-task/task/releases/download/v3.42.1/task_linux_amd64.deb \
+  task_linux_amd64.deb
 
-WORKDIR /build
+RUN dpkg -i task_linux_amd64.deb && rm task_linux_amd64.deb
 
-#download and install task (t its easier an faster without npm)
-ADD --checksum=sha256:a35462ec71410cccfc428072de830e4478bc57a919d0131ef7897759270dff8f \
-  https://github.com/go-task/task/releases/download/v3.40.1/task_linux_amd64.tar.gz \
-  task_linux_amd64.tar.gz
+RUN apt update && \
+   apt install -y \
+   build-essential \
+   openssl \
+   cmake 
 
-RUN tar -xzf task_linux_amd64.tar.gz && mv task /usr/local/bin/task
- 
 #include local artifacts
 COPY app/ .
 
-#runs setup tasks such as building libraries and configuring directories
-RUN task setup && task container-create-cert
+#installs required dependencies and builds the native libraries (also openssl)
+RUN task setup && task create-cert
 
 #APP CONTAINER
-#move into a clean dotnet apline lean image
-FROM mcr.microsoft.com/dotnet/runtime:8.0.12-noble as app-cont
+#move into a clean dotnet ubuntu image
+FROM mcr.microsoft.com/dotnet/runtime:8.0.14-noble as app-cont
 
 LABEL name="vnuge/simple-bookmark"
 LABEL maintainer="Vaughn Nugent <vnpublic@proton.me>"

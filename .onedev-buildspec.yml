@@ -18,7 +18,9 @@ jobs:
   maxRetries: 3
   retryDelay: 30
   timeout: 3600
+  
 - name: Unit Testing
+  jobExecutor: windows
   steps:
   - !CheckoutStep
     name: checkout
@@ -43,21 +45,24 @@ jobs:
   maxRetries: 3
   retryDelay: 30
   timeout: 14400
+
 - name: Staging build
+  jobExecutor: windows
   steps:
-  - !CheckoutStep
-    name: checkout
-    cloneCredential: !DefaultCredential {}
-    withLfs: false
-    withSubmodules: false
-    checkoutPath: '@project_name@'
+  - !CommandStep
+    name: code checkout
+    runInContainer: false
+    interpreter: !DefaultInterpreter
+      commands: |
+        git clone @server_url@/@project_name@ --branch @branch@ @project_name@
+    useTTY: true
     condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
   - !CommandStep
     name: mock build
     runInContainer: false
     interpreter: !DefaultInterpreter
       commands: |
-        vnbuild build -S --include @project_name@ --verbose
+        vnbuild build --no-delay --include @project_name@ --verbose
     useTTY: true
     condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
   - !CommandStep
@@ -65,7 +70,7 @@ jobs:
     runInContainer: false
     interpreter: !DefaultInterpreter
       commands: |
-        vnbuild publish -i @project_name@
+        vnbuild publish -i @project_name@ --verbose
     useTTY: true
     condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
   triggers:
@@ -78,21 +83,24 @@ jobs:
   maxRetries: 3
   retryDelay: 30
   timeout: 14400
-- name: Publish Tag
+
+- name: Publish
+  jobExecutor: publish-agents
   steps:
-  - !CheckoutStep
-    name: checkout
-    cloneCredential: !DefaultCredential {}
-    withLfs: false
-    withSubmodules: false
-    checkoutPath: '@project_name@'
+  - !CommandStep
+    name: code checkout
+    runInContainer: false
+    interpreter: !DefaultInterpreter
+      commands: |
+        git clone @server_url@/@project_name@ --branch @branch@ @project_name@
+    useTTY: true
     condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
   - !CommandStep
     name: VNBuild build
     runInContainer: false
     interpreter: !DefaultInterpreter
       commands: |
-        vnbuild build -S --include @project_name@
+        vnbuild build --no-delay --include @project_name@
     useTTY: true
     condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
   - !CommandStep

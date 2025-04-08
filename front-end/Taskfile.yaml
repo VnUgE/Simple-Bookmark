@@ -29,7 +29,7 @@ tasks:
     cmds:
      - cmd: powershell mkdir -Force lib/vnlib.browser
      - cmd: curl{{ exeExt }} 
-        https://www.vaughnnugent.com/public/resources/software/builds/Plugins.Essentials/785bb68b2670e982a199fe3be93aa50a08c7af77/@vnuge-vnlib.browser/release.tgz
+        https://www.vaughnnugent.com/public/resources/software/builds/Plugins.Essentials/2d28103820dcf02f566ac180dc2a3a435bbc57a9/@vnuge-vnlib.browser/release.tgz
         -o lib/vnlib.browser/release.tgz
      - cmd: cd lib/vnlib.browser && tar -xzf release.tgz
 

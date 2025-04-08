@@ -1,6 +1,9 @@
 assembly-versioning-scheme: MajorMinorPatch
+assembly-versioning-format: '{Major}.{Minor}.{Patch}.{WeightedPreReleaseNumber}'
+assembly-file-versioning-format: '{Major}.{Minor}.{Patch}.{WeightedPreReleaseNumber}'
 mode: ContinuousDeployment
-branches: {}
+increment: Patch
+
 ignore:
   sha: []
 merge-message-formats: {}
