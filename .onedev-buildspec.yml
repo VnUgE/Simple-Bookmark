@@ -18,7 +18,9 @@ jobs:
   maxRetries: 3
   retryDelay: 30
   timeout: 3600
+  
 - name: Unit Testing
+  jobExecutor: windows
   steps:
   - !CheckoutStep
     name: checkout
@@ -43,7 +45,9 @@ jobs:
   maxRetries: 3
   retryDelay: 30
   timeout: 14400
+
 - name: Staging build
+  jobExecutor: windows
   steps:
   - !CommandStep
     name: code checkout
@@ -79,7 +83,9 @@ jobs:
   maxRetries: 3
   retryDelay: 30
   timeout: 14400
-- name: Publish Tag
+
+- name: Publish
+  jobExecutor: publish-agents
   steps:
   - !CommandStep
     name: code checkout
