@@ -23,10 +23,12 @@ tasks:
 
   build:
     cmds:
-     - cmd: dotnet-gitversion.exe /updateprojectfiles
+     - cmd: dotnet gitversion /updateprojectfiles
      #overwrite front-end version, this must be run on build hook because update can cause the version to change 
      - cmd: cd front-end/ && npm version {{ .BUILD_VERSION }}
        ignore_error: true #error if run when version is not updated
+
+     - task: ensure-nuget-source
 
   #copy artifacts to temp directory
   postbuild_success:
@@ -41,3 +43,13 @@ tasks:
   dev-update:
     cmds:
      - cd front-end/ && npm update 
+
+  ensure-nuget-source:
+    desc: 'Ensures the vn.com NuGet source is configured'
+    vars:
+      NUGET_SOURCE_NAME: VNLib.Release
+      NUGET_SOURCE_URL: https://www.vaughnnugent.com/public/resources/software/builds/feed/release/index.json
+    cmds:
+      # Check if source exists using a platform-agnostic approach
+      - cmd: dotnet nuget add source '{{ .NUGET_SOURCE_URL }}' -n '{{ .NUGET_SOURCE_NAME }}'
+        ignore_error: true
