@@ -23,7 +23,7 @@
     "@vnuge/vnlib.browser": "./lib/vnlib.browser",
     "@vuelidate/core": "^2.0.2",
     "@vuelidate/validators": "^2.0.2",
-    "@vueuse/core": "^12.1.x",
+    "@vueuse/core": "^13.0.x",
     "axios": "^1.4.0",
     "base32-encode": "^2.0.0",
     "flowbite": "^2.2.1",
@@ -31,7 +31,7 @@
     "lodash-es": "^4.17.21",
     "pinia": "^3.0.1",
     "qrcode.vue": "^3.4.1",
-    "universal-cookie": "^7.0.x",
+    "universal-cookie": "^8.0.x",
     "vue": "^3.2.47",
     "vue3-otp-input": "^0.5.1"
   },
@@ -45,7 +45,6 @@
     "tailwindcss": "^3.3.2",
     "typescript": "^5.0.2",
     "vite": "^6.0.x",
-    "vue-eslint-parser": "^9.3.0",
     "vue-tsc": "^2.0.x"
   }
 }
